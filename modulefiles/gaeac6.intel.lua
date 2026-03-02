@@ -3,7 +3,7 @@ Load environment for running the i-jedi with Intel compilers and MPI on GaeaC6.
 ]])
 
 local pkgName    = myModuleName()
-local pkgVersion = myModuleVersion()
+local pkgVersion = myModuleVersion() or "0.0.1"
 local pkgNameVer = myModuleFullName()
 
 prepend_path("MODULEPATH", '/ncrc/proj/epic/spack-stack/c6/spack-stack-1.9.3/envs/ue-oneapi-2024.2.1/install/modulefiles/Core')

@@ -3,7 +3,7 @@ Load environment for running the i-jedi with Intel compilers and MPI on Ursa.
 ]])
 
 local pkgName    = myModuleName()
-local pkgVersion = myModuleVersion()
+local pkgVersion = myModuleVersion() or "0.0.1"
 local pkgNameVer = myModuleFullName()
 
 prepend_path("MODULEPATH", '/contrib/spack-stack/spack-stack-1.9.2/envs/ue-oneapi-2024.2.1/install/modulefiles/Core')
@@ -41,6 +41,6 @@ setenv('MPIEXEC_EXEC', mpiexec)
 setenv('MPIEXEC_NPROC', mpinproc)
 
 whatis("Name: ".. pkgName)
-whatis("Version: ".. tostring(pkgVersion))
+whatis("Version: ".. pkgVersion)
 whatis("Category: i-jedi")
 whatis("Description: Load all libraries needed for i-jedi")
