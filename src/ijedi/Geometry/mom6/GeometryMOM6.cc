@@ -3,13 +3,17 @@
 // Attribution-NonCommercial-ShareAlike Licence.
 // See LICENSE file in the top-level directory for details.
 
+#include <netcdf.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <iomanip>
+#include <numeric>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <netcdf.h>
 
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
@@ -23,6 +27,8 @@
 #include "atlas/mesh.h"
 #include "atlas/mesh/MeshBuilder.h"
 #include "atlas/output/Gmsh.h"
+#include "atlas/util/Earth.h"
+#include "atlas/util/KDTree.h"
 #include "atlas/util/Metadata.h"
 
 #include "oops/util/FieldSetHelpers.h"
@@ -30,11 +36,11 @@
 
 #include "ijedi/Geometry/mom6/GeometryMOM6.h"
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 namespace ijedi
 {
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Replicates FMS compute_extent(): integer-division partition with remainder
 // distributed to lower-rank processes.
 int GeometryMOM6::computeExtent(int N, int ndivs, int pe)
@@ -44,173 +50,142 @@ int GeometryMOM6::computeExtent(int N, int ndivs, int pe)
   return base + (pe < extra ? 1 : 0);
 }
 
-// -------------------------------------------------------------------------------------------------
-// Read T-grid lon/lat from ocean_hgrid.nc — full global array, size [njGlobal * niGlobal].
-// The supergrid is (2*NJ+1) × (2*NI+1); T-centres are at stride-2 odd indices.
-void GeometryMOM6::readHgridLonLat(const std::string & path,
-                                    std::vector<double> & lon,
-                                    std::vector<double> & lat) const
+// ---------------------------------------------------------------------------
+// Read all T-cell and U/V-cell geometry from ocean_hgrid.nc.
+// Supergrid is (2*NJ+1) x (2*NI+1); stride-2 odd indices give T-cell
+// centres.  C-grid staggering: U-point at [2*jG+1, 2*iG+2], V-point at
+// [2*jG+2, 2*iG+1].
+// Metrics: dxT = dx[2*jG+1, 2*iG] + dx[2*jG+1, 2*iG+1]
+//          dyT = dy[2*jG, 2*iG+1] + dy[2*jG+1, 2*iG+1]
+//          areaT = sum of 2x2 area block at [2*jG:2*jG+2, 2*iG:2*iG+2]
+void GeometryMOM6::readHgrid(const std::string & path,
+                             std::vector<double> * lon,
+                             std::vector<double> * lat,
+                             std::vector<double> * dxT,
+                             std::vector<double> * dyT,
+                             std::vector<double> * areaT,
+                             std::vector<double> * lonU,
+                             std::vector<double> * latU,
+                             std::vector<double> * lonV,
+                             std::vector<double> * latV) const
 {
   int ncid;
   if (nc_open(path.c_str(), NC_NOWRITE, &ncid) != NC_NOERR)
     throw eckit::CantOpenFile(path, Here());
 
-  const int nxp = 2 * niGlobal_ + 1;
-  const int nyp = 2 * njGlobal_ + 1;
-
-  std::vector<double> xFull(static_cast<size_t>(nyp) * nxp);
-  std::vector<double> yFull(static_cast<size_t>(nyp) * nxp);
-
-  int xid, yid;
-  nc_inq_varid(ncid, "x", &xid);
-  nc_inq_varid(ncid, "y", &yid);
-  nc_get_var_double(ncid, xid, xFull.data());
-  nc_get_var_double(ncid, yid, yFull.data());
-  nc_close(ncid);
-
-  lon.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
-  lat.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
-
-  for (int jG = 0; jG < njGlobal_; ++jG) {
-    const int jSuper = 2 * jG + 1;
-    for (int iG = 0; iG < niGlobal_; ++iG) {
-      const int iSuper = 2 * iG + 1;
-      lon[jG * niGlobal_ + iG] = xFull[jSuper * nxp + iSuper];
-      lat[jG * niGlobal_ + iG] = yFull[jSuper * nxp + iSuper];
-    }
-  }
-}
-
-// -------------------------------------------------------------------------------------------------
-// Read T-cell metrics from ocean_hgrid.nc — full global arrays, size [njGlobal * niGlobal].
-//
-// Supergrid variable dimensions and T-cell formulas (0-based iG, jG):
-//   dx  (nyp, nx=2*NI)   : dxT  = dx[2*jG+1, 2*iG] + dx[2*jG+1, 2*iG+1]
-//   dy  (ny=2*NJ, nxp)   : dyT  = dy[2*jG,   2*iG+1] + dy[2*jG+1, 2*iG+1]
-//   area(ny=2*NJ, nx=2*NI): areaT = sum of 2×2 block area[2*jG:2*jG+2, 2*iG:2*iG+2]
-void GeometryMOM6::readHgridMetrics(const std::string & path,
-                                     std::vector<double> & dxT,
-                                     std::vector<double> & dyT,
-                                     std::vector<double> & areaT) const
-{
-  int ncid;
-  if (nc_open(path.c_str(), NC_NOWRITE, &ncid) != NC_NOERR)
-    throw eckit::CantOpenFile(path, Here());
-
-  const int nx   = 2 * niGlobal_;
-  const int nyp  = 2 * njGlobal_ + 1;
-  const int nxp  = 2 * niGlobal_ + 1;
+  const int nxp   = 2 * niGlobal_ + 1;
+  const int nyp   = 2 * njGlobal_ + 1;
+  const int nx    = 2 * niGlobal_;
   const int nySub = 2 * njGlobal_;
 
-  std::vector<double> dxFull  (static_cast<size_t>(nyp)  * nx);
-  std::vector<double> dyFull  (static_cast<size_t>(nySub) * nxp);
-  std::vector<double> areaFull(static_cast<size_t>(nySub) * nx);
+  std::vector<double> xFull(static_cast<size_t>(nyp)   * nxp);
+  std::vector<double> yFull(static_cast<size_t>(nyp)   * nxp);
+  std::vector<double> dxFull(static_cast<size_t>(nyp)   * nx);
+  std::vector<double> dyFull(static_cast<size_t>(nySub) * nxp);
+  std::vector<double> aFull(static_cast<size_t>(nySub) * nx);
 
   int vid;
+  nc_inq_varid(ncid, "x",    &vid); nc_get_var_double(ncid, vid, xFull.data());
+  nc_inq_varid(ncid, "y",    &vid); nc_get_var_double(ncid, vid, yFull.data());
   nc_inq_varid(ncid, "dx",   &vid); nc_get_var_double(ncid, vid, dxFull.data());
   nc_inq_varid(ncid, "dy",   &vid); nc_get_var_double(ncid, vid, dyFull.data());
-  nc_inq_varid(ncid, "area", &vid); nc_get_var_double(ncid, vid, areaFull.data());
+  nc_inq_varid(ncid, "area", &vid); nc_get_var_double(ncid, vid, aFull.data());
   nc_close(ncid);
 
-  dxT.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
-  dyT.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
-  areaT.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
+  const size_t nT = static_cast<size_t>(njEff_) * niEff_;
+  lon->resize(nT);  lat->resize(nT);
+  dxT->resize(nT);  dyT->resize(nT);  areaT->resize(nT);
+  lonU->resize(nT); latU->resize(nT);
+  lonV->resize(nT); latV->resize(nT);
 
-  for (int jG = 0; jG < njGlobal_; ++jG) {
-    const int j2 = 2 * jG;
-    for (int iG = 0; iG < niGlobal_; ++iG) {
-      const int i2 = 2 * iG;
-      const int n  = jG * niGlobal_ + iG;
+  const int K = coarsenFactor_;
+  for (int jG = 0; jG < njEff_; ++jG) {
+    const int jS = K * (2 * jG + 1);   // coarse T-row in supergrid
+    const int j2 = 2 * K * jG;
+    for (int iG = 0; iG < niEff_; ++iG) {
+      const int iS = K * (2 * iG + 1);  // coarse T-col in supergrid
+      const int i2 = 2 * K * iG;
+      const int n  = jG * niEff_ + iG;
 
-      dxT[n]   = dxFull[(j2 + 1) * nx + i2] + dxFull[(j2 + 1) * nx + i2 + 1];
-      dyT[n]   = dyFull[j2 * nxp + (i2 + 1)] + dyFull[(j2 + 1) * nxp + (i2 + 1)];
-      areaT[n] = areaFull[ j2      * nx + i2]
-               + areaFull[ j2      * nx + i2 + 1]
-               + areaFull[(j2 + 1) * nx + i2]
-               + areaFull[(j2 + 1) * nx + i2 + 1];
+      (*lon)[n]  = xFull[ jS      * nxp + iS];
+      (*lat)[n]  = yFull[ jS      * nxp + iS];
+      (*lonU)[n] = xFull[ jS      * nxp + (i2 + 2*K)];  // east-face U-point
+      (*latU)[n] = yFull[ jS      * nxp + (i2 + 2*K)];
+      (*lonV)[n] = xFull[(jS + K) * nxp + iS];           // north-face V-point
+      (*latV)[n] = yFull[(jS + K) * nxp + iS];
+
+      (*dxT)[n] = 0.0;
+      for (int dc = 0; dc < 2*K; ++dc)
+        (*dxT)[n] += dxFull[jS * nx + i2 + dc];  // sum 2K half-widths
+
+      (*dyT)[n] = 0.0;
+      for (int dr = 0; dr < 2*K; ++dr)
+        (*dyT)[n] += dyFull[(j2 + dr) * nxp + iS];  // sum 2K half-heights
+
+      (*areaT)[n] = 0.0;
+      for (int dr = 0; dr < 2*K; ++dr)
+        for (int dc = 0; dc < 2*K; ++dc)
+          (*areaT)[n] += aFull[(j2 + dr) * nx + i2 + dc];  // K^2 x 4 areas
     }
   }
 }
 
-// -------------------------------------------------------------------------------------------------
-// Read U/V-cell centre lon/lat from ocean_hgrid.nc — full global arrays, size [njGlobal * niGlobal].
-//
-// MOM6 C-grid staggering (0-based iG, jG):
-//   U-point (east face of T-cell): x/y[2*jG+1, 2*iG+2]
-//   V-point (north face of T-cell): x/y[2*jG+2, 2*iG+1]
-void GeometryMOM6::readHgridUVLonLat(const std::string & path,
-                                      std::vector<double> & lonU,
-                                      std::vector<double> & latU,
-                                      std::vector<double> & lonV,
-                                      std::vector<double> & latV) const
-{
-  int ncid;
-  if (nc_open(path.c_str(), NC_NOWRITE, &ncid) != NC_NOERR)
-    throw eckit::CantOpenFile(path, Here());
-
-  const int nxp = 2 * niGlobal_ + 1;
-  const int nyp = 2 * njGlobal_ + 1;
-
-  std::vector<double> xFull(static_cast<size_t>(nyp) * nxp);
-  std::vector<double> yFull(static_cast<size_t>(nyp) * nxp);
-
-  int xid, yid;
-  nc_inq_varid(ncid, "x", &xid);
-  nc_inq_varid(ncid, "y", &yid);
-  nc_get_var_double(ncid, xid, xFull.data());
-  nc_get_var_double(ncid, yid, yFull.data());
-  nc_close(ncid);
-
-  lonU.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
-  latU.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
-  lonV.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
-  latV.resize(static_cast<size_t>(njGlobal_) * niGlobal_);
-
-  for (int jG = 0; jG < njGlobal_; ++jG) {
-    const int jSuper = 2 * jG + 1;
-    for (int iG = 0; iG < niGlobal_; ++iG) {
-      const int n = jG * niGlobal_ + iG;
-      lonU[n] = xFull[ jSuper      * nxp + (2 * iG + 2)];
-      latU[n] = yFull[ jSuper      * nxp + (2 * iG + 2)];
-      lonV[n] = xFull[(jSuper + 1) * nxp + (2 * iG + 1)];
-      latV[n] = yFull[(jSuper + 1) * nxp + (2 * iG + 1)];
-    }
-  }
-}
-
-// -------------------------------------------------------------------------------------------------
-// Read depth(ny, nx) and wet(ny, nx) from ocean_topog.nc — full global arrays,
-// size [njGlobal * niGlobal].  `wet` is MOM6's authoritative land/sea mask (1=ocean, 0=land).
-// If `wet` is absent (e.g., synthetic test grids), falls back to depth > minimumDepth_.
+// ---------------------------------------------------------------------------
+// Read depth(ny, nx) and wet(ny, nx) from ocean_topog.nc — full global
+// arrays, size [njGlobal * niGlobal].  `wet` is MOM6's authoritative
+// land/sea mask (1=ocean, 0=land).  If `wet` is absent (e.g., synthetic
+// test grids), falls back to depth > minimumDepth_.
 void GeometryMOM6::readTopog(const std::string & path,
-                              std::vector<double> & depth,
-                              std::vector<double> & wet) const
+                              std::vector<double> * depth,
+                              std::vector<double> * wet) const
 {
   int ncid;
   if (nc_open(path.c_str(), NC_NOWRITE, &ncid) != NC_NOERR)
     throw eckit::CantOpenFile(path, Here());
 
   const size_t n = static_cast<size_t>(njGlobal_) * niGlobal_;
-  depth.resize(n);
-  wet.resize(n);
+  depth->resize(n);
+  wet->resize(n);
   int vid;
-  nc_inq_varid(ncid, "depth", &vid); nc_get_var_double(ncid, vid, depth.data());
+  nc_inq_varid(ncid, "depth", &vid);
+  nc_get_var_double(ncid, vid, depth->data());
   // wet is optional; fall back to depth > minimumDepth_ when not present
   if (nc_inq_varid(ncid, "wet", &vid) == NC_NOERR) {
-    nc_get_var_double(ncid, vid, wet.data());
+    nc_get_var_double(ncid, vid, wet->data());
   } else {
     for (size_t k = 0; k < n; ++k)
-      wet[k] = (depth[k] > minimumDepth_) ? 1.0 : 0.0;
+      (*wet)[k] = ((*depth)[k] > minimumDepth_) ? 1.0 : 0.0;
   }
   nc_close(ncid);
+
+  // Coarsen to the effective grid if coarsenFactor_ > 1.
+  // Average depth over each K x K fine-cell block; re-derive wet.
+  if (coarsenFactor_ > 1) {
+    const int K = coarsenFactor_;
+    const size_t nEff = static_cast<size_t>(njEff_) * niEff_;
+    std::vector<double> depthC(nEff), wetC(nEff);
+    for (int jG = 0; jG < njEff_; ++jG) {
+      for (int iG = 0; iG < niEff_; ++iG) {
+        double sumD = 0.0;
+        for (int jr = 0; jr < K; ++jr)
+          for (int ir = 0; ir < K; ++ir)
+            sumD += (*depth)[(K*jG + jr) * niGlobal_ + (K*iG + ir)];
+        depthC[jG * niEff_ + iG] = sumD / (K * K);
+        wetC[jG * niEff_ + iG] =
+            (depthC[jG * niEff_ + iG] > minimumDepth_) ? 1.0 : 0.0;
+      }
+    }
+    *depth = std::move(depthC);
+    *wet   = std::move(wetC);
+  }
 }
 
-// -------------------------------------------------------------------------------------------------
-// Build Atlas NodeColumns for the local MOM6 compute domain → mom6FunctionSpace_.
+// ---------------------------------------------------------------------------
+// Build Atlas NodeColumns for the local MOM6 compute domain.
 // Global arrays are passed in; local slice is extracted here.
 void GeometryMOM6::buildMom6FunctionSpace(const eckit::mpi::Comm & comm,
-                                           const std::vector<double> & lonGlobal,
-                                           const std::vector<double> & latGlobal)
+                                          const std::vector<double> & lonGlobal,
+                                          const std::vector<double> & latGlobal)
 {
   using atlas::gidx_t;
   using atlas::idx_t;
@@ -228,9 +203,9 @@ void GeometryMOM6::buildMom6FunctionSpace(const eckit::mpi::Comm & comm,
       const int n  = jL * iCount_ + iL;
       const int iG = iStart_ - 1 + iL;
       const int jG = jStart_ - 1 + jL;
-      lons[n]      = lonGlobal[jG * niGlobal_ + iG];
-      lats[n]      = latGlobal[jG * niGlobal_ + iG];
-      globalIdx[n] = static_cast<gidx_t>(jG * niGlobal_ + iG + 1);  // 1-based
+      lons[n]      = lonGlobal[jG * niEff_ + iG];
+      lats[n]      = latGlobal[jG * niEff_ + iG];
+      globalIdx[n] = static_cast<gidx_t>(jG * niEff_ + iG + 1);  // 1-based
       remoteIdx[n] = static_cast<idx_t>(n + 1);                      // 1-based
     }
   }
@@ -250,44 +225,46 @@ void GeometryMOM6::buildMom6FunctionSpace(const eckit::mpi::Comm & comm,
       mesh, atlas::util::Config("mpi_comm", comm.name()));
 }
 
-// -------------------------------------------------------------------------------------------------
-// Build Atlas NodeColumns for the JEDI unstructured partition → functionSpace_ (base class).
+// ---------------------------------------------------------------------------
+// Build Atlas NodeColumns for the JEDI unstructured partition.
 //
 // Algorithm:
-//   1. All ranks build the same global active-point list (ocean + land fringe) — no MPI needed,
-//      deterministic from the global mask.
-//   2. Atlas "equal_regions" partitioner assigns each active point to a rank based on its
-//      lon/lat, giving geographically compact (latitude-band) ownership.
-//   3. Ghost nodes: active-point neighbours of owned nodes that belong to other JEDI ranks.
+//   1. All ranks build the same global active-point list (ocean + land
+//      fringe) — no MPI needed, deterministic from the global mask.
+//   2. Atlas "equal_regions" partitioner assigns each active point to a
+//      rank based on its lon/lat, giving geographically compact ownership.
+//   3. Ghost nodes: active-point neighbours of owned nodes that belong to
+//      other JEDI ranks.
 //   4. jediPoints_ records (iG, jG) for each node (owned first, then ghost).
 //   5. Atlas MeshBuilder → NodeColumns.
 //
-// Periodicity: i wraps (east-west); j is clamped (no tripolar fold for now).
+// Periodicity: i wraps (east-west); j is clamped (no tripolar fold).
 void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
-                                           const std::vector<double> & wetGlobal,
-                                           const std::vector<double> & lonGlobal,
-                                           const std::vector<double> & latGlobal)
+                                          const std::vector<double> & wetGlobal,
+                                          const std::vector<double> & lonGlobal,
+                                          const std::vector<double> & latGlobal)
 {
   using atlas::gidx_t;
   using atlas::idx_t;
 
-  // Periodic ocean test using MOM6's authoritative wet mask (i wraps, j clamped)
+  // Periodic ocean test — MOM6's wet mask (i wraps, j clamped)
   auto isOcean = [&](int i, int j) -> bool {
-    i = (i % niGlobal_ + niGlobal_) % niGlobal_;
-    if (j < 0 || j >= njGlobal_) return false;
-    return wetGlobal[j * niGlobal_ + i] > 0.5;
+    i = (i % niEff_ + niEff_) % niEff_;
+    if (j < 0 || j >= njEff_) return false;
+    return wetGlobal[j * niEff_ + i] > 0.5;
   };
 
   // --- Step 1: global active-point list (row-major scan order) ---
   struct APoint { int iG, jG; };
   std::vector<APoint> active;
-  active.reserve(niGlobal_ * njGlobal_);
+  active.reserve(niEff_ * njEff_);
 
-  for (int jG = 0; jG < njGlobal_; ++jG) {
-    for (int iG = 0; iG < niGlobal_; ++iG) {
+  for (int jG = 0; jG < njEff_; ++jG) {
+    for (int iG = 0; iG < niEff_; ++iG) {
       const bool ocean  = isOcean(iG, jG);
-      const bool fringe = !ocean && (isOcean(iG - 1, jG) || isOcean(iG + 1, jG) ||
-                                     isOcean(iG, jG - 1) || isOcean(iG, jG + 1));
+      const bool fringe = !ocean &&
+          (isOcean(iG - 1, jG) || isOcean(iG + 1, jG) ||
+           isOcean(iG, jG - 1) || isOcean(iG, jG + 1));
       if (ocean || fringe)
         active.push_back({iG, jG});
     }
@@ -295,11 +272,11 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
   nActiveGlobal_ = static_cast<int>(active.size());
 
   // --- Step 2: Atlas geographic partition ---
-  // Build an UnstructuredGrid from the active-point coordinates and let the
-  // "equal_regions" partitioner assign geographically compact latitude-band ownership.
+  // Build an UnstructuredGrid from the active-point coordinates and let
+  // the "equal_regions" partitioner assign geographically compact ownership.
   std::vector<atlas::PointXY> pts(nActiveGlobal_);
   for (int k = 0; k < nActiveGlobal_; ++k) {
-    const int gIdx = active[k].jG * niGlobal_ + active[k].iG;
+    const int gIdx = active[k].jG * niEff_ + active[k].iG;
     pts[k] = atlas::PointXY(lonGlobal[gIdx], latGlobal[gIdx]);
   }
   const atlas::UnstructuredGrid ugrid(pts);
@@ -323,27 +300,30 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
   std::unordered_map<int, int> activeMap;
   activeMap.reserve(nActiveGlobal_);
   for (int k = 0; k < nActiveGlobal_; ++k)
-    activeMap[active[k].jG * niGlobal_ + active[k].iG] = k;
+    activeMap[active[k].jG * niEff_ + active[k].iG] = k;
 
   // --- Step 3: identify ghost nodes ---
-  // First collect owned points, then scan their neighbours for cross-rank active points.
+  // Collect owned points, then scan their neighbours for cross-rank
+  // active points.
   std::vector<int> ghostIdxVec;
-  std::unordered_map<int, int> ghostSeen;   // active-list index → position in ghostIdxVec
+  // active-list index → position in ghostIdxVec
+  std::unordered_map<int, int> ghostSeen;
 
   for (int k = 0; k < nActiveGlobal_; ++k) {
     if (partOf[k] != rank) continue;
     const int iG = active[k].iG;
     const int jG = active[k].jG;
-    const int nbI[4] = { (iG - 1 + niGlobal_) % niGlobal_,
-                         (iG + 1) % niGlobal_, iG, iG };
+    const int nbI[4] = { (iG - 1 + niEff_) % niEff_,
+                         (iG + 1) % niEff_, iG, iG };
     const int nbJ[4] = { jG, jG, jG - 1, jG + 1 };
     for (int d = 0; d < 4; ++d) {
-      if (nbJ[d] < 0 || nbJ[d] >= njGlobal_) continue;
-      auto it = activeMap.find(nbJ[d] * niGlobal_ + nbI[d]);
+      if (nbJ[d] < 0 || nbJ[d] >= njEff_) continue;
+      auto it = activeMap.find(nbJ[d] * niEff_ + nbI[d]);
       if (it == activeMap.end()) continue;
       const int neighborK = it->second;
       if (partOf[neighborK] == rank) continue;
-      if (ghostSeen.emplace(neighborK, static_cast<int>(ghostIdxVec.size())).second)
+      const int gpos = static_cast<int>(ghostIdxVec.size());
+      if (ghostSeen.emplace(neighborK, gpos).second)
         ghostIdxVec.push_back(neighborK);
     }
   }
@@ -368,9 +348,9 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
   for (int n = 0; n < nTotal; ++n) {
     const int iG = jediPoints_[n].first;
     const int jG = jediPoints_[n].second;
-    lons[n]      = lonGlobal[jG * niGlobal_ + iG];
-    lats[n]      = latGlobal[jG * niGlobal_ + iG];
-    globalIdx[n] = static_cast<gidx_t>(jG * niGlobal_ + iG + 1);   // 1-based
+    lons[n]      = lonGlobal[jG * niEff_ + iG];
+    lats[n]      = latGlobal[jG * niEff_ + iG];
+    globalIdx[n] = static_cast<gidx_t>(jG * niEff_ + iG + 1);   // 1-based
     remoteIdx[n] = static_cast<idx_t>(n + 1);                       // 1-based
   }
   for (int g = 0; g < nGhost; ++g) {
@@ -399,9 +379,10 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
                     << " ghostCount="    << nGhost << std::endl;
 }
 
-// -------------------------------------------------------------------------------------------------
-// Populate mom6Fields_ on mom6FunctionSpace_ with geometry data for the local MOM6 compute domain.
-// All input arrays are global (size njGlobal*niGlobal, row-major); local slice is extracted here.
+// ---------------------------------------------------------------------------
+// Populate mom6Fields_ on mom6FunctionSpace_ with geometry data for the
+// local MOM6 compute domain.  All input arrays are global (size
+// njGlobal*niGlobal, row-major); local slice is extracted here.
 void GeometryMOM6::buildMom6Fields(const std::vector<double> & lonGlobal,
                                     const std::vector<double> & latGlobal,
                                     const std::vector<double> & depthGlobal,
@@ -457,7 +438,7 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lonGlobal,
   for (int jL = 0; jL < jCount_; ++jL) {
     for (int iL = 0; iL < iCount_; ++iL) {
       const int n    = jL * iCount_ + iL;
-      const int gIdx = (jStart_ - 1 + jL) * niGlobal_ + (iStart_ - 1 + iL);
+      const int gIdx = (jStart_ - 1 + jL) * niEff_ + (iStart_ - 1 + iL);
       vLon(n, 0)   = lonGlobal[gIdx];
       vLat(n, 0)   = latGlobal[gIdx];
       vDepth(n, 0) = depthGlobal[gIdx];
@@ -473,7 +454,7 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lonGlobal,
   }
 }
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Populate fields_ on the JEDI unstructured functionSpace_ from global arrays.
 // Node ordering follows jediPoints_ (owned nodes first, then ghost nodes).
 void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
@@ -532,7 +513,7 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
   for (int n = 0; n < npts; ++n) {
     const int iG   = jediPoints_[n].first;
     const int jG   = jediPoints_[n].second;
-    const int gIdx = jG * niGlobal_ + iG;
+    const int gIdx = jG * niEff_ + iG;
     vLon(n, 0)   = lonGlobal[gIdx];
     vLat(n, 0)   = latGlobal[gIdx];
     vDepth(n, 0) = depthGlobal[gIdx];
@@ -545,11 +526,48 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
     vLonV(n, 0)  = lonVGlobal[gIdx];
     vLatV(n, 0)  = latVGlobal[gIdx];
   }
+
+  buildDistFromCoast(lonGlobal, latGlobal, wetGlobal);
 }
 
-// -------------------------------------------------------------------------------------------------
-// Build scatter/gather map: for each JEDI-owned point, record the owning MOM6 rank and
-// the row-major local index on that rank.  Deterministic — no MPI needed.
+// ---------------------------------------------------------------------------
+// Compute great-circle distance (metres) from each JEDI point to the
+// nearest land cell.  lonGlobal/latGlobal/wetGlobal are full global arrays
+// (all ranks have them), so no MPI needed.
+void GeometryMOM6::buildDistFromCoast(const std::vector<double> & lonGlobal,
+                                       const std::vector<double> & latGlobal,
+                                       const std::vector<double> & wetGlobal)
+{
+  // Build KD-tree from all global land points (wet == 0)
+  atlas::util::IndexKDTree kdtree;
+  const int nGlobal = static_cast<int>(wetGlobal.size());
+  for (int k = 0; k < nGlobal; ++k) {
+    if (wetGlobal[k] == 0.0)
+      kdtree.insert(atlas::PointLonLat{lonGlobal[k], latGlobal[k]},
+                    static_cast<atlas::idx_t>(k));
+  }
+  kdtree.build();
+
+  atlas::Field fDist = functionSpace_.createField<double>(
+      atlas::option::name("dist_from_coast") | atlas::option::levels(1));
+  auto vDist = atlas::array::make_view<double, 2>(fDist);
+
+  const int npts = static_cast<int>(jediPoints_.size());
+  for (int n = 0; n < npts; ++n) {
+    const int gIdx = jediPoints_[n].second * niEff_ + jediPoints_[n].first;
+    const atlas::PointLonLat pt{lonGlobal[gIdx], latGlobal[gIdx]};
+    const auto nearest = kdtree.closestPoint(pt);
+    const int landK = static_cast<int>(nearest.payload());
+    vDist(n, 0) = atlas::util::Earth::distance(
+        pt, atlas::PointLonLat{lonGlobal[landK], latGlobal[landK]});
+  }
+  fields_.add(fDist);
+}
+
+// ---------------------------------------------------------------------------
+// Build scatter/gather map: for each JEDI-owned point, record the owning
+// MOM6 rank and the row-major local index on that rank.
+// Deterministic — no MPI needed.
 void GeometryMOM6::buildScatterMap()
 {
   scatterMap_.mom6Rank.resize(ownedCount_);
@@ -560,14 +578,14 @@ void GeometryMOM6::buildScatterMap()
     const int jG = jediPoints_[n].second;
 
     // Find MOM6 piX (i-rank) and piY (j-rank) owning (iG, jG)
-    const int baseX  = niGlobal_ / layoutX_;
-    const int extraX = niGlobal_ % layoutX_;
+    const int baseX  = niEff_ / layoutX_;
+    const int extraX = niEff_ % layoutX_;
     const int piX    = (iG < extraX * (baseX + 1))
                        ? iG / (baseX + 1)
                        : extraX + (iG - extraX * (baseX + 1)) / baseX;
 
-    const int baseY  = njGlobal_ / layoutY_;
-    const int extraY = njGlobal_ % layoutY_;
+    const int baseY  = njEff_ / layoutY_;
+    const int extraY = njEff_ % layoutY_;
     const int piY    = (jG < extraY * (baseY + 1))
                        ? jG / (baseY + 1)
                        : extraY + (jG - extraY * (baseY + 1)) / baseY;
@@ -576,18 +594,225 @@ void GeometryMOM6::buildScatterMap()
 
     // 0-based start of that tile
     int iStart0 = 0;
-    for (int k = 0; k < piX; ++k) iStart0 += computeExtent(niGlobal_, layoutX_, k);
+    for (int k = 0; k < piX; ++k) iStart0 += computeExtent(niEff_, layoutX_, k);
     int jStart0 = 0;
-    for (int k = 0; k < piY; ++k) jStart0 += computeExtent(njGlobal_, layoutY_, k);
+    for (int k = 0; k < piY; ++k) jStart0 += computeExtent(njEff_, layoutY_, k);
 
-    scatterMap_.mom6LocalIdx[n] = (jG - jStart0) * computeExtent(niGlobal_, layoutX_, piX)
-                                + (iG - iStart0);
+    scatterMap_.mom6LocalIdx[n] =
+        (jG - jStart0) * computeExtent(niEff_, layoutX_, piX)
+        + (iG - iStart0);
   }
 }
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Precompute allToAllv metadata from ScatterMap.
+// Called once after buildScatterMap.
+//
+// Roles (from each rank's perspective during scatter, i.e. MOM6 → JEDI):
+//   recvCounts/recvDispl : values this rank wants from each MOM6 rank
+//   sendCounts/sendDispl : values this rank must send to each JEDI rank
+//   sendLocalIdx : local mom6FunctionSpace_ indices to pack per send
+void GeometryMOM6::buildExchangePlan()
+{
+  const int npes = static_cast<int>(comm_.size());
+
+  // 1. Count requests from each MOM6 rank (pure local)
+  std::vector<int> recvCounts(npes, 0);
+  for (int n = 0; n < ownedCount_; ++n)
+    recvCounts[scatterMap_.mom6Rank[n]]++;
+
+  // 2. Exchange counts: MOM6 ranks learn how many values each JEDI rank
+  //    requests
+  std::vector<int> sendCounts(npes, 0);
+  comm_.allToAll(recvCounts, sendCounts);
+
+  // 3. Build recvOrder: sort owned-JEDI indices by source MOM6 rank so that the
+  //    recv buffer arrives in contiguous rank-order blocks.
+  std::vector<int> recvOrder(ownedCount_);
+  std::iota(recvOrder.begin(), recvOrder.end(), 0);
+  std::stable_sort(recvOrder.begin(), recvOrder.end(),
+    [&](int a, int b) {
+      return scatterMap_.mom6Rank[a] < scatterMap_.mom6Rank[b];
+    });
+
+  // 4. Prefix-sum displacements
+  std::vector<int> recvDispl(npes, 0), sendDispl(npes, 0);
+  for (int r = 1; r < npes; ++r) {
+    recvDispl[r] = recvDispl[r-1] + recvCounts[r-1];
+    sendDispl[r] = sendDispl[r-1] + sendCounts[r-1];
+  }
+
+  // 5. Each JEDI rank sends the requested mom6LocalIdx values to the
+  //    owning MOM6 ranks
+  std::vector<int> reqIdxBuf(ownedCount_);
+  for (int i = 0; i < ownedCount_; ++i)
+    reqIdxBuf[i] = scatterMap_.mom6LocalIdx[recvOrder[i]];
+
+  const int totalSend = sendDispl[npes-1] + sendCounts[npes-1];
+  std::vector<int> sendLocalIdx(totalSend);
+  comm_.allToAllv(reqIdxBuf.data(),    recvCounts.data(), recvDispl.data(),
+                  sendLocalIdx.data(), sendCounts.data(), sendDispl.data());
+
+  exchangePlan_.recvCounts   = std::move(recvCounts);
+  exchangePlan_.recvDispl    = std::move(recvDispl);
+  exchangePlan_.recvOrder    = std::move(recvOrder);
+  exchangePlan_.sendCounts   = std::move(sendCounts);
+  exchangePlan_.sendDispl    = std::move(sendDispl);
+  exchangePlan_.sendLocalIdx = std::move(sendLocalIdx);
+}
+
+// ---------------------------------------------------------------------------
+// Scatter a field from the MOM6 structured decomposition to the JEDI
+// unstructured one.  Only owned JEDI nodes are filled; ghost nodes are
+// left untouched.
+void GeometryMOM6::scatterToJedi(const atlas::Field & mom6Field,
+                                       atlas::Field * jediField) const
+{
+  const int npes  = static_cast<int>(comm_.size());
+  const int nSend = exchangePlan_.sendDispl[npes-1]
+                  + exchangePlan_.sendCounts[npes-1];
+
+  // MOM6 side: pack values at the requested local indices
+  auto vMom6 = atlas::array::make_view<double, 2>(mom6Field);
+  std::vector<double> sendBuf(nSend);
+  for (int i = 0; i < nSend; ++i)
+    sendBuf[i] = vMom6(exchangePlan_.sendLocalIdx[i], 0);
+
+  // AllToAllv: MOM6 ranks → JEDI ranks
+  std::vector<double> recvBuf(ownedCount_);
+  comm_.allToAllv(sendBuf.data(),
+                  exchangePlan_.sendCounts.data(),
+                  exchangePlan_.sendDispl.data(),
+                  recvBuf.data(),
+                  exchangePlan_.recvCounts.data(),
+                  exchangePlan_.recvDispl.data());
+
+  // JEDI side: unpack into owned positions using the recvOrder permutation
+  auto vJedi = atlas::array::make_view<double, 2>(*jediField);
+  for (int i = 0; i < ownedCount_; ++i)
+    vJedi(exchangePlan_.recvOrder[i], 0) = recvBuf[i];
+}
+
+// ---------------------------------------------------------------------------
+// Gather a field from the JEDI unstructured decomposition back to the
+// MOM6 structured one.  Only active (JEDI) point positions in mom6Field
+// are updated; interior land cells are unchanged.
+void GeometryMOM6::gatherFromJedi(const atlas::Field & jediField,
+                                        atlas::Field * mom6Field) const
+{
+  const int npes  = static_cast<int>(comm_.size());
+  const int nRecv = exchangePlan_.sendDispl[npes-1]
+                  + exchangePlan_.sendCounts[npes-1];
+
+  // JEDI side: pack owned values in the same order scatter used
+  auto vJedi = atlas::array::make_view<double, 2>(jediField);
+  std::vector<double> sendBuf(ownedCount_);
+  for (int i = 0; i < ownedCount_; ++i)
+    sendBuf[i] = vJedi(exchangePlan_.recvOrder[i], 0);
+
+  // AllToAllv: JEDI → MOM6 (send/recv descriptors transposed vs scatter)
+  std::vector<double> recvBuf(nRecv);
+  comm_.allToAllv(sendBuf.data(),
+                  exchangePlan_.recvCounts.data(),
+                  exchangePlan_.recvDispl.data(),
+                  recvBuf.data(),
+                  exchangePlan_.sendCounts.data(),
+                  exchangePlan_.sendDispl.data());
+
+  // MOM6 side: unpack at the originally requested local indices
+  auto vMom6 = atlas::array::make_view<double, 2>(*mom6Field);
+  for (int i = 0; i < nRecv; ++i)
+    vMom6(exchangePlan_.sendLocalIdx[i], 0) = recvBuf[i];
+}
+
+// ---------------------------------------------------------------------------
+// Self-consistency check.
+// Check 1: invert the scatter map; verify it recovers jediPoints_.
+// Check 2: scatter mom6Fields_["lon"] and compare with fields_["lon"].
+// Check 3: gather fields_["depth"] into a temp MOM6 field and compare
+//          with mom6Fields_["depth"] at all active point positions.
+void GeometryMOM6::checkScatterMap()
+{
+  const int rank  = static_cast<int>(comm_.rank());
+  const int npes  = static_cast<int>(comm_.size());
+  int nErrors = 0;
+
+  // --- Check 1: index arithmetic ---
+  for (int n = 0; n < ownedCount_; ++n) {
+    const int r      = scatterMap_.mom6Rank[n];
+    const int locIdx = scatterMap_.mom6LocalIdx[n];
+
+    const int piX = r / layoutY_;
+    const int piY = r % layoutY_;
+
+    int iStart0 = 0;
+    for (int k = 0; k < piX; ++k) iStart0 += computeExtent(niEff_, layoutX_, k);
+    int jStart0 = 0;
+    for (int k = 0; k < piY; ++k) jStart0 += computeExtent(njEff_, layoutY_, k);
+
+    const int iCount   = computeExtent(niEff_, layoutX_, piX);
+    const int iG_check = iStart0 + (locIdx % iCount);
+    const int jG_check = jStart0 + (locIdx / iCount);
+
+    const int iG = jediPoints_[n].first;
+    const int jG = jediPoints_[n].second;
+
+    if (iG_check != iG || jG_check != jG) {
+      oops::Log::error() << "checkScatterMap rank " << rank << " point " << n
+                         << ": expected (" << iG << "," << jG
+                         << ") got (" << iG_check << ","
+                         << jG_check << ")" << std::endl;
+      ++nErrors;
+    }
+  }
+
+  // --- Check 2: scatter lon and compare with fields_["lon"] ---
+  atlas::Field tempLon = functionSpace_.createField<double>(
+      atlas::option::name("temp_lon") | atlas::option::levels(1));
+  scatterToJedi(mom6Fields_.field("lon"), &tempLon);
+
+  auto vScattered = atlas::array::make_view<double, 2>(tempLon);
+  auto vJediLon   = atlas::array::make_view<double, 2>(fields_.field("lon"));
+  for (int n = 0; n < ownedCount_; ++n) {
+    if (std::abs(vScattered(n, 0) - vJediLon(n, 0)) > 1e-10) {
+      oops::Log::error() << "checkScatterMap scatter lon mismatch rank " << rank
+                         << " n=" << n << ": got " << vScattered(n, 0)
+                         << " expected " << vJediLon(n, 0) << std::endl;
+      ++nErrors;
+    }
+  }
+
+  // --- Check 3: gather depth and compare with mom6Fields_["depth"] ---
+  atlas::Field tempDepth = mom6FunctionSpace_.createField<double>(
+      atlas::option::name("temp_depth") | atlas::option::levels(1));
+  gatherFromJedi(fields_.field("depth"), &tempDepth);
+
+  auto vGathered  = atlas::array::make_view<double, 2>(tempDepth);
+  auto vMom6Depth = atlas::array::make_view<double, 2>(
+                       mom6Fields_.field("depth"));
+  const int nRecv = exchangePlan_.sendDispl[npes-1]
+                  + exchangePlan_.sendCounts[npes-1];
+  for (int i = 0; i < nRecv; ++i) {
+    const int localIdx = exchangePlan_.sendLocalIdx[i];
+    if (std::abs(vGathered(localIdx, 0) - vMom6Depth(localIdx, 0)) > 1e-10) {
+      ++nErrors;
+    }
+  }
+
+  comm_.allReduceInPlace(nErrors, eckit::mpi::sum());
+  if (nErrors > 0)
+    throw eckit::Exception(
+        "checkScatterMap: " + std::to_string(nErrors) + " error(s)",
+        Here());
+
+  oops::Log::info() << "checkScatterMap: index + scatter + gather OK on rank "
+                    << rank << std::endl;
+}
+
+// ---------------------------------------------------------------------------
 GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
                            const eckit::mpi::Comm & comm)
+  : comm_(comm)
 {
   oops::Log::trace() << "GeometryMOM6 constructor starting" << std::endl;
 
@@ -603,9 +828,19 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   layoutX_ = layout[0];
   layoutY_ = layout[1];
 
+  coarsenFactor_ = conf.getInt("coarsen factor", 1);
+  if (niGlobal_ % coarsenFactor_ != 0 || njGlobal_ % coarsenFactor_ != 0)
+    throw eckit::BadValue("coarsen_factor=" + std::to_string(coarsenFactor_)
+        + " does not divide NIGLOBAL=" + std::to_string(niGlobal_)
+        + " x NJGLOBAL=" + std::to_string(njGlobal_)
+        + " (need both divisible)", Here());
+  niEff_ = niGlobal_ / coarsenFactor_;
+  njEff_ = njGlobal_ / coarsenFactor_;
+
   oops::Log::debug() << "GeometryMOM6: NI=" << niGlobal_ << " NJ=" << njGlobal_
                      << " NZ=" << numLevels_
-                     << " layout=(" << layoutX_ << "," << layoutY_ << ")" << std::endl;
+                     << " layout=(" << layoutX_ << "," << layoutY_ << ")"
+                     << " coarsen_factor=" << coarsenFactor_ << std::endl;
 
   // 2. Compute local MOM6 domain extent for this rank
   //    MOM6 convention: rank = piX * layoutY_ + piY
@@ -613,43 +848,42 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   const int piX  = rank / layoutY_;
   const int piY  = rank % layoutY_;
 
-  iCount_ = computeExtent(niGlobal_, layoutX_, piX);
-  jCount_ = computeExtent(njGlobal_, layoutY_, piY);
+  iCount_ = computeExtent(niEff_, layoutX_, piX);
+  jCount_ = computeExtent(njEff_, layoutY_, piY);
 
   iStart_ = 1;
-  for (int k = 0; k < piX; ++k) iStart_ += computeExtent(niGlobal_, layoutX_, k);
+  for (int k = 0; k < piX; ++k) iStart_ += computeExtent(niEff_, layoutX_, k);
   jStart_ = 1;
-  for (int k = 0; k < piY; ++k) jStart_ += computeExtent(njGlobal_, layoutY_, k);
+  for (int k = 0; k < piY; ++k) jStart_ += computeExtent(njEff_, layoutY_, k);
 
   oops::Log::debug() << "GeometryMOM6 rank " << rank
                      << ": iStart=" << iStart_ << " iCount=" << iCount_
-                     << " jStart=" << jStart_ << " jCount=" << jCount_ << std::endl;
+                     << " jStart=" << jStart_
+                     << " jCount=" << jCount_ << std::endl;
 
-  // 3. Read global grid arrays (all ranks read identically; each is njGlobal*niGlobal)
+  // 3. Read global grid arrays (all ranks read identically)
   const std::string hgridPath = inputDir + "/INPUT/ocean_hgrid.nc";
 
-  std::vector<double> lon, lat;
-  readHgridLonLat(hgridPath, lon, lat);
-
-  std::vector<double> dxT, dyT, areaT;
-  readHgridMetrics(hgridPath, dxT, dyT, areaT);
-
-  std::vector<double> lonU, latU, lonV, latV;
-  readHgridUVLonLat(hgridPath, lonU, latU, lonV, latV);
+  std::vector<double> lon, lat, dxT, dyT, areaT, lonU, latU, lonV, latV;
+  readHgrid(hgridPath,
+            &lon, &lat, &dxT, &dyT, &areaT, &lonU, &latU, &lonV, &latV);
 
   std::vector<double> depth, wet;
-  readTopog(inputDir + "/INPUT/ocean_topog.nc", depth, wet);
+  readTopog(inputDir + "/INPUT/ocean_topog.nc", &depth, &wet);
 
   // 4. MOM6 structured function space and fields (local compute domain)
   buildMom6FunctionSpace(comm, lon, lat);
-  buildMom6Fields(lon, lat, depth, wet, dxT, dyT, areaT, lonU, latU, lonV, latV);
+  buildMom6Fields(lon, lat, depth, wet, dxT, dyT, areaT,
+                  lonU, latU, lonV, latV);
 
-  // 5. JEDI unstructured function space and fields (ocean + fringe, load-balanced)
+  // 5. JEDI unstructured function space and fields (ocean + fringe)
   buildJediFunctionSpace(comm, wet, lon, lat);
   buildFields(lon, lat, depth, wet, dxT, dyT, areaT, lonU, latU, lonV, latV);
 
-  // 6. Scatter/gather map: JEDI ↔ MOM6
+  // 6. Scatter/gather map and exchange plan: JEDI ↔ MOM6
   buildScatterMap();
+  buildExchangePlan();
+  if (conf.getBool("check scatter map", false)) checkScatterMap();
 
   // 7. Optionally save grids to NetCDF / debug files
   if (conf.has("save grid to"))
@@ -662,9 +896,10 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   oops::Log::trace() << "GeometryMOM6 constructor done" << std::endl;
 }
 
-// -------------------------------------------------------------------------------------------------
-// Gather all MOM6-structured geometry fields from all ranks and write a (nj, ni) NetCDF
-// file on rank 0.  Uses mom6Fields_ which holds the local MOM6 compute-domain data.
+// ---------------------------------------------------------------------------
+// Gather all MOM6-structured geometry fields from all ranks and write a
+// (nj, ni) NetCDF file on rank 0.  Uses mom6Fields_ which holds the local
+// MOM6 compute-domain data.
 void GeometryMOM6::saveStructuredGrid(const std::string & filename,
                                        const eckit::mpi::Comm & comm) const
 {
@@ -696,29 +931,31 @@ void GeometryMOM6::saveStructuredGrid(const std::string & filename,
     for (int p = 0; p < npes; ++p) {
       const int px = p / layoutY_;
       const int py = p % layoutY_;
-      allDoms[p].iCount = computeExtent(niGlobal_, layoutX_, px);
-      allDoms[p].jCount = computeExtent(njGlobal_, layoutY_, py);
+      allDoms[p].iCount = computeExtent(niEff_, layoutX_, px);
+      allDoms[p].jCount = computeExtent(njEff_, layoutY_, py);
       allDoms[p].iStart = 1;
       for (int k = 0; k < px; ++k)
-        allDoms[p].iStart += computeExtent(niGlobal_, layoutX_, k);
+        allDoms[p].iStart += computeExtent(niEff_, layoutX_, k);
       allDoms[p].jStart = 1;
       for (int k = 0; k < py; ++k)
-        allDoms[p].jStart += computeExtent(njGlobal_, layoutY_, k);
+        allDoms[p].jStart += computeExtent(njEff_, layoutY_, k);
     }
   }
 
   // Step 3: create NetCDF file on root
   int ncid = -1;
   std::vector<int> varids(fieldNames.size(), -1);
+  int part_varid = -1;
   if (comm.rank() == root) {
     if (nc_create(filename.c_str(), NC_CLOBBER | NC_NETCDF4, &ncid) != NC_NOERR)
       throw eckit::CantOpenFile(filename, Here());
     int nj_dim, ni_dim;
-    nc_def_dim(ncid, "nj", static_cast<size_t>(njGlobal_), &nj_dim);
-    nc_def_dim(ncid, "ni", static_cast<size_t>(niGlobal_), &ni_dim);
+    nc_def_dim(ncid, "nj", static_cast<size_t>(njEff_), &nj_dim);
+    nc_def_dim(ncid, "ni", static_cast<size_t>(niEff_), &ni_dim);
     const int dims[2] = {nj_dim, ni_dim};
     for (size_t f = 0; f < fieldNames.size(); ++f)
       nc_def_var(ncid, fieldNames[f].c_str(), NC_DOUBLE, 2, dims, &varids[f]);
+    nc_def_var(ncid, "partition", NC_INT, 2, dims, &part_varid);
     nc_enddef(ncid);
   }
 
@@ -730,14 +967,15 @@ void GeometryMOM6::saveStructuredGrid(const std::string & filename,
   }
 
   for (size_t f = 0; f < fieldNames.size(); ++f) {
-    auto view = atlas::array::make_view<double, 2>(mom6Fields_.field(fieldNames[f]));
+    auto view = atlas::array::make_view<double, 2>(
+                    mom6Fields_.field(fieldNames[f]));
     std::vector<double> localData(localSize);
     for (int n = 0; n < localSize; ++n) localData[n] = view(n, 0);
 
     comm.gatherv(localData, recvBuf, recvcounts, displs, root);
 
     if (comm.rank() == root) {
-      std::vector<double> global(static_cast<size_t>(njGlobal_) * niGlobal_, 0.0);
+      std::vector<double> global(static_cast<size_t>(njEff_) * niEff_, 0.0);
       for (int p = 0; p < npes; ++p) {
         const DomInfo & d = allDoms[p];
         const int off = displs[p];
@@ -745,24 +983,38 @@ void GeometryMOM6::saveStructuredGrid(const std::string & filename,
           for (int iL = 0; iL < d.iCount; ++iL) {
             const int jG = d.jStart - 1 + jL;
             const int iG = d.iStart - 1 + iL;
-            global[jG * niGlobal_ + iG] = recvBuf[off + jL * d.iCount + iL];
+            global[jG * niEff_ + iG] = recvBuf[off + jL * d.iCount + iL];
           }
       }
       nc_put_var_double(ncid, varids[f], global.data());
     }
   }
 
-  if (comm.rank() == root) nc_close(ncid);
+  // Write partition map: partition[jG][iG] = owning MOM6 rank
+  if (comm.rank() == root) {
+    std::vector<int> partGlobal(static_cast<size_t>(njEff_) * niEff_, -1);
+    for (int p = 0; p < npes; ++p) {
+      const DomInfo & d = allDoms[p];
+      for (int jL = 0; jL < d.jCount; ++jL)
+        for (int iL = 0; iL < d.iCount; ++iL) {
+          const int jG = d.jStart - 1 + jL;
+          const int iG = d.iStart - 1 + iL;
+          partGlobal[jG * niEff_ + iG] = p;
+        }
+    }
+    nc_put_var_int(ncid, part_varid, partGlobal.data());
+    nc_close(ncid);
+  }
 }
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // Save the JEDI geometry fields to NetCDF using oops Atlas IO helpers.
 void GeometryMOM6::saveGrid(const std::string & filename,
                              const eckit::mpi::Comm & comm) const
 {
   atlas::FieldSet toWrite;
   for (const char * name : {"depth", "mask2d", "dxT", "dyT", "areaT",
-                            "lonu", "latu", "lonv", "latv"})
+                            "lonu", "latu", "lonv", "latv", "dist_from_coast"})
     toWrite.add(fields_.field(name));
 
   std::string filepath = filename;
@@ -776,8 +1028,8 @@ void GeometryMOM6::saveGrid(const std::string & filename,
   util::writeFieldSet(comm, conf, toWrite);
 }
 
-// -------------------------------------------------------------------------------------------------
-// Write debug output for inspecting Atlas domain decomposition and halo structure.
+// ---------------------------------------------------------------------------
+// Write debug output for inspecting Atlas domain decomposition and halo.
 void GeometryMOM6::saveDebugMesh(const std::string & prefix,
                                   const eckit::mpi::Comm & comm) const
 {
@@ -803,19 +1055,21 @@ void GeometryMOM6::saveDebugMesh(const std::string & prefix,
 
     auto lonlatView = atlas::array::make_view<double,        2>(nodes.lonlat());
     auto ghostView  = atlas::array::make_view<int,           1>(nodes.ghost());
-    auto partView   = atlas::array::make_view<int,           1>(nodes.partition());
-    auto gidxView   = atlas::array::make_view<atlas::gidx_t, 1>(nodes.global_index());
-    auto maskView   = atlas::array::make_view<double,        2>(fields_.field("mask2d"));
+    auto partView = atlas::array::make_view<int, 1>(nodes.partition());
+    auto gidxView = atlas::array::make_view<atlas::gidx_t, 1>(
+                        nodes.global_index());
+    auto maskView = atlas::array::make_view<double, 2>(
+                        fields_.field("mask2d"));
 
     std::vector<double>    lons(nNodes), lats(nNodes), mask(nNodes);
     std::vector<int>       ghost(nNodes), part(nNodes);
-    std::vector<long long> gidx(nNodes);
+    std::vector<int64_t>   gidx(nNodes);
     for (int n = 0; n < nNodes; ++n) {
       lons[n]  = lonlatView(n, 0);
       lats[n]  = lonlatView(n, 1);
       ghost[n] = ghostView(n);
       part[n]  = partView(n);
-      gidx[n]  = static_cast<long long>(gidxView(n));
+      gidx[n]  = static_cast<int64_t>(gidxView(n));
       mask[n]  = maskView(n, 0);
     }
 
@@ -836,13 +1090,13 @@ void GeometryMOM6::saveDebugMesh(const std::string & prefix,
     nc_def_var(ncid, "rank",         NC_INT,    0, nullptr,   &vid_rank);
     nc_enddef(ncid);
 
-    nc_put_var_double  (ncid, vid_lon,   lons.data());
-    nc_put_var_double  (ncid, vid_lat,   lats.data());
-    nc_put_var_int     (ncid, vid_ghost, ghost.data());
-    nc_put_var_int     (ncid, vid_part,  part.data());
-    nc_put_var_longlong(ncid, vid_gidx,  gidx.data());
-    nc_put_var_double  (ncid, vid_mask,  mask.data());
-    nc_put_var_int     (ncid, vid_rank,  &rank);
+    nc_put_var_double(ncid, vid_lon,   lons.data());
+    nc_put_var_double(ncid, vid_lat,   lats.data());
+    nc_put_var_int(ncid, vid_ghost, ghost.data());
+    nc_put_var_int(ncid, vid_part,  part.data());
+    nc_put_var_longlong(ncid, vid_gidx, gidx.data());
+    nc_put_var_double(ncid, vid_mask,  mask.data());
+    nc_put_var_int(ncid, vid_rank,  &rank);
     nc_close(ncid);
 
     oops::Log::info() << "GeometryMOM6::saveDebugMesh: rank " << rank
@@ -850,7 +1104,7 @@ void GeometryMOM6::saveDebugMesh(const std::string & prefix,
   }
 }
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 void GeometryMOM6::print(std::ostream & os) const
 {
   const int    npes     = layoutX_ * layoutY_;
@@ -860,14 +1114,23 @@ void GeometryMOM6::print(std::ostream & os) const
                           : 0.0;
   os << "\n"
      << "  +----- MOM6 Geometry ------------------------------------------+\n"
-     << "  |  Grid      : " << niGlobal_ << " x " << njGlobal_ << " x " << numLevels_
-                            << "  (NI x NJ x NZ)\n"
+     << "  |  Grid      : " << niEff_ << " x " << njEff_ << " x " << numLevels_
+                            << "  (NI x NJ x NZ)"
+                            << (coarsenFactor_ > 1
+                                ? "  [coarsen_factor="
+                                  + std::to_string(coarsenFactor_) + "]"
+                                : "") << "\n"
      << "  |  MOM6 layout : " << layoutX_ << " x " << layoutY_
                               << "  (" << npes << " MPI tasks)\n"
      << "  |  Min depth   : " << minimumDepth_ << " m\n"
      << "  |  ---- JEDI unstructured partition (equal_regions) ----------\n"
      << "  |  Active pts  : " << nActiveGlobal_
                               << "  (ocean + land fringe)\n"
+     << "  |  Land removed: " << (niEff_ * njEff_ - nActiveGlobal_)
+                              << "  (" << std::fixed << std::setprecision(1)
+                              << 100.0 * (niEff_ * njEff_ - nActiveGlobal_)
+                                       / (niEff_ * njEff_)
+                              << "% of full grid)\n"
      << "  |  Per rank    : avg " << static_cast<int>(avg)
                                   << "  min " << ownedMin_
                                   << "  max " << ownedMax_
@@ -878,13 +1141,13 @@ void GeometryMOM6::print(std::ostream & os) const
      << "  +--------------------------------------------------------------+\n";
 }
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 eckit::LocalConfiguration GeometryMOM6::gridSpecific() const
 {
   eckit::LocalConfiguration conf;
   conf.set("grid_type",      "mom6");
-  conf.set("ni_global",      niGlobal_);
-  conf.set("nj_global",      njGlobal_);
+  conf.set("ni_global",      niEff_);
+  conf.set("nj_global",      njEff_);
   conf.set("nz",             numLevels_);
   conf.set("layout_x",       layoutX_);
   conf.set("layout_y",       layoutY_);
@@ -893,5 +1156,5 @@ eckit::LocalConfiguration GeometryMOM6::gridSpecific() const
   return conf;
 }
 
-// -------------------------------------------------------------------------------------------------
-} // namespace ijedi
+// ---------------------------------------------------------------------------
+}  // namespace ijedi

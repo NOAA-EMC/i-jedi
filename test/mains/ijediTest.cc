@@ -8,6 +8,7 @@
 #include "oops/runs/Run.h"
 #include "oops/test/interface/Geometry.h"
 #include "oops/test/interface/GeometryIterator.h"
+#include "oops/test/interface/State.h"
 
 // -------------------------------------------------------------------------------------------------
 
@@ -29,6 +30,11 @@ int runApp(int argc, char **argv, const std::string testName)
   //{
   //  return std::make_unique<test::GeometryIterator<ijedi::Traits>>();
   //};
+
+  tests["state"] = []()
+  {
+    return std::make_unique<test::State<ijedi::Traits>>();
+  };
 
   // Create application object and point to it
   auto it = tests.find(testName);
@@ -57,6 +63,7 @@ int main(int argc, char **argv)
   const std::set<std::string> validtests = {
       "geometry",
       "geometry_iterator",
+      "state",
   };
   ASSERT_MSG(validtests.find(testApp) != validtests.end(), "Test not recognized: " + testApp);
 

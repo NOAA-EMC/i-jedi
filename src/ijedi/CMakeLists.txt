@@ -25,6 +25,12 @@ list(APPEND ijedi_src_files
   FieldMetadata/FieldsMetadataDefault.h
 
   # State
+  State/State.cc
+  State/State.h
+  State/base/StateBase.cc
+  State/base/StateBase.h
+  State/mom6/StateMOM6.cc
+  State/mom6/StateMOM6.h
 
   # Increment
 

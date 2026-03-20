@@ -23,7 +23,7 @@ namespace ijedi
 
   class GeometryFV3 : public GeometryBase
   {
-  public:
+   public:
     GeometryFV3(const eckit::Configuration &, const eckit::mpi::Comm &);
     void print(std::ostream &) const override;
 
@@ -36,12 +36,12 @@ namespace ijedi
     // Unified access to grid-specific parameters
     eckit::LocalConfiguration gridSpecific() const override;
 
-  private:
+   private:
     // FV3-specific grid dimensions (cubed-sphere)
     int npx_;     // Number of grid points in x-direction (per tile)
     int npy_;     // Number of grid points in y-direction (per tile)
     int npz_;     // Number of vertical levels (same as numLevels_)
-    int tileNum_; // Tile number for this MPI rank
+    int tileNum_;  // Tile number for this MPI rank
   };
 
-} // namespace ijedi
+}  // namespace ijedi

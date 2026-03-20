@@ -23,7 +23,7 @@ namespace ijedi
 
   class GeometryMPAS : public GeometryBase
   {
-  public:
+   public:
     GeometryMPAS(const eckit::Configuration &, const eckit::mpi::Comm &);
     void print(std::ostream &) const override;
 
@@ -31,4 +31,4 @@ namespace ijedi
     eckit::LocalConfiguration gridSpecific() const override;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

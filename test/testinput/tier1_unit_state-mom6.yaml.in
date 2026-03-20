@@ -1,0 +1,35 @@
+geometry:
+  geometry_type: mom6
+  input_dir: @MOM6_TESTDATA_DIR@
+  coarsen factor: 1
+
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [3, 2]
+    MINIMUM_DEPTH: 0.5
+
+state test:
+  tolerance: 1.0e-6
+  date: "2020-01-01T00:00:00Z"
+
+  statefile:
+    variables: [tocn, socn]
+    date: "2020-01-01T00:00:00Z"
+    analytic init: true
+
+  norm file: 1.0
+
+  test variable change constructor: true
+  construct to variables: [tocn]
+
+  write then read test:
+    state write:
+      file format: fieldset
+      filepath: mom6_state_write_test
+    state read:
+      variables: [tocn, socn]
+      date: "2020-01-01T00:00:00Z"
+      file format: fieldset
+      filepath: mom6_state_write_test

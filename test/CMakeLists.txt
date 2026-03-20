@@ -16,17 +16,21 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml.in"
     "${CMAKE_CURRENT_BINARY_DIR}/testinput/tier1_unit_geometry-mom6.yaml"
     @ONLY)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_state-mom6.yaml.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/testinput/tier1_unit_state-mom6.yaml"
+    @ONLY)
 add_custom_command(
     OUTPUT "${MOM6_TESTDATA_DIR}/INPUT/ocean_hgrid.nc"
            "${MOM6_TESTDATA_DIR}/INPUT/ocean_topog.nc"
            "${MOM6_TESTDATA_DIR}/soca_gridspec.72x35x25.nc"
     COMMAND ${Python3_EXECUTABLE}
-            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/gen_mom6_testdata.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/mom6/gen_mom6_testdata.py"
             "${MOM6_TESTDATA_DIR}"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/testdata/gen_mom6_testdata.py"
-            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/ocean_hgrid.cdl"
-            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/ocean_topog.cdl"
-            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/soca_gridspec.72x35x25.cdl"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/testdata/mom6/gen_mom6_testdata.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/mom6/ocean_hgrid.cdl"
+            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/mom6/ocean_topog.cdl"
+            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/mom6/soca_gridspec.72x35x25.cdl"
     COMMENT "Generating MOM6 geometry test data from CDL"
     VERBATIM)
 add_custom_target(mom6_testdata ALL
@@ -35,7 +39,7 @@ add_custom_target(mom6_testdata ALL
 # CTest fixture so MOM6 tests wait for data generation
 add_test(NAME mom6_testdata_setup
     COMMAND ${Python3_EXECUTABLE}
-            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/gen_mom6_testdata.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/mom6/gen_mom6_testdata.py"
             "${MOM6_TESTDATA_DIR}")
 set_tests_properties(mom6_testdata_setup PROPERTIES
     FIXTURES_SETUP mom6_testdata_fixture)
@@ -44,8 +48,10 @@ set_tests_properties(mom6_testdata_setup PROPERTIES
 # -------------------------------------------------------
 # All tests are built; use ctest -R tier<N> to run specific tiers
 # Note: CONFIGURE_DEPENDS tells CMake to recheck for new/removed test files
-# Set IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE" to allow MPI oversubscription (useful for CI/local testing)
-set(IJEDI_MPI_ARGS $ENV{IJEDI_MPI_ARGS})
+# Extra MPI arguments, e.g. "--map-by :OVERSUBSCRIBE" for oversubscription.
+# Cached so it persists across reconfigures; initialised from env var on first configure.
+set(IJEDI_MPI_ARGS "$ENV{IJEDI_MPI_ARGS}" CACHE STRING
+    "Extra mpiexec arguments (e.g. --map-by :OVERSUBSCRIBE)")
 
 if(IJEDI_MPI_ARGS)
     separate_arguments(IJEDI_MPI_ARGS)
@@ -85,11 +91,6 @@ foreach(TIER RANGE 1 3)
                 set(NPROC ${CMAKE_MATCH_1})
             endif()
 
-#            # MOM6 test should always use 2 MPI tasks
-#            if(TEST_NAME MATCHES "mom6")
-#                set(NPROC 4)
-#            endif()
-
             # MOM6 tests run in a separate workdir, so use absolute YAML path
             if(TEST_NAME MATCHES "mom6")
                 set(YAML_PATH ${YAML_FILE})
@@ -122,7 +123,7 @@ endforeach()
 # Registered after the foreach loop so its test number follows the geometry test.
 add_test(NAME ijedi_tier1_unit_geometry-mom6_check
     COMMAND ${Python3_EXECUTABLE}
-            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/check_mom6_structured_grid.py"
+            "${CMAKE_CURRENT_SOURCE_DIR}/testdata/mom6/check_mom6_structured_grid.py"
             "${MOM6_WORKDIR}/mom6_structured_grid.nc"
             "${MOM6_TESTDATA_DIR}/soca_gridspec.72x35x25.nc")
 set_tests_properties(ijedi_tier1_unit_geometry-mom6_check PROPERTIES
@@ -201,7 +202,7 @@ if(MOM6_HIRES_DIR)
         # initialization, while i-jedi sums supergrid sub-cells → systematic ~0.8% difference.
         add_test(NAME ijedi_tier2_unit_geometry-mom6_check
             COMMAND ${Python3_EXECUTABLE}
-                    "${CMAKE_CURRENT_SOURCE_DIR}/testdata/check_mom6_structured_grid.py"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/testdata/mom6/check_mom6_structured_grid.py"
                     "${MOM6_HIRES_WORKDIR}/mom6_hires_structured_grid.nc"
                     "${MOM6_HIRES_SOCA_GRIDSPEC}"
                     "--rtol-area=1e-2")

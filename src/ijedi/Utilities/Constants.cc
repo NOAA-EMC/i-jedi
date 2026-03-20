@@ -5,7 +5,7 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 #include <cmath>
 #include <unordered_map>
@@ -14,7 +14,7 @@
 
 #include "ijedi/Utilities/Constants.h"
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
 namespace ijedi
 {
@@ -30,7 +30,8 @@ namespace ijedi
     static const double epsilon = h2omw / airmw;
     static const double zvir = rvap / rdry - 1.;
     static const double lapse_rate = -0.0065;
-    static const double lapse_exponent = -(grav * 0.0289644) / (runiv / 1000 * lapse_rate);
+    static const double lapse_exponent =
+        -(grav * 0.0289644) / (runiv / 1000 * lapse_rate);
 
     // Put the constants into a map
     static const std::unordered_map<std::string, double> constants = {
@@ -56,7 +57,9 @@ namespace ijedi
     double getConstant(const std::string constName)
     {
         auto it = constants.find(constName);
-        ASSERT_MSG(it != constants.end(), "Constants: Constant name " + constName + " is not found.");
+        ASSERT_MSG(it != constants.end(),
+                   "Constants: Constant name " + constName
+                   + " is not found.");
         return it->second;
     }
 
@@ -72,11 +75,11 @@ namespace ijedi
     }
 
     // Function for accessing the constants from Fortran
-    void getConstantF(const char constNameC[], double &constValueC)
+    void getConstantF(const char constNameC[], double *constValueC)
     {
         std::string constName(constNameC);
-        constValueC = getConstant(constName);
+        *constValueC = getConstant(constName);
     }
-} // namespace ijedi
+}  // namespace ijedi
 
-// -------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------

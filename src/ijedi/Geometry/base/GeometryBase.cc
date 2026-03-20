@@ -18,20 +18,19 @@
 
 namespace ijedi
 {
-  std::shared_ptr<GeometryBase> GeometryBase::create(const eckit::Configuration &conf,
-                                                     const eckit::mpi::Comm &comm)
+  std::shared_ptr<GeometryBase> GeometryBase::create(
+      const eckit::Configuration &conf,
+      const eckit::mpi::Comm &comm)
   {
-
     std::string type;
     if (conf.has("geometry_type"))
     {
       type = conf.getString("geometry_type");
-    }
-    else
-    {
+    } else {
       // Abort
       std::stringstream errorMsg;
-      errorMsg << "Geometry type (geometry_type) not specified in configuration.";
+      errorMsg << "Geometry type (geometry_type) not specified in "
+                  "configuration.";
       throw eckit::BadValue(errorMsg.str(), Here());
     }
 
@@ -52,4 +51,4 @@ namespace ijedi
                           Here());
   }
 
-} // namespace ijedi
+}  // namespace ijedi

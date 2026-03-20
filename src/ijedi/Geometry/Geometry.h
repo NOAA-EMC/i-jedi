@@ -38,16 +38,17 @@ namespace oops
 namespace ijedi
 {
 
-  // -----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Geometry handles geometry.
 
   class Geometry : public util::Printable,
                    private util::ObjectCounter<Geometry>
   {
-  public:
+   public:
     static const std::string classname() { return "ijedi::Geometry"; }
 
-    explicit Geometry(const eckit::Configuration &, const eckit::mpi::Comm &);
+    explicit Geometry(const eckit::Configuration &,
+                      const eckit::mpi::Comm &);
     Geometry(const Geometry &);
     ~Geometry();
 
@@ -57,22 +58,27 @@ namespace ijedi
 
     const eckit::mpi::Comm &getComm() const { return comm_; }
 
-    const atlas::FunctionSpace &functionSpace() const { return geometryImpl_->functionSpace(); }
-    const atlas::FieldSet &fields() const { return geometryImpl_->fields(); }
-    atlas::FunctionSpace &functionSpace() { return geometryImpl_->functionSpace(); }
-    atlas::FieldSet &fields() { return geometryImpl_->fields(); }
+    const atlas::FunctionSpace &functionSpace() const
+      { return geometryImpl_->functionSpace(); }
+    const atlas::FieldSet &fields() const
+      { return geometryImpl_->fields(); }
+    atlas::FunctionSpace &functionSpace()
+      { return geometryImpl_->functionSpace(); }
+    atlas::FieldSet &fields()
+      { return geometryImpl_->fields(); }
     const int &numLevels() const { return geometryImpl_->numLevels(); }
 
     // Access to grid-specific parameters
-    eckit::LocalConfiguration gridSpecific() const { return geometryImpl_->gridSpecific(); }
+    eckit::LocalConfiguration gridSpecific() const
+      { return geometryImpl_->gridSpecific(); }
 
-  private:
+   private:
     Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;
     const eckit::mpi::Comm &comm_;
     std::shared_ptr<FieldsMetadata> fieldsMeta_;
     std::shared_ptr<GeometryBase> geometryImpl_;
   };
-  // -----------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

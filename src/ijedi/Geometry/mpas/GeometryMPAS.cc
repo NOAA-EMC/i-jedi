@@ -26,4 +26,4 @@ namespace ijedi
     return conf;
   }
 
-} // namespace ijedi
+}  // namespace ijedi

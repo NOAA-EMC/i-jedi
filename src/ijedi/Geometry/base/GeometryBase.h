@@ -25,29 +25,31 @@ namespace ijedi
 
   class GeometryBase
   {
-  public:
+   public:
     virtual ~GeometryBase() = default;
 
-    static std::shared_ptr<GeometryBase> create(const eckit::Configuration &,
-                                                const eckit::mpi::Comm &);
+    static std::shared_ptr<GeometryBase> create(
+        const eckit::Configuration &,
+        const eckit::mpi::Comm &);
     virtual void print(std::ostream &) const = 0;
 
     // Accessors for geometry data
-    const atlas::FunctionSpace &functionSpace() const { return functionSpace_; }
+    const atlas::FunctionSpace &functionSpace() const
+      { return functionSpace_; }
     const atlas::FieldSet &fields() const { return fields_; }
     atlas::FunctionSpace &functionSpace() { return functionSpace_; }
     atlas::FieldSet &fields() { return fields_; }
     const int &numLevels() const { return numLevels_; }
 
-    // Access to model-specific grid parameters
-    // Returns a configuration object containing model-specific parameters
+    // Access to model-specific grid parameters.
+    // Returns a configuration object containing model-specific parameters.
     // Example usage: int npx = geom.gridSpecific().getInt("npx");
     virtual eckit::LocalConfiguration gridSpecific() const = 0;
 
-  protected:
+   protected:
     atlas::FunctionSpace functionSpace_;
     atlas::FieldSet fields_;
     int numLevels_;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

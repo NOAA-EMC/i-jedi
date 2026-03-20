@@ -1,12 +1,14 @@
 geometry:
   geometry_type: mom6
   input_dir: @MOM6_HIRES_STAGING@
+  coarsen factor: 2
+  save grid to: mom6_hires_jedi_grid.nc
+  save structured grid to: mom6_hires_structured_grid.nc
+  save debug mesh to: mom6_hires_debug
+  check scatter map: true
   MOM_input:
     NIGLOBAL: @MOM6_HIRES_NIGLOBAL@
     NJGLOBAL: @MOM6_HIRES_NJGLOBAL@
     NZ: @MOM6_HIRES_NZ@
     LAYOUT: [@MOM6_HIRES_LAYOUT_X@, @MOM6_HIRES_LAYOUT_Y@]
     MINIMUM_DEPTH: @MOM6_HIRES_MINIMUM_DEPTH@
-  save grid to: mom6_hires_jedi_grid.nc
-  save structured grid to: mom6_hires_structured_grid.nc
-  save debug mesh to: mom6_hires_debug
