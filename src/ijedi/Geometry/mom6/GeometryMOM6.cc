@@ -886,8 +886,8 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   if (conf.getBool("check scatter map", false)) checkScatterMap();
 
   // 7. Optionally save grids to NetCDF / debug files
-  if (conf.has("save grid to"))
-    saveGrid(conf.getString("save grid to"), comm);
+  if (conf.has("save unstructured grid to"))
+    saveGrid(conf.getString("save unstructured grid to"), comm);
   if (conf.has("save structured grid to"))
     saveStructuredGrid(conf.getString("save structured grid to"), comm);
   if (conf.has("save debug mesh to"))
@@ -1094,7 +1094,7 @@ void GeometryMOM6::saveDebugMesh(const std::string & prefix,
     nc_put_var_double(ncid, vid_lat,   lats.data());
     nc_put_var_int(ncid, vid_ghost, ghost.data());
     nc_put_var_int(ncid, vid_part,  part.data());
-    nc_put_var_longlong(ncid, vid_gidx, gidx.data());
+    nc_put_var_longlong(ncid, vid_gidx, reinterpret_cast<const long long*>(gidx.data()));
     nc_put_var_double(ncid, vid_mask,  mask.data());
     nc_put_var_int(ncid, vid_rank,  &rank);
     nc_close(ncid);
