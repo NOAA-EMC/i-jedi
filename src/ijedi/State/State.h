@@ -29,6 +29,7 @@ namespace ijedi
 {
 
   class Geometry;
+  class Increment;
 
   // ---------------------------------------------------------------------------
   // State — OOPS-facing wrapper.
@@ -57,6 +58,7 @@ namespace ijedi
     void zero();
     void accumul(const double &, const State &);
     double norm() const;
+    State & operator+=(const Increment &);
 
     // I/O
     void read(const eckit::Configuration &);
@@ -73,6 +75,9 @@ namespace ijedi
 
     // Variables
     const oops::Variables & variables() const;
+
+    // Internal accessor for StateBase (used by Increment::diff and accumul)
+    const StateBase & impl() const { return *stateImpl_; }
 
    private:
     void print(std::ostream &) const override;

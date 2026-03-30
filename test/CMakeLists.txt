@@ -20,6 +20,26 @@ configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_state-mom6.yaml.in"
     "${CMAKE_CURRENT_BINARY_DIR}/testinput/tier1_unit_state-mom6.yaml"
     @ONLY)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_increment-mom6.yaml.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/testinput/tier1_unit_increment-mom6.yaml"
+    @ONLY)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_errorcovariance-mom6.yaml.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/testinput/tier1_unit_errorcovariance-mom6.yaml"
+    @ONLY)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_dirac-mom6.yaml.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/testinput/tier1_unit_dirac-mom6.yaml"
+    @ONLY)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_dirac-diffusion-params-mom6.yaml.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/testinput/tier1_unit_dirac-diffusion-params-mom6.yaml"
+    @ONLY)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_dirac-diffusion-mom6.yaml.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/testinput/tier1_unit_dirac-diffusion-mom6.yaml"
+    @ONLY)
 add_custom_command(
     OUTPUT "${MOM6_TESTDATA_DIR}/INPUT/ocean_hgrid.nc"
            "${MOM6_TESTDATA_DIR}/INPUT/ocean_topog.nc"
@@ -119,6 +139,17 @@ foreach(TIER RANGE 1 3)
     endforeach()
 endforeach()
 
+# Diffusion tests: params generation must run before the dirac test.
+# These overrides replace the generic MOM6 fixture set from the loop above.
+set_tests_properties(ijedi_tier1_unit_dirac-diffusion-params-mom6 PROPERTIES
+    FIXTURES_REQUIRED  mom6_testdata_fixture
+    FIXTURES_SETUP     "mom6_geometry_fixture;mom6_diffusion_params_fixture"
+    WORKING_DIRECTORY  "${MOM6_WORKDIR}")
+set_tests_properties(ijedi_tier1_unit_dirac-diffusion-mom6 PROPERTIES
+    FIXTURES_REQUIRED  "mom6_testdata_fixture;mom6_diffusion_params_fixture"
+    FIXTURES_SETUP     mom6_geometry_fixture
+    WORKING_DIRECTORY  "${MOM6_WORKDIR}")
+
 # Structured-grid regression test: compare geometry output against SOCA reference.
 # Registered after the foreach loop so its test number follows the geometry test.
 add_test(NAME ijedi_tier1_unit_geometry-mom6_check
@@ -139,29 +170,14 @@ set_tests_properties(ijedi_tier1_unit_geometry-mom6_check PROPERTIES
 # Enable at configure time:
 #   cmake -DMOM6_HIRES_DIR=/path/to/dir/containing/ocean_hgrid.nc ..
 #
-# Optional overrides (defaults: 0.25° OM4 on 6 MPI tasks):
-#   -DMOM6_HIRES_NIGLOBAL=1440  -DMOM6_HIRES_NJGLOBAL=1080  -DMOM6_HIRES_NZ=75
-#   -DMOM6_HIRES_LAYOUT="3,2"   -DMOM6_HIRES_MINIMUM_DEPTH=0.5
-#
-# The YAML is written to testinput/hires/ (not scanned by the auto-discovery
-# loop above) and the test is registered manually with no fixture dependencies.
+# Grid parameters (0.25° OM4, 6 MPI tasks) are hardcoded in the YAML files.
 # ---------------------------------------------------------------------------
 set(MOM6_HIRES_DIR "" CACHE PATH
     "Directory containing ocean_hgrid.nc + ocean_topog.nc for tier-2 MOM6 test")
 
 if(MOM6_HIRES_DIR)
-    # Grid parameters
-    set(MOM6_HIRES_NIGLOBAL      1440  CACHE STRING "NIGLOBAL for tier-2 MOM6 test")
-    set(MOM6_HIRES_NJGLOBAL      1080  CACHE STRING "NJGLOBAL for tier-2 MOM6 test")
-    set(MOM6_HIRES_NZ            75    CACHE STRING "NZ for tier-2 MOM6 test")
-    set(MOM6_HIRES_LAYOUT        "3,2" CACHE STRING "LAYOUT (NX,NY) for tier-2 MOM6 test")
-    set(MOM6_HIRES_MINIMUM_DEPTH 0.5   CACHE STRING "MINIMUM_DEPTH (m) for tier-2 MOM6 test")
-
-    # Split layout into X / Y and derive nproc
-    string(REPLACE "," ";" _hires_layout_list "${MOM6_HIRES_LAYOUT}")
-    list(GET _hires_layout_list 0 MOM6_HIRES_LAYOUT_X)
-    list(GET _hires_layout_list 1 MOM6_HIRES_LAYOUT_Y)
-    math(EXPR MOM6_HIRES_NPROC "${MOM6_HIRES_LAYOUT_X} * ${MOM6_HIRES_LAYOUT_Y}")
+    # Hardcoded: 3x2 layout = 6 MPI tasks
+    set(MOM6_HIRES_NPROC 6)
 
     # Staging area: geometry expects INPUT/ subdir; create it with symlinks
     set(MOM6_HIRES_STAGING "${CMAKE_CURRENT_BINARY_DIR}/testdata/mom6_hires")
@@ -175,6 +191,7 @@ if(MOM6_HIRES_DIR)
     endforeach()
 
     # Configure YAML into hires/ subdir (not touched by the auto-discovery loop)
+    # The only substituted variable is @MOM6_HIRES_STAGING@ (the data path).
     set(MOM6_HIRES_YAML_DIR "${CMAKE_CURRENT_BINARY_DIR}/testinput/hires")
     set(MOM6_HIRES_YAML     "${MOM6_HIRES_YAML_DIR}/tier2_unit_geometry-mom6.yaml")
     set(MOM6_HIRES_WORKDIR  "${CMAKE_CURRENT_BINARY_DIR}/workdir/mom6_hires")
@@ -214,12 +231,40 @@ if(MOM6_HIRES_DIR)
         message(STATUS "  set -DMOM6_HIRES_SOCA_GRIDSPEC=/path/to/soca_gridspec.nc to enable")
     endif()
 
-    message(STATUS "Tier-2 high-res MOM6 geometry test: ENABLED")
-    message(STATUS "  data     : ${MOM6_HIRES_DIR}")
-    message(STATUS "  grid     : ${MOM6_HIRES_NIGLOBAL} x ${MOM6_HIRES_NJGLOBAL} x ${MOM6_HIRES_NZ}")
-    message(STATUS "  layout   : ${MOM6_HIRES_LAYOUT_X} x ${MOM6_HIRES_LAYOUT_Y}  (${MOM6_HIRES_NPROC} MPI tasks)")
+    # ---------------------------------------------------------------------------
+    # Tier-2 high-resolution MOM6 diffusion tests
+    # ---------------------------------------------------------------------------
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier2_unit_dirac-diffusion-params-mom6.yaml.in"
+        "${MOM6_HIRES_YAML_DIR}/tier2_unit_dirac-diffusion-params-mom6.yaml"
+        @ONLY)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier2_unit_dirac-diffusion-mom6.yaml.in"
+        "${MOM6_HIRES_YAML_DIR}/tier2_unit_dirac-diffusion-mom6.yaml"
+        @ONLY)
+
+    add_test(NAME ijedi_tier2_unit_dirac-diffusion-params-mom6
+        COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MOM6_HIRES_NPROC}
+                ${IJEDI_MPI_ARGS}
+                $<TARGET_FILE:ijedi_test.x> dirac
+                "${MOM6_HIRES_YAML_DIR}/tier2_unit_dirac-diffusion-params-mom6.yaml")
+    set_tests_properties(ijedi_tier2_unit_dirac-diffusion-params-mom6 PROPERTIES
+        WORKING_DIRECTORY "${MOM6_HIRES_WORKDIR}"
+        FIXTURES_SETUP    mom6_hires_diffusion_params_fixture)
+
+    add_test(NAME ijedi_tier2_unit_dirac-diffusion-mom6
+        COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} ${MOM6_HIRES_NPROC}
+                ${IJEDI_MPI_ARGS}
+                $<TARGET_FILE:ijedi_test.x> dirac
+                "${MOM6_HIRES_YAML_DIR}/tier2_unit_dirac-diffusion-mom6.yaml")
+    set_tests_properties(ijedi_tier2_unit_dirac-diffusion-mom6 PROPERTIES
+        WORKING_DIRECTORY "${MOM6_HIRES_WORKDIR}"
+        FIXTURES_REQUIRED mom6_hires_diffusion_params_fixture)
+
+    message(STATUS "Tier-2 high-res MOM6 tests: ENABLED (6 MPI tasks, 0.25° OM4)")
+    message(STATUS "  data: ${MOM6_HIRES_DIR}")
     message(STATUS "  run -R tier2 to execute")
 else()
-    message(STATUS "Tier-2 high-res MOM6 geometry test: DISABLED")
+    message(STATUS "Tier-2 high-res MOM6 tests: DISABLED")
     message(STATUS "  set -DMOM6_HIRES_DIR=/path/to/dir/with/ocean_hgrid.nc to enable")
 endif()

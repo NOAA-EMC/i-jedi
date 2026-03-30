@@ -33,6 +33,23 @@ list(APPEND ijedi_src_files
   State/mom6/StateMOM6.h
 
   # Increment
+  Increment/Increment.cc
+  Increment/Increment.h
+  Increment/base/IncrementBase.cc
+  Increment/base/IncrementBase.h
+  Increment/mom6/IncrementMOM6.cc
+  Increment/mom6/IncrementMOM6.h
+
+  # ErrorCovariance
+  ErrorCovariance/ErrorCovariance.cc
+  ErrorCovariance/ErrorCovariance.h
+
+  # LinearVariableChange
+  LinearVariableChange/LinearVariableChange.cc
+  LinearVariableChange/LinearVariableChange.h
+
+  # ModelData
+  ModelData.h
 
   # IO
 

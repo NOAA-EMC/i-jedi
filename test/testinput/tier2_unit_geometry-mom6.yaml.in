@@ -7,8 +7,8 @@ geometry:
   save debug mesh to: mom6_hires_debug
   check scatter map: true
   MOM_input:
-    NIGLOBAL: @MOM6_HIRES_NIGLOBAL@
-    NJGLOBAL: @MOM6_HIRES_NJGLOBAL@
-    NZ: @MOM6_HIRES_NZ@
-    LAYOUT: [@MOM6_HIRES_LAYOUT_X@, @MOM6_HIRES_LAYOUT_Y@]
-    MINIMUM_DEPTH: @MOM6_HIRES_MINIMUM_DEPTH@
+    NIGLOBAL: 1440
+    NJGLOBAL: 1080
+    NZ: 75
+    LAYOUT: [3, 2]
+    MINIMUM_DEPTH: 0.5

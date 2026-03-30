@@ -9,6 +9,7 @@
 #include "eckit/config/Configuration.h"
 #include "eckit/exception/Exceptions.h"
 
+#include "oops/base/Variables.h"
 #include "oops/util/Logger.h"
 
 #include "ijedi/Geometry/Geometry.h"
@@ -71,13 +72,9 @@ namespace ijedi
   std::vector<size_t> Geometry::variableSizes(
       const oops::Variables &vars) const
   {
-    // Array of level heights
     std::vector<size_t> varSizes;
-    // Loop through arrays and search metadata map for the levels
-    // for (size_t it = 0; it < vars.size(); it++)
-    //{
-    //  varSizes.push_back(fieldsMeta_->getLevels(vars[it].name()));
-    //}
+    for (size_t iv = 0; iv < vars.size(); ++iv)
+      varSizes.push_back(static_cast<size_t>(numLevels()));
     return varSizes;
   }
 

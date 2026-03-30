@@ -339,6 +339,23 @@ namespace ijedi
   }
 
   // ---------------------------------------------------------------------------
+  void StateBase::addIncrement(const atlas::FieldSet & dxFields)
+  {
+    for (int iv = 0; iv < fields_.size(); ++iv)
+    {
+      const std::string & name = vars_[iv].name();
+      if (!dxFields.has(name)) continue;
+      auto       dst = atlas::array::make_view<double, 2>(fields_[name]);
+      const auto src = atlas::array::make_view<double, 2>(dxFields[name]);
+      const int npts = fields_[iv].shape(0);
+      const int nlev = fields_[iv].shape(1);
+      for (int n = 0; n < npts; ++n)
+        for (int l = 0; l < nlev; ++l)
+          dst(n, l) += src(n, l);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   void StateBase::print(std::ostream & os) const
   {
     const auto ghost = atlas::array::make_view<int32_t, 1>(

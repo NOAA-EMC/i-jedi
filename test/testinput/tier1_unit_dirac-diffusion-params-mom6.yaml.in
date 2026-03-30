@@ -1,0 +1,38 @@
+geometry:
+  geometry_type: mom6
+  input_dir: @MOM6_TESTDATA_DIR@
+  coarsen factor: 1
+
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [3, 2]
+    MINIMUM_DEPTH: 0.5
+
+background:
+  date: "2020-01-01T00:00:00Z"
+  variables: [tocn, socn]
+  analytic init: true
+
+analysis variables: [tocn, socn]
+
+background error:
+  covariance model: SABER
+  saber central block:
+    saber block name: diffusion
+    calibration:
+      normalization:
+        iterations: 1000
+      groups:
+      - horizontal:
+          fixed value: 500000.0    # 500 km Gaussian sigma
+          as gaussian: true
+        write:
+          filepath: diffusion_hz
+      - vertical:
+          fixed value: 2.0         # 2 levels Gaussian sigma
+          levels: 25
+          as gaussian: true
+        write:
+          filepath: diffusion_vt

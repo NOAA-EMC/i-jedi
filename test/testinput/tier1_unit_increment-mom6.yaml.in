@@ -1,0 +1,30 @@
+geometry:
+  geometry_type: mom6
+  input_dir: @MOM6_TESTDATA_DIR@
+  coarsen factor: 1
+
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [3, 2]
+    MINIMUM_DEPTH: 0.5
+
+inc variables: [tocn, socn]
+
+increment test:
+  date: "2020-01-01T00:00:00Z"
+  tolerance: 1.0e-6
+
+  dirac:
+    indices: 10
+    level: 0
+    variable: tocn
+
+  write then read test:
+    increment write:
+      file format: fieldset
+      filepath: mom6_increment_write_test
+    increment read:
+      file format: fieldset
+      filepath: mom6_increment_write_test

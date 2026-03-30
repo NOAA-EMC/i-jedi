@@ -32,8 +32,8 @@ ecbuild_bundle( PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.
 #===============================================================================
 ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda-internal/jedi-cmake.git" UPDATE BRANCH develop RECURSIVE )
 ecbuild_bundle( PROJECT oops      GIT    "https://github.com/JCSDA-Internal/oops.git"       UPDATE BRANCH develop )
-#ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA-Internal/vader.git"      UPDATE BRANCH develop )
-#ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA-Internal/saber.git"      UPDATE BRANCH develop )
+ecbuild_bundle( PROJECT vader     SOURCE "/home/gvernier/sandboxes/jedi-bundle-new/vader" )
+ecbuild_bundle( PROJECT saber     SOURCE "/home/gvernier/sandboxes/saber" )
 #ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA-Internal/ioda.git"       UPDATE BRANCH develop )
 #ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA-Internal/ufo.git"        UPDATE BRANCH develop )
 ecbuild_bundle( PROJECT ijedi     SOURCE "../" )

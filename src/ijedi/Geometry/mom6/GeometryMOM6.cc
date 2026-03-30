@@ -26,6 +26,7 @@
 #include "atlas/grid/UnstructuredGrid.h"
 #include "atlas/mesh.h"
 #include "atlas/mesh/MeshBuilder.h"
+#include "atlas/mesh/actions/BuildHalo.h"
 #include "atlas/output/Gmsh.h"
 #include "atlas/util/Earth.h"
 #include "atlas/util/KDTree.h"
@@ -313,10 +314,14 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
     if (partOf[k] != rank) continue;
     const int iG = active[k].iG;
     const int jG = active[k].jG;
-    const int nbI[4] = { (iG - 1 + niEff_) % niEff_,
-                         (iG + 1) % niEff_, iG, iG };
-    const int nbJ[4] = { jG, jG, jG - 1, jG + 1 };
-    for (int d = 0; d < 4; ++d) {
+    const int nbI[8] = { (iG - 1 + niEff_) % niEff_,
+                         (iG + 1) % niEff_, iG, iG,
+                         (iG - 1 + niEff_) % niEff_, (iG + 1) % niEff_,
+                         (iG - 1 + niEff_) % niEff_, (iG + 1) % niEff_ };
+    const int nbJ[8] = { jG, jG, jG - 1, jG + 1,
+                         jG - 1, jG - 1,
+                         jG + 1, jG + 1 };
+    for (int d = 0; d < 8; ++d) {
       if (nbJ[d] < 0 || nbJ[d] >= njEff_) continue;
       auto it = activeMap.find(nbJ[d] * niEff_ + nbI[d]);
       if (it == activeMap.end()) continue;
@@ -329,6 +334,16 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
   }
 
   // --- Step 4: populate jediPoints_ (owned first, then ghost) ---
+  // Also compute each active point's local index on its owner rank.
+  // All ranks build the same active/partOf arrays, so this is deterministic
+  // with no extra MPI — needed to set remoteIdx correctly for ghost nodes.
+  std::vector<int> ownerLocalIdx(nActiveGlobal_);
+  {
+    std::vector<int> ownerCount(npes, 0);
+    for (int k = 0; k < nActiveGlobal_; ++k)
+      ownerLocalIdx[k] = ownerCount[partOf[k]]++;
+  }
+
   const int nGhost = static_cast<int>(ghostIdxVec.size());
   const int nTotal = ownedCount_ + nGhost;
   jediPoints_.clear();
@@ -339,24 +354,68 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
   for (int gk : ghostIdxVec)
     jediPoints_.push_back({active[gk].iG, active[gk].jG});
 
+  // --- Step 4.5: generate quad cells for owned ocean points ---
+  // SABER Diffusion (NodeColumns path) requires mesh cells so that
+  // atlas::mesh::actions::build_edges() can produce the edge list used by the
+  // Laplacian stencil.  Each quad covers four corners that are all ocean-active;
+  // land points are excluded.  This is the same requirement as any other
+  // NodeColumns user of SABER Diffusion (e.g. the cubed-sphere CS-LFR-12 grid).
+  std::vector<std::array<atlas::gidx_t, 4>> quadNodes;
+  std::vector<atlas::gidx_t>                quadGidx;
+  for (int n = 0; n < ownedCount_; ++n) {
+    const int iG  = jediPoints_[n].first;
+    const int jG  = jediPoints_[n].second;
+    if (jG + 1 >= njEff_) continue;                    // no northern neighbour
+    const int iG1 = (iG + 1) % niEff_;                 // periodic in i
+    const int jG1 = jG + 1;
+    if (activeMap.find(jG  * niEff_ + iG ) == activeMap.end()) continue;
+    if (activeMap.find(jG  * niEff_ + iG1) == activeMap.end()) continue;
+    if (activeMap.find(jG1 * niEff_ + iG1) == activeMap.end()) continue;
+    if (activeMap.find(jG1 * niEff_ + iG ) == activeMap.end()) continue;
+    // SW, SE, NE, NW corners — global node indices (1-based)
+    quadNodes.push_back({
+        static_cast<atlas::gidx_t>(jG  * niEff_ + iG  + 1),
+        static_cast<atlas::gidx_t>(jG  * niEff_ + iG1 + 1),
+        static_cast<atlas::gidx_t>(jG1 * niEff_ + iG1 + 1),
+        static_cast<atlas::gidx_t>(jG1 * niEff_ + iG  + 1)});
+    quadGidx.push_back(0);   // placeholder; filled after allGather below
+  }
+  // Compute globally unique quad element indices via per-rank allGather offset
+  {
+    const int nQ = static_cast<int>(quadNodes.size());
+    std::vector<int> nPerRank(comm.size());
+    comm.allGather(nQ, nPerRank.begin(), nPerRank.end());
+    int offset = 0;
+    for (int r = 0; r < rank; ++r) offset += nPerRank[r];
+    for (int q = 0; q < nQ; ++q)
+      quadGidx[q] = static_cast<atlas::gidx_t>(offset + q + 1);  // 1-based
+  }
+
   // --- Step 5: build Atlas mesh ---
   std::vector<double>  lons(nTotal), lats(nTotal);
   std::vector<int>     ghosts(nTotal, 0), partitions(nTotal, rank);
   std::vector<gidx_t>  globalIdx(nTotal);
   std::vector<idx_t>   remoteIdx(nTotal);
 
-  for (int n = 0; n < nTotal; ++n) {
+  for (int n = 0; n < ownedCount_; ++n) {
     const int iG = jediPoints_[n].first;
     const int jG = jediPoints_[n].second;
     lons[n]      = lonGlobal[jG * niEff_ + iG];
     lats[n]      = latGlobal[jG * niEff_ + iG];
-    globalIdx[n] = static_cast<gidx_t>(jG * niEff_ + iG + 1);   // 1-based
-    remoteIdx[n] = static_cast<idx_t>(n + 1);                       // 1-based
+    globalIdx[n] = static_cast<gidx_t>(jG * niEff_ + iG + 1);  // 1-based
+    remoteIdx[n] = static_cast<idx_t>(n + 1);                   // 1-based local
   }
   for (int g = 0; g < nGhost; ++g) {
-    const int n = ownedCount_ + g;
+    const int n  = ownedCount_ + g;
+    const int gk = ghostIdxVec[g];
+    const int iG = jediPoints_[n].first;
+    const int jG = jediPoints_[n].second;
+    lons[n]      = lonGlobal[jG * niEff_ + iG];
+    lats[n]      = latGlobal[jG * niEff_ + iG];
+    globalIdx[n] = static_cast<gidx_t>(jG * niEff_ + iG + 1);  // 1-based
+    remoteIdx[n] = static_cast<idx_t>(ownerLocalIdx[gk] + 1);  // 1-based on owner
     ghosts[n]     = 1;
-    partitions[n] = partOf[ghostIdxVec[g]];
+    partitions[n] = partOf[gk];
   }
 
   eckit::LocalConfiguration meshConf;
@@ -367,8 +426,9 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
       lons, lats, ghosts,
       globalIdx, remoteIdx, /*remote_index_base=*/1, partitions,
       /*tri_boundary_nodes=*/{}, /*tri_global_indices=*/{},
-      /*quad_boundary_nodes=*/{}, /*quad_global_indices=*/{},
+      quadNodes, quadGidx,
       meshConf);
+  atlas::mesh::actions::build_halo(mesh, 1);
 
   functionSpace_ = atlas::functionspace::NodeColumns(
       mesh, atlas::util::Config("mpi_comm", comm.name()));
@@ -492,11 +552,12 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
   atlas::Field fDepth = addField("depth");
   atlas::Field fDxT   = addField("dxT");
   atlas::Field fDyT   = addField("dyT");
-  atlas::Field fAreaT = addField("areaT");
+  atlas::Field fArea  = addField("area");   // called "area" for SABER diffusion
   atlas::Field fLonU  = addField("lonu");
   atlas::Field fLatU  = addField("latu");
   atlas::Field fLonV  = addField("lonv");
   atlas::Field fLatV  = addField("latv");
+  atlas::Field fAreaT = addField("areaT");  // MOM6-native alias for area
 
   auto vLon   = atlas::array::make_view<double, 2>(fLon);
   auto vLat   = atlas::array::make_view<double, 2>(fLat);
@@ -504,11 +565,12 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
   auto vDepth = atlas::array::make_view<double, 2>(fDepth);
   auto vDxT   = atlas::array::make_view<double, 2>(fDxT);
   auto vDyT   = atlas::array::make_view<double, 2>(fDyT);
-  auto vAreaT = atlas::array::make_view<double, 2>(fAreaT);
+  auto vArea  = atlas::array::make_view<double, 2>(fArea);
   auto vLonU  = atlas::array::make_view<double, 2>(fLonU);
   auto vLatU  = atlas::array::make_view<double, 2>(fLatU);
   auto vLonV  = atlas::array::make_view<double, 2>(fLonV);
   auto vLatV  = atlas::array::make_view<double, 2>(fLatV);
+  auto vAreaT = atlas::array::make_view<double, 2>(fAreaT);
 
   for (int n = 0; n < npts; ++n) {
     const int iG   = jediPoints_[n].first;
@@ -520,6 +582,7 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
     vMask(n, 0)  = wetGlobal[gIdx];
     vDxT(n, 0)   = dxTGlobal[gIdx];
     vDyT(n, 0)   = dyTGlobal[gIdx];
+    vArea(n, 0)  = areaTGlobal[gIdx];
     vAreaT(n, 0) = areaTGlobal[gIdx];
     vLonU(n, 0)  = lonUGlobal[gIdx];
     vLatU(n, 0)  = latUGlobal[gIdx];

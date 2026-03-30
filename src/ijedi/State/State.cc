@@ -6,6 +6,7 @@
 #include "oops/util/Logger.h"
 
 #include "ijedi/Geometry/Geometry.h"
+#include "ijedi/Increment/Increment.h"
 #include "ijedi/State/State.h"
 #include "ijedi/State/base/StateBase.h"
 
@@ -75,6 +76,8 @@ namespace ijedi
   void State::accumul(const double & w, const State & x)
   { stateImpl_->accumul(w, *x.stateImpl_); }
   double State::norm() const                      { return stateImpl_->norm(); }
+  State & State::operator+=(const Increment & dx)
+  { stateImpl_->addIncrement(dx.impl().fields()); return *this; }
 
   // ---------------------------------------------------------------------------
   void State::read(const eckit::Configuration & conf)

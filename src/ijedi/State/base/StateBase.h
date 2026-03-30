@@ -82,6 +82,9 @@ namespace ijedi
     void toFieldSet(atlas::FieldSet &) const;
     void fromFieldSet(const atlas::FieldSet &);
 
+    // Add an increment fieldset to this state (used by State::operator+=)
+    void addIncrement(const atlas::FieldSet &);
+
     // Default implementation prints per-variable min/max/rms stats.
     // Subclasses may override to add model-specific information.
     virtual void print(std::ostream &) const;
