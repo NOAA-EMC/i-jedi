@@ -71,9 +71,6 @@ namespace ijedi
     // Set date/time on read
     oops::OptionalParameter<bool> setDateTime{"set datetime on read", "set datetime on read", this};
 
-    // Optionally the config may contain member
-    oops::OptionalParameter<int> member{"member", "ensemble member number", this};
-
     // Optional list of fields to write out
     oops::OptionalParameter<std::vector<std::string>> fieldsToWrite{"fields to write",
                                                                     "names of the fields to write",

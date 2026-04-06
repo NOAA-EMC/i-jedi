@@ -74,14 +74,6 @@ namespace ijedi
     // Create a Parameters object
     StateParameters params;
     params.deserialize(config);
-    // Optionally set the datetime on read (needed for some bump applications)
-    if (params.setdatetime.value() != boost::none)
-    {
-      // if (*params.setdatetime.value() && params.datetime.value() != boost::none)
-      //{
-      //  time_ = *params.datetime.value();
-      //}
-    }
 
     // Create the IO object to use
     // ---------------------------
@@ -117,16 +109,14 @@ namespace ijedi
 
     const auto &comm = geom_.comm();
     const auto &fs = this->fieldSet();
-    int fieldIndex = 0;
     for (const auto &var : this->variables())
     {
       const atlas::Field &field = fs.field(var.name());
       const auto [globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
-      ++fieldIndex;
       os << std::endl
-         << "Fld=" << fieldIndex << std::scientific << std::setprecision(16) << "  Min=" << globalMin
-         << ", Max=" << globalMax << ", RMS=" << rms << " : " << var.name();
+         << var.name() << " : " << std::scientific << std::setprecision(16) << "Min=" << globalMin
+         << ", Max=" << globalMax << ", RMS=" << rms;
     }
   }
 
-} // namespace ijedi
+}  // namespace ijedi

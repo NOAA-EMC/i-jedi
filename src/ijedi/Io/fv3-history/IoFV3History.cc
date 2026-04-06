@@ -52,4 +52,4 @@ namespace ijedi
     os << classname() << " Io for Cube Sphere Histories";
   }
   // -------------------------------------------------------------------------------------------------
-} // namespace ijedi
+}  // namespace ijedi

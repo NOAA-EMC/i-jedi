@@ -60,10 +60,8 @@ namespace ijedi
     // Analytic initial condition parameters
     oops::OptionalParameter<oops::Variables> stateVariables{"state variables", this};
     oops::OptionalParameter<AnalyticICParameters> analytic{"analytic init", this};
-    oops::OptionalParameter<util::DateTime> datetime{"datetime", this};
     // Read parameters
     IoParametersWrapper ioParametersWrapper{this};
-    oops::OptionalParameter<bool> setdatetime{"set datetime on read", this};
   };
 
   // -------------------------------------------------------------------------------------------------
@@ -72,14 +70,6 @@ namespace ijedi
   {
     OOPS_CONCRETE_PARAMETERS(StateWriteParameters, Parameters)
   public:
-    oops::OptionalParameter<std::string> type{"type", this};
-    oops::OptionalParameter<std::string> exp{"exp", this};
-    oops::OptionalParameter<int> member{"member", this};
-    oops::OptionalParameter<std::string> memberPattern{"member pattern", this};
-    oops::OptionalParameter<util::DateTime> date{"date", this};
-    oops::OptionalParameter<int> iteration{"iteration", this};
-    oops::OptionalParameter<std::string> prefix{"prefix", this};
-    oops::Parameter<bool> dateCols{"date colons", true, this};
     IoParametersWrapper ioParametersWrapper{this};
     // Additional formats to output
     oops::OptionalParameter<std::vector<IoParametersWrapper>>
