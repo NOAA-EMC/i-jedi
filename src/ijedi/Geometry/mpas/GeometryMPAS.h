@@ -3,11 +3,13 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "eckit/mpi/Comm.h"
 
 #include "atlas/grid.h"
 
+#include "oops/base/GeometryData.h"
 #include "ijedi/Geometry/base/GeometryBase.h"
 
 namespace eckit
@@ -28,7 +30,7 @@ namespace ijedi
 
     GeometryMPAS(const eckit::Configuration & config, const eckit::mpi::Comm & comm);
     GeometryMPAS(const GeometryMPAS & other);
-    ~GeometryMPAS();
+//    ~GeometryMPAS();
 
     GeometryMPAS & operator=(const GeometryMPAS &) = delete;
 
@@ -38,9 +40,9 @@ namespace ijedi
 
     void * fortranGeom_ = nullptr;
     bool levelsAreTopDown_;
-    std::vector<int> levelsPerVariable_;
-    //std::shared_ptr<oops::GeometryData> geomData_;
-    //const eckit::mpi::Comm* comm_;
+    std::unordered_map<std::string, size_t> levelsPerVariable_;
+    std::shared_ptr<oops::GeometryData> geomData_;
+    const eckit::mpi::Comm* comm_;
 
   };
 

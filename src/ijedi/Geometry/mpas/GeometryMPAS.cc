@@ -15,7 +15,7 @@
 #include "atlas/mesh/MeshBuilder.h"
 #include "atlas/option.h"
 
-//#include "oops/base/GeometryData.h"
+#include "oops/base/GeometryData.h"
 
 #include "oops/util/abor1_cpp.h"
 #include "oops/util/Logger.h"
@@ -207,6 +207,9 @@ namespace ijedi {
                              atlas::FunctionSpace &functionSpace,
                              atlas::FieldSet &fieldSet,
                              int &numberLevels) 
+
+
+
   { 
   oops::Log::trace() << "GeometryMPAS constructor starting" << std::endl;
 
@@ -229,6 +232,7 @@ namespace ijedi {
 
   // Build GeometryData
   geomData_.reset(new oops::GeometryData(functionSpace, fieldSet, levelsAreTopDown_, comm));
+  comm_ = &comm;  // Store the communicator pointer
 
   oops::Log::trace() << "ijedi_mpas::GeometryMPAS::GeometryMPAS from config done" << std::endl;
 
@@ -244,7 +248,7 @@ namespace ijedi {
     int nCellsGlobal;
     ijedi_mpas_geom_get_global_cell_count_f90(fortranGeom_, nCellsGlobal);
     os << "ijedi_mpas::GeometryMPAS, nCellsGlobal = " << nCellsGlobal << ", nVertLevels = " << nVertLevels
-       << ", communicator = " << comm().name();
+       << ", communicator = " << comm_->name();
   }
 
   // -----------------------------------------------------------------------------------------------
