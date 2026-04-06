@@ -25,6 +25,8 @@ list(APPEND ijedi_src_files
   FieldMetadata/FieldsMetadataDefault.h
 
   # State
+  State/State.cc
+  State/State.h
 
   # Increment
 
@@ -36,6 +38,8 @@ list(APPEND ijedi_src_files
   Utilities/ijedi_constants_mod.f90
   Utilities/ijedi_kinds_mod.f90
   Utilities/ijedi_netcdf_utils_mod.F90
+  Utilities/PrintHelper.cc
+  Utilities/PrintHelper.h
 )
 
 # ###############################################################################
