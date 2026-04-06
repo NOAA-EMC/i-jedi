@@ -204,7 +204,7 @@ namespace ijedi {
                              eckit::Configuration &geomVariables,
                              atlas::FunctionSpace &functionSpace,
                              atlas::FieldSet &fieldSet,
-			     bool &levelsAreTopDown,
+                             bool &levelsAreTopDown,
                              int &numberLevels)
   {
   oops::Log::trace() << "GeometryMPAS constructor starting" << std::endl;
