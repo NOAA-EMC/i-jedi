@@ -1148,7 +1148,7 @@ namespace ijedi
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mom6_mld";
-    md.units = "none";
+    md.units = "meters";
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
