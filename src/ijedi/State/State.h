@@ -91,7 +91,7 @@ namespace ijedi
   class State : public mist::base::State, private util::ObjectCounter<State>
   {
   public:
-    static std::string classname() { return "jedimpas::State"; }
+    static std::string classname() { return "ijedi::State"; }
 
     State(const Geometry &, const eckit::Configuration &);
     State(const Geometry &, const oops::Variables &, const util::DateTime &, bool initToZero = true);
