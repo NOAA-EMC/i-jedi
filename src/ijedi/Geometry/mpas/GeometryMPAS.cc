@@ -34,6 +34,7 @@ namespace ijedi
     std::stringstream errorMsg;
     errorMsg << "GeometryMPAS::verticalCoord is not implemented" << std::endl;
     ABORT(errorMsg.str());
+    return {};
   }
 
   // -----------------------------------------------------------------------------------------------
