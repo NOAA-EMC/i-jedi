@@ -27,7 +27,7 @@ namespace ijedi
   {
     OOPS_CONCRETE_PARAMETERS(FMSinitParameters, Parameters)
 
-  public:
+   public:
     oops::Parameter<std::string> fieldTableFilename{"field table filename", "field_table", this};
     oops::Parameter<std::string> namelistFilename{"namelist filename", "input.nml", this};
     oops::Parameter<int> stackmax{"stackmax", 4000000, this};
@@ -39,7 +39,7 @@ namespace ijedi
   {
     OOPS_CONCRETE_PARAMETERS(TimeInvariantFieldsParameters, Parameters)
 
-  public:
+   public:
     oops::OptionalParameter<oops::Variables> derivedFields{"derived fields", this};
     oops::OptionalParameter<eckit::LocalConfiguration> fieldMasks{"field masks", this};
   };
@@ -50,7 +50,7 @@ namespace ijedi
   {
     OOPS_CONCRETE_PARAMETERS(GeometryParameters, Parameters)
 
-  public:
+   public:
     oops::OptionalParameter<std::string> akbk{"akbk", this};
     oops::OptionalParameter<std::string> ensMember{"member_number", this};
     oops::Parameter<bool> doSchmidt{"do_schmidt", false, this};
@@ -84,4 +84,4 @@ namespace ijedi
 
   // -------------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

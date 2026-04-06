@@ -48,11 +48,13 @@ list(APPEND ijedi_src_files
 
 # fv3 pieces if FMS is found
 if(FMS_FOUND)
-  list(APPEND ijedi_fv3_src_files
+  list(APPEND ijedi_fv3_cpp_src_files
     Geometry/fv3/GeometryFV3.cc
     Geometry/fv3/GeometryFV3.h
     Geometry/fv3/GeometryFV3Parameters.h
     Geometry/fv3/GeometryFV3.interface.h
+  )
+  list(APPEND ijedi_fv3_fortran_src_files
     Geometry/fv3/ijedi_fv3_akbk_mod.f90
     Geometry/fv3/ijedi_fv3_arrays.F90
     Geometry/fv3/ijedi_fv3_control.F90
@@ -64,6 +66,11 @@ if(FMS_FOUND)
     Geometry/fv3/ijedi_fv3_mp_mod.F90
     Geometry/fv3/ijedi_fv3_namelist_mod.f90
     Geometry/fv3/ijedi_fv3_sorted_index.F90
+  )
+
+  list(APPEND ijedi_fv3_src_files
+    ${ijedi_fv3_cpp_src_files}
+    ${ijedi_fv3_fortran_src_files}
   )
 
   # fv3 ported files have specific required properties
@@ -91,7 +98,7 @@ if(FMS_FOUND)
     set(fv3_flags "")
   endif()
 
-  set_source_files_properties(${ijedi_fv3_src_files} PROPERTIES COMPILE_FLAGS "${fv3_flags}")
+  set_source_files_properties(${ijedi_fv3_fortran_src_files} PROPERTIES COMPILE_FLAGS "${fv3_flags}")
 endif()
 
 # ###############################################################################

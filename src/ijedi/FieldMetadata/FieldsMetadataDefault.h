@@ -17,7 +17,7 @@ namespace ijedi
     std::string longName;
     std::string units;
     std::string kind;
-    std::string tracer; // Turned into bool but input as string to allow checking
+    std::string tracer;  // Turned into bool but input as string to allow checking
     std::string levels;
     std::string vtype;
     std::string mask;
@@ -75,7 +75,8 @@ namespace ijedi
 
     // Check key not already in the map
     ASSERT_MSG(fieldsmetadata.find(md.longName) == fieldsmetadata.end(),
-               "FieldMetadataDefault::addFieldMetadata: Long name " + md.longName + " already used.");
+               "FieldMetadataDefault::addFieldMetadata: Long name "
+               + md.longName + " already used.");
 
     // Insert the object into the map
     fieldsmetadata.insert(std::pair<std::string, FieldMetadata>(md.longName, fieldmetadata));
@@ -2069,4 +2070,4 @@ namespace ijedi
     md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
   }
-} // namespace ijedi
+}  // namespace ijedi

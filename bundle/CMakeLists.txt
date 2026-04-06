@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 project(ijedi-bundle VERSION 0.0.1 LANGUAGES C CXX Fortran)
 
@@ -29,14 +29,15 @@ ecbuild_bundle(PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.0
 
 # ===============================================================================
 # required repositories
-# ===============================================================================
-ecbuild_bundle(PROJECT jedicmake GIT "https://github.com/jcsda-internal/jedi-cmake.git" UPDATE BRANCH develop RECURSIVE)
-ecbuild_bundle(PROJECT oops GIT "https://github.com/JCSDA-Internal/oops.git" UPDATE BRANCH feature/mist)
-ecbuild_bundle(PROJECT vader GIT "https://github.com/JCSDA-Internal/vader.git" UPDATE BRANCH develop)
 
-# ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA-Internal/saber.git"      UPDATE BRANCH develop )
-# ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA-Internal/ioda.git"       UPDATE BRANCH develop )
-# ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA-Internal/ufo.git"        UPDATE BRANCH develop )
+# ===============================================================================
+ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git" UPDATE BRANCH develop RECURSIVE )
+ecbuild_bundle( PROJECT oops      GIT    "https://github.com/NOAA-EMC/oops.git" UPDATE BRANCH feature/mist )
+ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git" UPDATE BRANCH develop)
+
+# ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"      UPDATE BRANCH develop )
+# ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"       UPDATE BRANCH develop )
+# ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"        UPDATE BRANCH develop )
 ecbuild_bundle(PROJECT ijedi SOURCE "../")
 
 # ===============================================================================

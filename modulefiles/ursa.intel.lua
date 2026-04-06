@@ -27,6 +27,7 @@ load("boost/1.84.0")
 load("eckit/1.28.3")
 load("fckit/0.13.2")
 load("atlas/0.40.0")
+load("fms/2024.02")
 
 setenv("CC","mpiicx")
 setenv("CXX","mpiicpx")

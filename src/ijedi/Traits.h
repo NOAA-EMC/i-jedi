@@ -17,4 +17,4 @@ namespace ijedi
     typedef ijedi::State    State;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

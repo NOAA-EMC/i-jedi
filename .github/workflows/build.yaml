@@ -1,0 +1,37 @@
+name: Run all CI tests
+on: [pull_request]
+
+jobs:
+  run_all_tests:
+    runs-on: ubuntu-latest
+    name: Full CI (style and tests)
+    container: jcsda/docker-gnu-openmpi-dev:1.9
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        path: i-jedi
+        submodules: recursive
+    - name: Build in a bundle
+      shell: bash
+      run: |
+        su - nonroot
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE
+        mkdir -p Build
+        cd Build
+        export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"
+        ecbuild ../i-jedi/bundle
+        cd ijedi
+        make -j4
+    - name: Run ctests
+      shell: bash
+      run: |
+        su - nonroot
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE/Build/ijedi
+        export OMPI_ALLOW_RUN_AS_ROOT=1
+        export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+        ctest --rerun-failed --output-on-failure --allow-run-as-root

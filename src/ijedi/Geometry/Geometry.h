@@ -40,7 +40,7 @@ namespace ijedi
 
   class Geometry : public mist::base::Geometry, private util::ObjectCounter<Geometry>
   {
-  public:
+   public:
     static const std::string classname() { return "ijedi::Geometry"; }
 
     Geometry(const eckit::Configuration &, const eckit::mpi::Comm &);
@@ -55,7 +55,7 @@ namespace ijedi
     // Function to return the geometry variables
     const eckit::Configuration &geomVariables() const { return *geomVariables_; }
 
-  private:
+   private:
     Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;
     std::shared_ptr<FieldsMetadata> fieldsMeta_;
@@ -66,4 +66,4 @@ namespace ijedi
   };
   // -----------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

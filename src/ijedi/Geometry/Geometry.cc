@@ -27,9 +27,7 @@ namespace ijedi
     if (geomConf.has("geometry_type"))
     {
       type_ = geomConf.getString("geometry_type");
-    }
-    else
-    {
+    } else {
       // Abort
       std::stringstream errorMsg;
       errorMsg << "Geometry type (geometry_type) not specified in configuration.";

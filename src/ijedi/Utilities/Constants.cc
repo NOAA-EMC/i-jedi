@@ -68,6 +68,6 @@ namespace ijedi
     std::string constName(constNameC);
     constValueC = getConstant(constName);
   }
-} // namespace ijedi
+}  // namespace ijedi
 
 // -------------------------------------------------------------------------------------------------

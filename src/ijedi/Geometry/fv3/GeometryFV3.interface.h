@@ -24,5 +24,5 @@ namespace ijedi
         void f_fv3_geom_initialize(const eckit::LocalConfiguration &, const eckit::mpi::Comm *);
         void f_fv3_geom_create(const eckit::Configuration &, const eckit::Configuration &,
                                const eckit::mpi::Comm *);
-    } // extern "C"
-} // namespace ijedi
+    }  // extern "C"
+}  // namespace ijedi

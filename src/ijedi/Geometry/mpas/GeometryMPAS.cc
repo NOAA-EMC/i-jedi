@@ -1,3 +1,6 @@
+#include <string>
+#include <vector>
+
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/exception/Exceptions.h"
@@ -35,4 +38,4 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

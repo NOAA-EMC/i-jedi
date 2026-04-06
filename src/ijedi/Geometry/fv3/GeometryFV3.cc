@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/exception/Exceptions.h"
@@ -111,7 +113,7 @@ namespace ijedi
       const int num_elements = num_tri_elements + num_quad_elements;
       std::vector<int> num_elements_per_rank(comm.size());
       comm.allGather(num_elements, num_elements_per_rank.begin(), num_elements_per_rank.end());
-      int global_element_index = 1; // 1-based global index
+      int global_element_index = 1;  // 1-based global index
       for (size_t i = 0; i < comm.rank(); ++i)
       {
         global_element_index += num_elements_per_rank[i];
@@ -148,7 +150,7 @@ namespace ijedi
                      [](const int index)
                      { return atlas::gidx_t{index}; });
 
-      const atlas::idx_t remote_index_base = 1; // 1-based indexing from Fortran
+      const atlas::idx_t remote_index_base = 1;  // 1-based indexing from Fortran
       std::vector<atlas::idx_t> atlas_remote_indices(num_nodes);
       std::transform(remote_indices.begin(), remote_indices.end(), atlas_remote_indices.begin(),
                      [](const int index)
@@ -182,7 +184,7 @@ namespace ijedi
         const std::string filename = params.writeGmshFilename;
         eckit::LocalConfiguration gmsh_config{};
         gmsh_config.set("coordinates", "xyz");
-        gmsh_config.set("ghost", true); // enables viewing halos per task
+        gmsh_config.set("ghost", true);  // enables viewing halos per task
         atlas::output::Gmsh gmsh(filename, gmsh_config);
         gmsh.write(mesh);
       }
@@ -240,4 +242,4 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

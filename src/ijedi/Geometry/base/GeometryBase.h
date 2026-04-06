@@ -3,6 +3,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/mpi/Comm.h"
@@ -20,7 +21,7 @@ namespace ijedi
 
   class GeometryBase
   {
-  public:
+   public:
     virtual ~GeometryBase() = default;
 
     static std::shared_ptr<GeometryBase> create(const eckit::Configuration &,
@@ -33,4 +34,4 @@ namespace ijedi
     virtual std::vector<double> verticalCoord(std::string &) const = 0;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

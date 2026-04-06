@@ -1,6 +1,8 @@
 #pragma once
 
 #include <ostream>
+#include <string>
+#include <vector>
 
 #include "eckit/mpi/Comm.h"
 
@@ -18,14 +20,14 @@ namespace ijedi
 
   class GeometryFV3 : public GeometryBase
   {
-  public:
+   public:
     GeometryFV3(const eckit::Configuration &, const eckit::mpi::Comm &,
                 eckit::Configuration &, atlas::FunctionSpace &, atlas::FieldSet &, int &);
     void print(std::ostream &) const override;
     std::vector<double> verticalCoord(std::string &) const override;
 
-  private:
+   private:
     std::string printMessage_;
   };
 
-} // namespace ijedi
+}  // namespace ijedi
