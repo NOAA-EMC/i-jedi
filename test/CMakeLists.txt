@@ -74,4 +74,14 @@ set_tests_properties(ijedi_setup_mom6_testdata PROPERTIES
 
 set_tests_properties(ijedi_tier1_unit_geometry-mom6 PROPERTIES
     FIXTURES_REQUIRED  mom6_testdata
-    WORKING_DIRECTORY  ${MOM6_TEST_WORKDIR})
+    WORKING_DIRECTORY  ${MOM6_TEST_WORKDIR}
+    FIXTURES_SETUP     mom6_grid_output)
+
+# MOM6 structured-grid check against SOCA reference gridspec
+add_test(NAME ijedi_check_mom6_structured_grid
+    COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/data/mom6/check_mom6_structured_grid.py
+        ${MOM6_TEST_WORKDIR}/mom6_structured_grid.nc
+        ${MOM6_TEST_WORKDIR}/soca_gridspec.72x35x25.nc)
+set_tests_properties(ijedi_check_mom6_structured_grid PROPERTIES
+    FIXTURES_REQUIRED mom6_grid_output)

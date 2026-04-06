@@ -1125,8 +1125,8 @@ void GeometryMOM6::saveDebugMesh(const std::string & prefix,
                         fields_.field("mask2d"));
 
     std::vector<double>    lons(nNodes), lats(nNodes), mask(nNodes);
-    std::vector<int>       ghost(nNodes), part(nNodes);
-    std::vector<int64_t>   gidx(nNodes);
+    std::vector<int>         ghost(nNodes), part(nNodes);
+    std::vector<int64_t>     gidx(nNodes);
     for (int n = 0; n < nNodes; ++n) {
       lons[n]  = lonlatView(n, 0);
       lats[n]  = lonlatView(n, 1);
@@ -1157,7 +1157,7 @@ void GeometryMOM6::saveDebugMesh(const std::string & prefix,
     nc_put_var_double(ncid, vid_lat,   lats.data());
     nc_put_var_int(ncid, vid_ghost, ghost.data());
     nc_put_var_int(ncid, vid_part,  part.data());
-    nc_put_var_longlong(ncid, vid_gidx, reinterpret_cast<const long long*>(gidx.data()));
+    nc_put_var(ncid, vid_gidx, gidx.data());
     nc_put_var_double(ncid, vid_mask,  mask.data());
     nc_put_var_int(ncid, vid_rank,  &rank);
     nc_close(ncid);
