@@ -7,7 +7,10 @@
 
 #include "ijedi/Utilities/PrintHelper.h"
 
+<<<<<<< HEAD
 #include <algorithm>
+=======
+>>>>>>> a2c8d12 (Add a stub for State class)
 #include <cmath>
 #include <limits>
 #include <tuple>
