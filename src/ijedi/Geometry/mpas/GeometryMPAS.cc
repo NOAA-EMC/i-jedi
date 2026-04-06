@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
@@ -203,10 +204,7 @@ namespace ijedi {
                              eckit::Configuration &geomVariables,
                              atlas::FunctionSpace &functionSpace,
                              atlas::FieldSet &fieldSet,
-                             int &numberLevels) 
-
-
-
+                             int &numberLevels)
   { 
   oops::Log::trace() << "GeometryMPAS constructor starting" << std::endl;
 
@@ -233,19 +231,18 @@ namespace ijedi {
 
   oops::Log::trace() << "ijedi_mpas::GeometryMPAS::GeometryMPAS from config done" << std::endl;
 
-
   }
 
   // -----------------------------------------------------------------------------------------------
 
-  void GeometryMPAS::print(std::ostream &os) const 
+  void GeometryMPAS::print(std::ostream &os) const
   {
     int nVertLevels;
     ijedi_mpas_geom_get_vertical_resolution_f90(fortranGeom_, nVertLevels);
     int nCellsGlobal;
     ijedi_mpas_geom_get_global_cell_count_f90(fortranGeom_, nCellsGlobal);
-    os << "ijedi_mpas::GeometryMPAS, nCellsGlobal = " << nCellsGlobal << ", nVertLevels = " << nVertLevels
-       << ", communicator = " << comm_->name();
+    os << "ijedi_mpas::GeometryMPAS, nCellsGlobal = " << nCellsGlobal
+       << ", nVertLevels = " << nVertLevels << ", communicator = " << comm_->name();
   }
 
   // -----------------------------------------------------------------------------------------------
