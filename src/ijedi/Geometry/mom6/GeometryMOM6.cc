@@ -50,7 +50,7 @@ int GeometryMOM6::computeExtent(int N, int ndivs, int pe)
 // ---------------------------------------------------------------------------
 // Read all T-cell and U/V-cell geometry from ocean_hgrid.nc.
 // Supergrid is (2*NJ+1) x (2*NI+1); stride-2 odd indices give T-cell
-// centres.  C-grid staggering: U-point at [2*jG+1, 2*iG+2], V-point at
+// centers.  C-grid staggering: U-point at [2*jG+1, 2*iG+2], V-point at
 // [2*jG+2, 2*iG+1].
 // Metrics: dxT = dx[2*jG+1, 2*iG] + dx[2*jG+1, 2*iG+1]
 //          dyT = dy[2*jG, 2*iG+1] + dy[2*jG+1, 2*iG+1]
