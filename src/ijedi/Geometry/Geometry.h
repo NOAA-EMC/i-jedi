@@ -46,10 +46,6 @@ namespace ijedi
     Geometry(const eckit::Configuration &, const eckit::mpi::Comm &);
     ~Geometry();
 
-    bool levelsAreTopDown() const { return true; }
-    std::vector<double> verticalCoord(std::string &) const;
-    std::vector<size_t> variableSizes(const oops::Variables &) const;
-
     // This might need to change with mist.
     const int &numLevels() const { return numberLevels_; }
 

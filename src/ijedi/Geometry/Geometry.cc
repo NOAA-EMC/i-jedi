@@ -43,6 +43,13 @@ namespace ijedi
     // Construct the fields metadata object using numLevels from the base class
     fieldsMeta_ = std::make_shared<FieldsMetadata>(numberLevels_);
 
+    // Set up levels information
+    levelsAreTopDown_  = true;
+    levelsPerVariable_ = fieldsMeta_->levelsPerVariable();
+
+    // Build GeometryData
+    geomData_.reset(new oops::GeometryData(functionspace_, fields_, levelsAreTopDown_, comm));
+
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;
   }
@@ -63,27 +70,6 @@ namespace ijedi
     os << std::endl
        << "--------------------------------------------------"
           "--------------------------------------------------";
-  }
-
-  // -----------------------------------------------------------------------------------------------
-
-  std::vector<double> Geometry::verticalCoord(std::string &vcUnits) const
-  {
-    return geometryImpl_->verticalCoord(vcUnits);
-  }
-
-  // -----------------------------------------------------------------------------------------------
-
-  std::vector<size_t> Geometry::variableSizes(const oops::Variables &vars) const
-  {
-    // Array of level heights
-    std::vector<size_t> varSizes;
-    // Loop through arrays and search metadata map for the levels
-    for (size_t it = 0; it < vars.size(); it++)
-    {
-      varSizes.push_back(fieldsMeta_->getLevels(vars[it].name()));
-    }
-    return varSizes;
   }
 
   // -----------------------------------------------------------------------------------------------
