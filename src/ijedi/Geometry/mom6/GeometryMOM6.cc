@@ -873,10 +873,12 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
                            const eckit::mpi::Comm & comm,
                            eckit::Configuration &geomVariables,
                            atlas::FunctionSpace &functionSpace,
-                           atlas::FieldSet &geomFields, int &numberLevels)
+                           atlas::FieldSet &geomFields,
+                           bool &levelsAreTopDown, int &numberLevels)
   : comm_(comm)
 {
   oops::Log::trace() << "GeometryMOM6 constructor starting" << std::endl;
+  levelsAreTopDown = true;
 
   // 1. Read grid parameters from the MOM_input sub-configuration
   const eckit::LocalConfiguration momConf(conf, "MOM_input");
