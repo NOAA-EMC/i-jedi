@@ -97,7 +97,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "northward_wind";
@@ -106,7 +106,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_temperature";
@@ -115,7 +115,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "virtual_temperature";
@@ -124,7 +124,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_potential_temperature";
@@ -133,7 +133,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_pressure_thickness";
@@ -142,7 +142,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_pressure_to_kappa";
@@ -151,7 +151,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_pressure_levels";
@@ -160,7 +160,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "half";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_pressure";
@@ -169,7 +169,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_pressure_at_surface";
@@ -178,7 +178,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "ln_air_pressure_at_interface";
@@ -187,7 +187,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "half";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "water_vapor_mixing_ratio_wrt_moist_air";
@@ -196,7 +196,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "saturation_water_vapor_mixing_ratio_wrt_moist_air";
@@ -205,7 +205,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "relative_humidity";
@@ -214,7 +214,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "cloud_liquid_ice";
@@ -223,7 +223,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "cloud_liquid_water";
@@ -232,7 +232,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_large_scale_cloud_ice_water";
@@ -241,7 +241,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_convective_cloud_ice_water";
@@ -250,7 +250,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_large_scale_cloud_liquid_water";
@@ -259,7 +259,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_convective_cloud_liquid_water";
@@ -268,7 +268,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "fraction_of_large_scale_cloud_that_is_ice";
@@ -277,7 +277,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "fraction_of_convective_cloud_that_is_ice";
@@ -286,7 +286,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "snow_water";
@@ -295,7 +295,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "rain_water";
@@ -304,7 +304,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "graupel";
@@ -313,7 +313,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "cloud_droplet_number_concentration";
@@ -322,7 +322,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "cloud_ice_number_concentration";
@@ -331,7 +331,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "rain_number_concentration";
@@ -340,7 +340,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "aerosol_water_number_concentration";
@@ -349,7 +349,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "aerosol_ice_number_concentration";
@@ -358,7 +358,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "cloud_area_fraction_in_atmosphere_layer";
@@ -367,7 +367,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sgs_tke";
@@ -376,7 +376,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "upward_air_velocity";
@@ -385,7 +385,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "layer_thickness";
@@ -394,7 +394,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "geopotential_height_times_gravity_at_surface";
@@ -403,7 +403,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_horizontal_streamfunction";
@@ -412,7 +412,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_horizontal_velocity_potential";
@@ -421,7 +421,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_upward_absolute_vorticity";
@@ -430,7 +430,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_horizontal_divergence";
@@ -439,7 +439,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "slmsk";
@@ -448,7 +448,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sheleg";
@@ -457,7 +457,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "skin_temperature_at_surface";
@@ -466,7 +466,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_surface_temperature";
@@ -475,7 +475,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "vtype";
@@ -484,7 +484,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "stype";
@@ -493,7 +493,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "vfrac";
@@ -502,7 +502,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "stc";
@@ -511,7 +511,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "4";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "tslb";
@@ -520,7 +520,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "9";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "soilt";
@@ -529,7 +529,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "soilMoistureVolumetric";
@@ -538,7 +538,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "4";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "smois";
@@ -547,7 +547,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "9";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "soilm";
@@ -556,7 +556,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "totalSnowDepth";
@@ -565,7 +565,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "totalSnowDepthMeters";
@@ -574,7 +574,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "snowDensity";
@@ -583,7 +583,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "eastward_wind_at_surface";
@@ -592,7 +592,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "northward_wind_at_surface";
@@ -601,7 +601,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "f10m";
@@ -610,7 +610,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_surface_salinity";
@@ -619,7 +619,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "initial_mass_fraction_of_large_scale_cloud_condensate";
@@ -628,7 +628,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "initial_mass_fraction_of_convective_cloud_condensate";
@@ -637,7 +637,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "convective_cloud_area_fraction";
@@ -646,7 +646,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "fraction_of_ocean";
@@ -655,7 +655,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "fraction_of_land";
@@ -664,7 +664,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "fraction_of_landice";
@@ -673,7 +673,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "fraction_of_lake";
@@ -682,7 +682,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "fraction_of_ice";
@@ -691,7 +691,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "isotropic_variance_of_filtered_topography";
@@ -700,7 +700,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_velocity_scale";
@@ -709,7 +709,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_buoyancy_scale";
@@ -718,7 +718,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "planetary_boundary_layer_height";
@@ -727,7 +727,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_exchange_coefficient_for_momentum";
@@ -736,7 +736,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_exchange_coefficient_for_heat";
@@ -745,7 +745,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_exchange_coefficient_for_moisture";
@@ -754,7 +754,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "KCBL_before_moist";
@@ -763,7 +763,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_temp_before_moist";
@@ -772,7 +772,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "lower_index_where_Kh_greater_than_2";
@@ -781,7 +781,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "upper_index_where_Kh_greater_than_2";
@@ -790,7 +790,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "moist_air_density";
@@ -799,7 +799,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "zorl";
@@ -808,7 +808,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "air_temperature_at_2m";
@@ -817,7 +817,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "tropopause_pressure";
@@ -826,7 +826,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "geopotential_height";
@@ -835,7 +835,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "geopotential_height_levels";
@@ -844,7 +844,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "half";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "height_above_mean_sea_level";
@@ -853,7 +853,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "height_above_mean_sea_level_at_surface";
@@ -862,7 +862,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "geopotential_height_at_surface";
@@ -871,7 +871,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "water_vapor_mixing_ratio_wrt_dry_air";
@@ -880,7 +880,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "integrated_layer_ozone_in_air";
@@ -889,7 +889,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_cloud_liquid_water_in_atmosphere_layer";
@@ -898,7 +898,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_cloud_ice_in_atmosphere_layer";
@@ -907,7 +907,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_rain_in_atmosphere_layer";
@@ -916,7 +916,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_snow_in_atmosphere_layer";
@@ -925,7 +925,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_graupel_in_atmosphere_layer";
@@ -934,7 +934,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_hail_in_atmosphere_layer";
@@ -943,7 +943,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_cloud_liquid_water_in_atmosphere_column";
@@ -952,7 +952,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_cloud_ice_in_atmosphere_column";
@@ -961,7 +961,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_rain_in_atmosphere_column";
@@ -970,7 +970,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_snow_in_atmosphere_column";
@@ -979,7 +979,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_graupel_in_atmosphere_column";
@@ -988,7 +988,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_content_of_hail_in_atmosphere_column";
@@ -997,7 +997,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "effective_radius_of_cloud_liquid_water_particle";
@@ -1006,7 +1006,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "effective_radius_of_cloud_ice_particle";
@@ -1015,7 +1015,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "effective_radius_of_rain_particle";
@@ -1024,7 +1024,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "effective_radius_of_snow_particle";
@@ -1033,7 +1033,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "effective_radius_of_graupel_particle";
@@ -1042,7 +1042,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "effective_radius_of_hail_particle";
@@ -1051,7 +1051,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "totalSnowDepth_background_error";
@@ -1060,7 +1060,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "water_area_fraction";
@@ -1069,7 +1069,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "land_area_fraction";
@@ -1078,7 +1078,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "ice_area_fraction";
@@ -1087,7 +1087,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_snow_area_fraction";
@@ -1096,7 +1096,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "skin_temperature_at_surface_where_sea";
@@ -1105,7 +1105,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "skin_temperature_at_surface_where_land";
@@ -1114,7 +1114,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "skin_temperature_at_surface_where_ice";
@@ -1123,7 +1123,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "skin_temperature_at_surface_where_snow";
@@ -1132,7 +1132,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_snow_thickness";
@@ -1141,7 +1141,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "vegetation_area_fraction";
@@ -1150,7 +1150,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "wind_speed_at_surface";
@@ -1159,7 +1159,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "wind_from_direction_at_surface";
@@ -1168,7 +1168,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "direction";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "leaf_area_index";
@@ -1177,7 +1177,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_fraction_of_condensed_water_in_soil";
@@ -1186,7 +1186,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "soil_temperature";
@@ -1195,7 +1195,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "land_type_index_NPOESS";
@@ -1204,7 +1204,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "vegetation_type_index";
@@ -1213,7 +1213,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "soil_type";
@@ -1222,7 +1222,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_roughness_length";
@@ -1231,7 +1231,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "wind_reduction_factor_at_10m";
@@ -1240,7 +1240,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "observable_domain_mask";
@@ -1249,7 +1249,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "surface_emissivity";
@@ -1258,7 +1258,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "optical_thickness_of_atmosphere_layer";
@@ -1267,7 +1267,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "toa_outgoing_radiance_per_unit_wavenumber";
@@ -1276,7 +1276,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "brightness_temperature";
@@ -1285,7 +1285,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "brightness_temperature_assuming_clear_sky";
@@ -1294,7 +1294,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "transmittances_of_atmosphere_layer";
@@ -1303,7 +1303,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "weightingfunction_of_atmosphere_layer";
@@ -1312,7 +1312,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "pressure_level_at_peak_of_weightingfunction";
@@ -1321,7 +1321,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "average_surface_temperature_within_field_of_view";
@@ -1330,7 +1330,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "equivalent_reflectivity_factor";
@@ -1339,7 +1339,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_ice_category_area_fraction";
@@ -1348,7 +1348,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_ice_category_thickness";
@@ -1357,7 +1357,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_surface_height_above_geoid";
@@ -1366,7 +1366,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_potential_temperature";
@@ -1375,7 +1375,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_conservative_temperature";
@@ -1384,7 +1384,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_absolute_salinity";
@@ -1393,7 +1393,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_practical_salinity";
@@ -1402,7 +1402,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_salinity";
@@ -1411,7 +1411,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_cell_thickness";
@@ -1420,7 +1420,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "latent_heat_vaporization";
@@ -1429,7 +1429,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "net_downwelling_shortwave_radiation";
@@ -1438,7 +1438,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "upward_latent_heat_flux_in_air";
@@ -1447,7 +1447,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "upward_sensible_heat_flux_in_air";
@@ -1456,7 +1456,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "net_downwelling_longwave_radiation";
@@ -1465,7 +1465,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "friction_velocity_over_water";
@@ -1474,7 +1474,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     // Aerosols
@@ -1484,7 +1484,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_dust002_in_air";
@@ -1493,7 +1493,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_dust003_in_air";
@@ -1502,7 +1502,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_dust004_in_air";
@@ -1511,7 +1511,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_dust005_in_air";
@@ -1520,7 +1520,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_sea_salt001_in_air";
@@ -1529,7 +1529,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_sea_salt002_in_air";
@@ -1538,7 +1538,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_sea_salt003_in_air";
@@ -1547,7 +1547,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_sea_salt004_in_air";
@@ -1556,7 +1556,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_sea_salt005_in_air";
@@ -1565,7 +1565,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_hydrophobic_black_carbon_in_air";
@@ -1574,7 +1574,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_hydrophilic_black_carbon_in_air";
@@ -1583,7 +1583,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_hydrophobic_organic_carbon_in_air";
@@ -1592,7 +1592,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_hydrophilic_organic_carbon_in_air";
@@ -1601,7 +1601,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_nitrate001_in_air";
@@ -1610,7 +1610,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_nitrate002_in_air";
@@ -1619,7 +1619,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_nitrate003_in_air";
@@ -1628,7 +1628,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_so2_in_air";
@@ -1637,7 +1637,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mass_fraction_of_sulfate_in_air";
@@ -1646,7 +1646,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_extinction_in_air_due_to_aerosol_particles_lambda1";
@@ -1655,7 +1655,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_extinction_in_air_due_to_aerosol_particles_lambda2";
@@ -1664,7 +1664,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_extinction_in_air_due_to_aerosol_particles_lambda3";
@@ -1673,7 +1673,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "pm25at";
@@ -1682,7 +1682,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "pm25ac";
@@ -1691,7 +1691,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "pm25co";
@@ -1700,7 +1700,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
+
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     // Trace gases
@@ -1710,7 +1710,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_mixing_ratio_of_no";
@@ -1719,7 +1718,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_mixing_ratio_of_o3";
@@ -1728,7 +1726,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_mixing_ratio_of_oh";
@@ -1737,7 +1734,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_mixing_ratio_of_co";
@@ -1746,7 +1742,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "volume_mixing_ratio_of_hcho";
@@ -1755,7 +1750,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mole_fraction_of_carbon_dioxide_in_air";
@@ -1764,7 +1758,6 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "ech4";
@@ -1773,7 +1766,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "ozone_mass_mixing_ratio";
@@ -1782,7 +1774,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "mole_fraction_of_ozone_in_air";
@@ -1791,7 +1782,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "odd_oxygen_mixing_ratio";
@@ -1800,7 +1790,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     // Trace Gas Emissions
@@ -1810,7 +1799,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic";
@@ -1819,7 +1807,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic";
@@ -1828,7 +1815,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_co_due_to_anthropogenic_agriculture";
@@ -1837,7 +1823,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic_agriculture";
@@ -1846,7 +1831,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic_agriculture";
@@ -1855,7 +1839,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_co_due_to_anthropogenic_energy";
@@ -1864,7 +1847,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic_energy";
@@ -1873,7 +1855,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic_energy";
@@ -1882,7 +1863,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_co_due_to_anthropogenic_industry";
@@ -1891,7 +1871,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic_industry";
@@ -1900,7 +1879,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic_industry";
@@ -1909,7 +1887,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_co_due_to_anthropogenic_rco";
@@ -1918,7 +1895,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic_rco";
@@ -1927,7 +1903,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic_rco";
@@ -1936,7 +1911,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_co_due_to_anthropogenic_shipping";
@@ -1945,7 +1919,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic_shipping";
@@ -1954,7 +1927,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic_shipping";
@@ -1963,7 +1935,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_co_due_to_anthropogenic_solvents";
@@ -1972,7 +1943,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic_solvents";
@@ -1981,7 +1951,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic_solvents";
@@ -1990,7 +1959,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_co_due_to_anthropogenic_transportation";
@@ -1999,7 +1967,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic_transportation";
@@ -2008,7 +1975,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic_transportation";
@@ -2017,7 +1983,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_co_due_to_anthropogenic_waste";
@@ -2026,7 +1991,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_no_due_to_anthropogenic_waste";
@@ -2035,7 +1999,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "emissions_of_hcho_due_to_anthropogenic_waste";
@@ -2044,7 +2007,6 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     // Orography
@@ -2054,7 +2016,6 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "filtered_orography";
@@ -2063,7 +2024,6 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
-    md.mask = "none";
     addFieldMetadata(fieldsmetadata, nlev, md);
   }
 }  // namespace ijedi
