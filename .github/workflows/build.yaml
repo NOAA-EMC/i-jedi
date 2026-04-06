@@ -18,7 +18,9 @@ jobs:
         su - nonroot
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE/i-jedi
+        cd $GITHUB_WORKSPACE
+        mkdir -p Build
+        cd Build
         export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"
         ecbuild ../i-jedi/bundle
     - name: Run coding style checks
@@ -27,7 +29,7 @@ jobs:
         su - nonroot
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE/i-jedi/ijedi
+        cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure        
     - name: Compile the code
       shell: bash
@@ -35,9 +37,7 @@ jobs:
         su - nonroot
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE
-        mkdir -p Build
-        cd Build/ijedi
+        cd $GITHUB_WORKSPACE/Build/ijedi
         make -j4
     - name: Run ctests
       shell: bash
