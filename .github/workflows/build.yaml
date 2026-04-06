@@ -12,6 +12,17 @@ jobs:
       with:
         path: i-jedi
         submodules: recursive
+    - name: Run coding style checks
+      shell: bash
+      run: |
+        su - nonroot
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE/i-jedi
+        export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"
+        ecbuild ../i-jedi/bundle
+        cd ijedi
+        ctest -R coding_norms --output-on-failure        
     - name: Build in a bundle
       shell: bash
       run: |
