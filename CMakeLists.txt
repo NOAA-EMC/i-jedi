@@ -41,6 +41,9 @@ endif()
 find_package(FMS 2023.04 COMPONENTS R4 R8)
 add_library(fms ALIAS FMS::fms_r8)
 
+# MPAS
+find_package(MPAS 8.0 COMPONENTS core_atmosphere)
+
 # ###############################################################################
 # Sources
 # ###############################################################################

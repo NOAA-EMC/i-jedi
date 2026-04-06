@@ -98,6 +98,24 @@ if(FMS_FOUND)
 endif()
 
 # ###############################################################################
+# MPAS specific project source files and setup
+# ###############################################################################
+if(MPAS_FOUND)
+
+  list(APPEND ijedi_mpas_src_files
+    Geometry/mpas/GeometryMPAS.cc
+    Geometry/mpas/GeometryMPAS.h
+    Geometry/mpas/GeometryMPAS.interface.h
+    Geometry/mpas/ijedi_mpas_geom_interface_mod.f90
+    Geometry/mpas/ijedi_mpas_geom_mod.f90
+  )
+
+  # Combine with main source files
+  list(APPEND ijedi_src_files ${ijedi_mpas_src_files})
+
+endif()
+
+# ###############################################################################
 # Model specific project source files
 # ###############################################################################
 ecbuild_add_library(TARGET ${PROJECT_NAME}
@@ -124,6 +142,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
 if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
+endif()
+if(MPAS_FOUND)
+  target_link_libraries(${PROJECT_NAME} PUBLIC MPAS::core::atmosphere)
 endif()
 
 if(OpenMP_CXX_FOUND)
