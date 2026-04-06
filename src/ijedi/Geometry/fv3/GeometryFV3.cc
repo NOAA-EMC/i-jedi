@@ -26,7 +26,7 @@ namespace ijedi
 
   GeometryFV3::GeometryFV3(const eckit::Configuration &geomConfig, const eckit::mpi::Comm &comm,
                            eckit::Configuration &geomVariables, atlas::FunctionSpace &functionSpace,
-                           atlas::FieldSet &geomFields, int &numberLevels)
+                           atlas::FieldSet &geomFields, bool &levelsAreTopDown, int &numberLevels)
   {
     oops::Log::trace() << "GeometryFV3 constructor starting" << std::endl;
 
@@ -59,7 +59,8 @@ namespace ijedi
     int layout_x = geomVariables.getInt("layout_x");
     int layout_y = geomVariables.getInt("layout_y");
 
-    // Set number of levels
+    // Set number of levels and whether levels are top-down or bottom-up
+    levelsAreTopDown = true;
     numberLevels = npz;
 
     std::string globalOrRegional = ntiles == 6 ? "Global" : "Regional";

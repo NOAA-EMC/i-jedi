@@ -85,7 +85,7 @@ void State::print(std::ostream & os) const {
   int fieldIndex    = 0;
   for (const auto & var : this->variables()) {
     const atlas::Field & field             = fs.field(var.name());
-    const auto [globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
+    const auto[globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
     ++fieldIndex;
     os << std::endl
        << "Fld=" << fieldIndex << std::scientific << std::setprecision(16) << "  Min=" << globalMin

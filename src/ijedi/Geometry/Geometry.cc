@@ -36,13 +36,12 @@ namespace ijedi
 
     // Create the geometry implementation (which will set numLevels_)
     geometryImpl_ = GeometryBase::create(geomConf, comm, *geomVariables_, functionspace_,
-                                         fields_, numberLevels_);
+                                         fields_, levelsAreTopDown_, numberLevels_);
 
     // Construct the fields metadata object using numLevels from the base class
     fieldsMeta_ = std::make_shared<FieldsMetadata>(numberLevels_);
 
-    // Set up levels information
-    levelsAreTopDown_  = true;
+    // Set up levels information for each variable using the fields metadata
     levelsPerVariable_ = fieldsMeta_->levelsPerVariable();
 
     // Build GeometryData
@@ -72,4 +71,4 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi
