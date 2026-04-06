@@ -205,7 +205,7 @@ namespace ijedi {
                              atlas::FunctionSpace &functionSpace,
                              atlas::FieldSet &fieldSet,
                              int &numberLevels)
-  { 
+  {
   oops::Log::trace() << "GeometryMPAS constructor starting" << std::endl;
 
   ijedi_mpas_geom_setup_f90(fortranGeom_, geomConfig, &comm);
@@ -230,7 +230,6 @@ namespace ijedi {
   comm_ = &comm;  // Store the communicator pointer
 
   oops::Log::trace() << "ijedi_mpas::GeometryMPAS::GeometryMPAS from config done" << std::endl;
-
   }
 
   // -----------------------------------------------------------------------------------------------
