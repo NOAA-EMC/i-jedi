@@ -29,7 +29,7 @@ namespace ijedi
                                                 eckit::Configuration &,
                                                 atlas::FunctionSpace &,
                                                 atlas::FieldSet &,
-                                                int &);
+                                                bool &, int &);
     virtual void print(std::ostream &) const = 0;
     virtual std::vector<double> verticalCoord(std::string &) const = 0;
   };
