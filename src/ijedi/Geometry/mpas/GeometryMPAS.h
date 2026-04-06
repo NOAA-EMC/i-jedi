@@ -30,7 +30,7 @@ namespace ijedi
 
     GeometryMPAS(const eckit::Configuration & config, const eckit::mpi::Comm & comm);
     GeometryMPAS(const GeometryMPAS & other);
-//    ~GeometryMPAS();
+//    ~GeometryMPAS(); // no destructor? 
 
     GeometryMPAS & operator=(const GeometryMPAS &) = delete;
 

@@ -5,8 +5,6 @@
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/exception/Exceptions.h"
 
-//#include "atlas/array/ArrayView.h"
-
 #include "atlas/field.h"
 #include "atlas/functionspace.h"
 #include "atlas/grid.h"
@@ -22,7 +20,6 @@
 
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
 #include "ijedi/Geometry/mpas/GeometryMPAS.interface.h"
-//#include "ijedi/Geometry/mpas/GeometryMPASParameters.h"
 
 namespace
 {
@@ -259,6 +256,7 @@ namespace ijedi {
     std::stringstream errorMsg;
     errorMsg << "GeometryMPAS::verticalCoord is not implemented" << std::endl;
     ABORT(errorMsg.str());
+    return std::vector<double>();  // Never reached, but satisfies compiler
   }
 
   // -----------------------------------------------------------------------------------------------
