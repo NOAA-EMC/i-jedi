@@ -5,6 +5,7 @@
 #include <iterator>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "oops/util/abor1_cpp.h"
@@ -142,7 +143,7 @@ namespace ijedi
     FieldMetadata getFieldMetadata(const std::string &) const;
 
     // Get levels from any of the potential field names
-    size_t getLevels(const std::string &) const;
+    std::unordered_map<std::string, size_t> levelsPerVariable() const;
 
     // Function to return all the long names
     const std::vector<std::string> &getLongNames() const { return longNames_; }
