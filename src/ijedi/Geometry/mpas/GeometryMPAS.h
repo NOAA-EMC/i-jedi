@@ -37,6 +37,10 @@ namespace ijedi
    private:
 
     void * fortranGeom_ = nullptr;
+    bool levelsAreTopDown_;
+    std::vector<int> levelsPerVariable_;
+    //std::shared_ptr<oops::GeometryData> geomData_;
+    //const eckit::mpi::Comm* comm_;
 
   };
 
