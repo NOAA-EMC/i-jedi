@@ -22,75 +22,111 @@
 #include "oops/util/Logger.h"
 #include "oops/util/for_each.h"
 
-namespace ijedi {
+#include "ijedi/Io/IoBase.h"
 
-State::State(const Geometry & geom, const eckit::Configuration & config)
-    : mist::base::State(geom, oops::Variables(config, "state variables"),
-                        util::DateTime(config.getString("date")), false),
-      geom_(geom) {
-  if (config.has("analytic init")) {
-    analytic_init(config);
-  } else if (config.has("filetype")) {
-    read(config);
-  } else {
-    throw eckit::BadParameter("ijedi::State: config must have 'filetype' or 'analytic init'",
-                              Here());
+namespace ijedi
+{
+
+  State::State(const Geometry &geom, const eckit::Configuration &config)
+      : mist::base::State(geom, oops::Variables(config, "state variables"),
+                          util::DateTime(config.getString("date")), false),
+        geom_(geom)
+  {
+    if (config.has("analytic init"))
+    {
+      analytic_init(config);
+    }
+    else if (config.has("filetype"))
+    {
+      read(config);
+    }
+    else
+    {
+      throw eckit::BadParameter("ijedi::State: config must have 'filetype' or 'analytic init'",
+                                Here());
+    }
   }
-}
 
-State::State(const Geometry & geom, const oops::Variables & vars, const util::DateTime & time,
-             bool initToZero)
-    : mist::base::State(geom, vars, time, initToZero), geom_(geom) {}
+  State::State(const Geometry &geom, const oops::Variables &vars, const util::DateTime &time,
+               bool initToZero)
+      : mist::base::State(geom, vars, time, initToZero), geom_(geom) {}
 
-State::State(const Geometry & geom, const State & other)
-    : mist::base::State(geom, other), geom_(geom) {}
+  State::State(const Geometry &geom, const State &other)
+      : mist::base::State(geom, other), geom_(geom) {}
 
-State::State(const oops::Variables & vars, const State & other)
-    : mist::base::State(vars, other), geom_(other.geom_) {}
+  State::State(const oops::Variables &vars, const State &other)
+      : mist::base::State(vars, other), geom_(other.geom_) {}
 
-State::State(const State & other) : mist::base::State(other), geom_(other.geom_) {}
+  State::State(const State &other) : mist::base::State(other), geom_(other.geom_) {}
 
-State::~State() = default;
+  State::~State() = default;
 
-State & State::operator=(const State & rhs) {
-  mist::base::State::operator=(rhs);
-  return *this;
-}
+  State &State::operator=(const State &rhs)
+  {
+    mist::base::State::operator=(rhs);
+    return *this;
+  }
 
-void State::read(const eckit::Configuration & config) {
-  oops::Log::trace() << "ijedi::State::read starting" << std::endl;
-  // TODO(someone): implement read
-  oops::Log::trace() << "ijedi::State::read done" << std::endl;
-}
+  void State::read(const eckit::Configuration &config)
+  {
+    oops::Log::trace() << "ijedi::State::read starting" << std::endl;
 
-void State::write(const eckit::Configuration & config) const {
-  oops::Log::trace() << "ijedi::State::write starting" << std::endl;
-  // TODO(someone): implement write
-  oops::Log::trace() << "ijedi::State::write done" << std::endl;
-}
+    // Create a Parameters object
+    StateParameters params;
+    params.deserialize(config);
+    // Optionally set the datetime on read (needed for some bump applications)
+    if (params.setdatetime.value() != boost::none)
+    {
+      // if (*params.setdatetime.value() && params.datetime.value() != boost::none)
+      //{
+      //  time_ = *params.datetime.value();
+      //}
+    }
 
-void State::analytic_init(const eckit::Configuration & config) {
-  oops::Log::trace() << "ijedi::State::analytic_init starting" << std::endl;
-  // TODO(someone): implement analytic init
-  oops::Log::trace() << "ijedi::State::analytic_init done" << std::endl;
-}
+    // Create the IO object to use
+    // ---------------------------
+    std::unique_ptr<IoBase> io(IoFactory::create(geom_,
+                                                 *params.ioParametersWrapper.ioParameters.value()));
 
-void State::print(std::ostream & os) const {
-  os << std::endl
-     << "  Valid time: " << this->validTime() << std::endl
-     << ", nFields = " << this->variables().size();
+    // Call read method of child
+    // -------------------------
+    io->readBase(this->fieldSet());
 
-  const auto & comm = geom_.comm();
-  const auto & fs   = this->fieldSet();
-  int fieldIndex    = 0;
-  for (const auto & var : this->variables()) {
-    const atlas::Field & field             = fs.field(var.name());
-    const auto [globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
-    ++fieldIndex;
+    oops::Log::trace() << "ijedi::State::read done" << std::endl;
+  }
+
+  void State::write(const eckit::Configuration &config) const
+  {
+    oops::Log::trace() << "ijedi::State::write starting" << std::endl;
+    // TODO(someone): implement write
+    oops::Log::trace() << "ijedi::State::write done" << std::endl;
+  }
+
+  void State::analytic_init(const eckit::Configuration &config)
+  {
+    oops::Log::trace() << "ijedi::State::analytic_init starting" << std::endl;
+    // TODO(someone): implement analytic init
+    oops::Log::trace() << "ijedi::State::analytic_init done" << std::endl;
+  }
+
+  void State::print(std::ostream &os) const
+  {
     os << std::endl
-       << "Fld=" << fieldIndex << std::scientific << std::setprecision(16) << "  Min=" << globalMin
-       << ", Max=" << globalMax << ", RMS=" << rms << " : " << var.name();
-  }
-}
+       << "  Valid time: " << this->validTime() << std::endl
+       << ", nFields = " << this->variables().size();
 
-}  // namespace ijedi
+    const auto &comm = geom_.comm();
+    const auto &fs = this->fieldSet();
+    int fieldIndex = 0;
+    for (const auto &var : this->variables())
+    {
+      const atlas::Field &field = fs.field(var.name());
+      const auto [globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
+      ++fieldIndex;
+      os << std::endl
+         << "Fld=" << fieldIndex << std::scientific << std::setprecision(16) << "  Min=" << globalMin
+         << ", Max=" << globalMax << ", RMS=" << rms << " : " << var.name();
+    }
+  }
+
+} // namespace ijedi
