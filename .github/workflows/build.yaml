@@ -21,6 +21,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         mkdir -p Build
         cd Build
+        export ESMF_DIR=/opt/views/view/cmake
         export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"
         ecbuild ../i-jedi/bundle
         cd ijedi
