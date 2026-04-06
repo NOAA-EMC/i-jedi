@@ -34,6 +34,13 @@ ecbuild_bundle(PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.0
 ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git" UPDATE BRANCH develop RECURSIVE )
 ecbuild_bundle( PROJECT oops      GIT    "https://github.com/NOAA-EMC/oops.git" UPDATE BRANCH feature/mist )
 ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git" UPDATE BRANCH develop)
+
+find_package(ESMF)
+if(ESMF_FOUND)
+  message(STATUS "Found external ESMF, MPAS will use it")
+else()
+  message(WARNING "ESMF not found, MPAS will try to build internal ESMF")
+endif()
 ecbuild_bundle( PROJECT mpas      GIT    "https://github.com/ufs-community/MPAS-Model.git" UPDATE BRANCH gsl/develop RECURSIVE )
 
 # ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"      UPDATE BRANCH develop )

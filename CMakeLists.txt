@@ -43,14 +43,6 @@ add_library(fms ALIAS FMS::fms_r8)
 
 # MPAS
 find_package(MPAS 8.0 COMPONENTS core_atmosphere)
-#if(ESMF_FOUND)
-#  message(STATUS "Configure i-jedi for external ESMF")
-#  add_definitions(-DMPAS_EXTERNAL_ESMF_LIB)
-#else()
-#  message(STATUS "Configure i-jedi for internal ESMF")
-#endif()
-message(STATUS "Configure i-jedi for external ESMF")
-add_definitions(-DMPAS_EXTERNAL_ESMF_LIB)
 
 # ###############################################################################
 # Sources

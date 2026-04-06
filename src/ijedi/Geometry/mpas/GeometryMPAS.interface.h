@@ -33,7 +33,7 @@ namespace ijedi
                                        int * partition, const int & num_tri_nodes,
                                        int * raw_tri_boundary_nodes);
         void ijedi_mpas_geom_get_vertical_resolution_f90(const void * geom, int & nVertLevels);
-        void ijedi_mpas_geom_get_local_cell_counts_f90(const void * geom, int & nCells, i
+        void ijedi_mpas_geom_get_local_cell_counts_f90(const void * geom, int & nCells,
                                        int & nCellsSolve);
         void ijedi_mpas_geom_get_global_cell_count_f90(const void * geom, int & nCellsGlobal);
         void ijedi_mpas_geom_get_area_f90(const void * geom, const int & n, double * area);
