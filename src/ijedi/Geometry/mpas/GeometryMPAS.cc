@@ -20,7 +20,7 @@ namespace ijedi
                              eckit::Configuration &geomVariables,
                              atlas::FunctionSpace &functionSpace,
                              atlas::FieldSet &fieldSet,
-                             int &numberLevels) {}
+                             bool &levelsAreTopDown, int &numberLevels) {}
 
   // -----------------------------------------------------------------------------------------------
 
