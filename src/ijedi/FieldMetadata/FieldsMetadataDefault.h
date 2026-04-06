@@ -17,7 +17,7 @@ namespace ijedi
     std::string longName;
     std::string units;
     std::string kind;
-    std::string tracer; // Turned into bool but input as string to allow checking
+    std::string tracer;  // Turned into bool but input as string to allow checking
     std::string levels;
     std::string vtype;
   };
