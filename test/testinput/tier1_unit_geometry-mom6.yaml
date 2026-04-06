@@ -1,6 +1,7 @@
 geometry:
   geometry_type: mom6
-  input_dir: .
+  ocean_hgrid: INPUT/ocean_hgrid.nc
+  ocean_topog: INPUT/ocean_topog.nc
   coarsen factor: 1
   save unstructured grid to: mom6_grid.nc
   save structured grid to: mom6_structured_grid.nc

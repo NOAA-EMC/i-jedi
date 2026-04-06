@@ -878,8 +878,6 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
 {
   oops::Log::trace() << "GeometryMOM6 constructor starting" << std::endl;
 
-  const std::string inputDir = conf.getString("input_dir", ".");
-
   // 1. Read grid parameters from the MOM_input sub-configuration
   const eckit::LocalConfiguration momConf(conf, "MOM_input");
   niGlobal_     = momConf.getInt("NIGLOBAL");
@@ -924,14 +922,15 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
                      << " jCount=" << jCount_ << std::endl;
 
   // 3. Read global grid arrays (all ranks read identically)
-  const std::string hgridPath = inputDir + "/INPUT/ocean_hgrid.nc";
+  const std::string hgridPath = conf.getString("ocean_hgrid");
+  const std::string topogPath = conf.getString("ocean_topog");
 
   std::vector<double> lon, lat, dxT, dyT, areaT, lonU, latU, lonV, latV;
   readHgrid(hgridPath,
             &lon, &lat, &dxT, &dyT, &areaT, &lonU, &latU, &lonV, &latV);
 
   std::vector<double> depth, wet;
-  readTopog(inputDir + "/INPUT/ocean_topog.nc", &depth, &wet);
+  readTopog(topogPath, &depth, &wet);
 
   // 4. MOM6 structured function space and fields (local compute domain)
   buildMom6FunctionSpace(comm, lon, lat);
