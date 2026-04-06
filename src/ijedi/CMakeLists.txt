@@ -29,6 +29,8 @@ list(APPEND ijedi_src_files
   State/State.h
 
   # Increment
+  Increment/Increment.cc
+  Increment/Increment.h
 
   # IO
 

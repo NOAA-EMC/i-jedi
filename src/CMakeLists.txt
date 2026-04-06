@@ -1,4 +1,5 @@
 add_subdirectory( ijedi )
+add_subdirectory( mains )
 
 # find cpplint.py provided by oops
 find_file( CPPLINT_PY oops_cpplint.py HINTS ${oops_BINDIR} )
