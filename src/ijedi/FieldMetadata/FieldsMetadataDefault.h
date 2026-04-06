@@ -20,7 +20,6 @@ namespace ijedi
     std::string tracer;  // Turned into bool but input as string to allow checking
     std::string levels;
     std::string vtype;
-    std::string mask;
   };
 
   // -----------------------------------------------------------------------------------------------
@@ -33,7 +32,6 @@ namespace ijedi
     md.tracer = "tracer";
     md.levels = "levels";
     md.vtype = "vtype";
-    md.mask = "mask";
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -48,7 +46,6 @@ namespace ijedi
     ASSERT_MSG(md.tracer != "tracer", "tracer was not set");
     ASSERT_MSG(md.levels != "levels", "levels was not set");
     ASSERT_MSG(md.vtype != "vtype", "vector type was not set");
-    ASSERT_MSG(md.mask != "mask", "mask was not set");
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -68,7 +65,6 @@ namespace ijedi
     fieldmetadata.setNumLevls(md.levels);
     fieldmetadata.setVectType(md.vtype);
     fieldmetadata.setIsTracer(md.tracer);
-    fieldmetadata.setGridMask(md.mask);
 
     // Validate the choices
     fieldmetadata.validate();
