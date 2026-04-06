@@ -71,7 +71,8 @@ namespace ijedi
 
     // Check key not already in the map
     ASSERT_MSG(fieldsmetadata.find(md.longName) == fieldsmetadata.end(),
-               "FieldMetadataDefault::addFieldMetadata: Long name " + md.longName + " already used.");
+               "FieldMetadataDefault::addFieldMetadata: Long name "
+               + md.longName + " already used.");
 
     // Insert the object into the map
     fieldsmetadata.insert(std::pair<std::string, FieldMetadata>(md.longName, fieldmetadata));
@@ -1842,4 +1843,4 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
   }
-} // namespace ijedi
+}  // namespace ijedi
