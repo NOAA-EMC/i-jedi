@@ -1,11 +1,10 @@
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/exception/Exceptions.h"
-
-//#include "atlas/array/ArrayView.h"
 
 #include "atlas/field.h"
 #include "atlas/functionspace.h"
@@ -22,7 +21,6 @@
 
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
 #include "ijedi/Geometry/mpas/GeometryMPAS.interface.h"
-//#include "ijedi/Geometry/mpas/GeometryMPASParameters.h"
 
 namespace
 {
@@ -206,11 +204,9 @@ namespace ijedi {
                              eckit::Configuration &geomVariables,
                              atlas::FunctionSpace &functionSpace,
                              atlas::FieldSet &fieldSet,
-                             int &numberLevels) 
-
-
-
-  { 
+                             bool &levelsAreTopDown,
+                             int &numberLevels)
+  {
   oops::Log::trace() << "GeometryMPAS constructor starting" << std::endl;
 
   ijedi_mpas_geom_setup_f90(fortranGeom_, geomConfig, &comm);
@@ -235,20 +231,18 @@ namespace ijedi {
   comm_ = &comm;  // Store the communicator pointer
 
   oops::Log::trace() << "ijedi_mpas::GeometryMPAS::GeometryMPAS from config done" << std::endl;
-
-
   }
 
   // -----------------------------------------------------------------------------------------------
 
-  void GeometryMPAS::print(std::ostream &os) const 
+  void GeometryMPAS::print(std::ostream &os) const
   {
     int nVertLevels;
     ijedi_mpas_geom_get_vertical_resolution_f90(fortranGeom_, nVertLevels);
     int nCellsGlobal;
     ijedi_mpas_geom_get_global_cell_count_f90(fortranGeom_, nCellsGlobal);
-    os << "ijedi_mpas::GeometryMPAS, nCellsGlobal = " << nCellsGlobal << ", nVertLevels = " << nVertLevels
-       << ", communicator = " << comm_->name();
+    os << "ijedi_mpas::GeometryMPAS, nCellsGlobal = " << nCellsGlobal
+       << ", nVertLevels = " << nVertLevels << ", communicator = " << comm_->name();
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -259,6 +253,7 @@ namespace ijedi {
     std::stringstream errorMsg;
     errorMsg << "GeometryMPAS::verticalCoord is not implemented" << std::endl;
     ABORT(errorMsg.str());
+    return std::vector<double>();  // Never reached, but satisfies compiler
   }
 
   // -----------------------------------------------------------------------------------------------

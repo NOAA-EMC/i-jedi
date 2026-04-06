@@ -36,13 +36,10 @@ foreach(TIER RANGE 1 3)
 
         # Ensure we have exactly 3 parts (tier, type, name)
         if(${NUM_PARTS} EQUAL 3)
-            # Get relative path for ARGS
-            file(RELATIVE_PATH YAML_REL_PATH ${CMAKE_CURRENT_BINARY_DIR} ${YAML_FILE})
-
-            # Add the test
+            # Use absolute YAML path so the test works regardless of WORKING_DIRECTORY
             add_test(NAME ijedi_${TEST_NAME}
                 COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
-                $<TARGET_FILE:ijedi_test.x> ${EXECUTABLE_BASE} ${YAML_REL_PATH})
+                $<TARGET_FILE:ijedi_test.x> ${EXECUTABLE_BASE} ${YAML_FILE})
 
             message(STATUS "  Added tier ${TIER} test: ijedi_${TEST_NAME}")
         else()
@@ -59,3 +56,32 @@ file(CREATE_LINK
     "${CMAKE_CURRENT_BINARY_DIR}/data"
     SYMBOLIC
 )
+
+# MOM6 test data generation fixture
+# ----------------------------------
+# Runs gen_mom6_testdata.py once; produces INPUT/*.nc inside the test's
+# own working directory, referenced by tier1_unit_geometry-mom6.yaml
+# as input_dir: .
+set(MOM6_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mom6)
+file(MAKE_DIRECTORY ${MOM6_TEST_WORKDIR})
+
+add_test(NAME ijedi_setup_mom6_testdata
+    COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/data/mom6/gen_mom6_testdata.py
+        ${MOM6_TEST_WORKDIR})
+set_tests_properties(ijedi_setup_mom6_testdata PROPERTIES
+    FIXTURES_SETUP mom6_testdata)
+
+set_tests_properties(ijedi_tier1_unit_geometry-mom6 PROPERTIES
+    FIXTURES_REQUIRED  mom6_testdata
+    WORKING_DIRECTORY  ${MOM6_TEST_WORKDIR}
+    FIXTURES_SETUP     mom6_grid_output)
+
+# MOM6 structured-grid check against SOCA reference gridspec
+add_test(NAME ijedi_check_mom6_structured_grid
+    COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/data/mom6/check_mom6_structured_grid.py
+        ${MOM6_TEST_WORKDIR}/mom6_structured_grid.nc
+        ${MOM6_TEST_WORKDIR}/soca_gridspec.72x35x25.nc)
+set_tests_properties(ijedi_check_mom6_structured_grid PROPERTIES
+    FIXTURES_REQUIRED mom6_grid_output)
