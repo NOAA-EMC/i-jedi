@@ -1310,7 +1310,7 @@ namespace ijedi
     md.longName = "sea_ice_area_fraction";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
@@ -1332,7 +1332,7 @@ namespace ijedi
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_ice_snow_thickness";
-    md.units = "none";
+    md.units = "meters";
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
@@ -1340,7 +1340,7 @@ namespace ijedi
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_ice_thickness";
-    md.units = "none";
+    md.units = "meters";
     md.kind = "double";
     md.tracer = "true";
     md.levels = "1";
@@ -1491,7 +1491,8 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
-    md.longName = "snow_ice_surface_temperature" md.units = "K";
+    md.longName = "snow_ice_surface_temperature";
+    md.units = "K";
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
