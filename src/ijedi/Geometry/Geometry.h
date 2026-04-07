@@ -52,15 +52,11 @@ namespace ijedi
     // Function to access field metadata
     const FieldsMetadata &getFieldMetadata() const { return *fieldsMeta_; }
 
-    // Function to return the geometry variables
-    const eckit::Configuration &geomVariables() const { return *geomVariables_; }
-
    private:
     Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;
     std::shared_ptr<FieldsMetadata> fieldsMeta_;
     std::shared_ptr<GeometryBase> geometryImpl_;
-    std::shared_ptr<eckit::Configuration> geomVariables_;
     int numberLevels_;
     std::string type_;
   };

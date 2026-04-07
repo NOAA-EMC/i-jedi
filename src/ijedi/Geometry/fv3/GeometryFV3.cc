@@ -53,22 +53,21 @@ namespace ijedi
 
     int npx = geomVariables.getInt("npx");
     int npy = geomVariables.getInt("npy");
-    int npz = geomVariables.getInt("npz");
+    numberLevels = geomVariables.getInt("nLevels");
     int ntiles = geomVariables.getInt("ntiles");
 
     int layout_x = geomVariables.getInt("layout_x");
     int layout_y = geomVariables.getInt("layout_y");
 
-    // Set number of levels and whether levels are top-down or bottom-up
+    // Set whether levels are top-down or bottom-up
     levelsAreTopDown = true;
-    numberLevels = npz;
 
     std::string globalOrRegional = ntiles == 6 ? "Global" : "Regional";
 
     // Message:
     // Cubed sphere geometry on <global/regional> grid.
     //
-    // Number of (full) model levels: <npz>
+    // Number of (full) model levels: <numberLevels>
     // Number of grids: <ntiles>
     // Grid dimensions: npx x npy: C<npx=1> x C<npy=1>
 
@@ -77,7 +76,7 @@ namespace ijedi
                     " Number of tiles (cube faces): " + std::to_string(ntiles) + "\n" +
                     " Grid dimensions (per tile): c" + std::to_string(npx) + " x c" +
                     std::to_string(npy) + "\n" +
-                    " Number of (full) model levels: " + std::to_string(npz) + "\n" +
+                    " Number of (full) model levels: " + std::to_string(numberLevels) + "\n" +
                     " Processor layout per tile: " +
                     std::to_string(layout_x) + " x " + std::to_string(layout_y);
 
