@@ -113,9 +113,11 @@ namespace ijedi
     private:
         void print(std::ostream &) const override;
 
-        // Helper methods for reading different file formats
+        // Helper methods for reading/writing different file formats
         void readHistoryFiles(atlas::FieldSet &, const eckit::LocalConfiguration &,
                               const eckit::LocalConfiguration &) const;
+        void writeHistoryFiles(const atlas::FieldSet &, const eckit::LocalConfiguration &,
+                               const eckit::LocalConfiguration &) const;
         void checkNetCDF(int status, const std::string &operation) const;
 
         // Store parameters and geometry reference
