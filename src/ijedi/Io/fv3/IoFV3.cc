@@ -1,0 +1,54 @@
+#include <ostream>
+#include <string>
+
+#include "oops/util/Logger.h"
+#include "oops/util/Timer.h"
+
+#include "ijedi/Geometry/Geometry.h"
+#include "ijedi/Io/fv3-history/IoFV3.h"
+
+namespace ijedi
+{
+    // -------------------------------------------------------------------------------------------------
+    static IoMaker<IoFV3> makerIoFV3_("fv3");
+    // -------------------------------------------------------------------------------------------------
+    IoFV3::IoFV3(const Geometry &geom, const Parameters_ &params)
+        : IoBase(geom, params.toConfiguration())
+    {
+        util::Timer timer(classname(), "IoFV3");
+        oops::Log::trace() << classname() << " constructor starting" << std::endl;
+        // CALL CONSTRUCTOR
+        oops::Log::trace() << classname() << " constructor done" << std::endl;
+    }
+    // -------------------------------------------------------------------------------------------------
+    IoFV3::~IoFV3()
+    {
+        util::Timer timer(classname(), "~IoFV3");
+        oops::Log::trace() << classname() << " destructor starting" << std::endl;
+        // CALL DESTRUCTOR
+        oops::Log::trace() << classname() << " destructor done" << std::endl;
+    }
+    // -------------------------------------------------------------------------------------------------
+    void IoFV3::read(atlas::FieldSet &x, const eckit::LocalConfiguration &fileionames,
+                     const eckit::LocalConfiguration &fileioscaling) const
+    {
+        util::Timer timer(classname(), "read state");
+        oops::Log::trace() << classname() << " read state starting" << std::endl;
+        oops::Log::trace() << classname() << " read state done" << std::endl;
+    }
+    // -------------------------------------------------------------------------------------------------
+    void IoFV3::write(const atlas::FieldSet &x, const eckit::LocalConfiguration &fileionames,
+                      const eckit::LocalConfiguration &fileioscaling) const
+    {
+        util::Timer timer(classname(), "write state");
+        oops::Log::trace() << classname() << " write state starting" << std::endl;
+        // CALL WRITE
+        oops::Log::trace() << classname() << " write state done" << std::endl;
+    }
+    // -------------------------------------------------------------------------------------------------
+    void IoFV3::print(std::ostream &os) const
+    {
+        os << classname() << " Io for Cube Sphere History and Restart files";
+    }
+    // -------------------------------------------------------------------------------------------------
+} // namespace ijedi
