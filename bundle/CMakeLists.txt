@@ -39,6 +39,12 @@ option(BUILD_MPAS "Build mpas-jedi" ON)
 set(MPAS_DOUBLE_PRECISION "ON" CACHE STRING "MPAS-Model: Use double precision 64-bit Floating point.")
 set(MPAS_CORES init_atmosphere atmosphere CACHE STRING "MPAS-Model: cores to build.")
 set(MPAS_OPENMP "ON" CACHE STRING "MPAS-Model: Enable OpenMP.")
+find_package(ESMF)
+if(ESMF_FOUND)
+  message(STATUS "Found external ESMF, MPAS will use it")
+else()
+  message(WARNING "ESMF not found, MPAS will try to build internal ESMF")
+endif()
 
 # Temporary, see https://github.com/JCSDA-internal/jedi-bundle/pull/140
 ecbuild_bundle( PROJECT mpas      GIT "https://github.com/MPAS-Dev/MPAS-Model.git"     TAG 0e5a47a0e1bcccd6e3d99909b76e740a643c4db6 )
