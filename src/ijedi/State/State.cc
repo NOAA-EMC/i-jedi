@@ -33,6 +33,7 @@ namespace ijedi
                           util::DateTime(config.getString("date")), false),
         geom_(geom)
   {
+    // If config has 'analytic init' then call analytic_init, else if config has 'io' then call read, else throw an error
     if (config.has("analytic init")) {
       analytic_init(config);
     } else if (config.has("io")) {

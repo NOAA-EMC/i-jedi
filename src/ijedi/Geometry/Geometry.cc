@@ -14,8 +14,6 @@
 namespace ijedi
 {
   // -----------------------------------------------------------------------------------------------
-  const int HALO_SIZE = 1;
-  // -----------------------------------------------------------------------------------------------
   Geometry::Geometry(const eckit::Configuration &geomConf, const eckit::mpi::Comm &comm)
       : mist::base::Geometry(comm),
         geomVariables_(std::make_shared<eckit::LocalConfiguration>())

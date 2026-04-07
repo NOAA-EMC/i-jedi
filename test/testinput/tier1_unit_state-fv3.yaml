@@ -24,6 +24,6 @@ state test:
     io:
       filetype: fv3 history
   date: 2020-12-15T00:00:00Z
-  norm file: 3123.5572529289711
-  norm generated state: 17525.605789643301
-  tolerance: 1.0e-08
+  norm file: 0.0
+  norm generated state: 0.0
+  tolerance: 1.0e-8

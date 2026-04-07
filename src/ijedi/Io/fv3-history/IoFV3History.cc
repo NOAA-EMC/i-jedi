@@ -34,7 +34,6 @@ namespace ijedi
   {
     util::Timer timer(classname(), "read state");
     oops::Log::trace() << classname() << " read state starting" << std::endl;
-    // CALL READ
     oops::Log::trace() << classname() << " read state done" << std::endl;
   }
   // -------------------------------------------------------------------------------------------------
