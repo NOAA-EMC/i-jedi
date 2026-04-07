@@ -26,13 +26,12 @@ namespace ijedi
    public:
     GeometryMPAS(const eckit::Configuration &, const eckit::mpi::Comm &, eckit::Configuration &,
                  atlas::FunctionSpace &, atlas::FieldSet &, bool &, int &);
+    ~GeometryMPAS() override;
     void print(std::ostream &) const override;
     std::vector<double> verticalCoord(std::string &) const override;
 
     GeometryMPAS(const eckit::Configuration & config, const eckit::mpi::Comm & comm);
-    GeometryMPAS(const GeometryMPAS & other);
-//    ~GeometryMPAS(); // no destructor?
-
+    GeometryMPAS(const GeometryMPAS & other) = delete;
     GeometryMPAS & operator=(const GeometryMPAS &) = delete;
 
     void * fortranGeom() const { return fortranGeom_; }

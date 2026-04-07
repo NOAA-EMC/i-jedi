@@ -235,6 +235,16 @@ namespace ijedi {
 
   // -----------------------------------------------------------------------------------------------
 
+  GeometryMPAS::~GeometryMPAS()
+  {
+    if (fortranGeom_ != nullptr) {
+      ijedi_mpas_geom_delete_f90(fortranGeom_);
+      fortranGeom_ = nullptr;
+    }
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
   void GeometryMPAS::print(std::ostream &os) const
   {
     int nVertLevels;
