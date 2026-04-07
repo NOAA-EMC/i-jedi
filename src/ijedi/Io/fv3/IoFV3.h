@@ -69,7 +69,7 @@ namespace ijedi
                                                                 this};
 
         // Set date/time on read
-        oops::OptionalParameter<bool> setDateTime{"set datetime on read", 
+        oops::OptionalParameter<bool> setDateTime{"set datetime on read",
                                                   "set datetime on read", this};
 
         // Optional list of fields to write out

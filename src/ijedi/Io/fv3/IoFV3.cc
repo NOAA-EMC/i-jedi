@@ -247,9 +247,7 @@ namespace ijedi
                     {
                         start = {0, 0, 0, 0};
                         count = {1, ntiles, ny, nx};
-                    }
-                    else
-                    {
+                    } else {
                         start = {0, 0, 0};
                         count = {1, ny, nx};
                     }
