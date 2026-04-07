@@ -5,7 +5,7 @@
 #include "oops/util/Timer.h"
 
 #include "ijedi/Geometry/Geometry.h"
-#include "ijedi/Io/fv3-history/IoFV3.h"
+#include "ijedi/Io/fv3/IoFV3.h"
 
 namespace ijedi
 {
