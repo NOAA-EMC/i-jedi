@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "mist/base/Increment.h"
 #include "oops/util/ObjectCounter.h"
@@ -34,7 +35,7 @@ namespace ijedi {
 
   class DiracParameters : public oops::Parameters {
     OOPS_CONCRETE_PARAMETERS(DiracParameters, Parameters)
-    public:
+   public:
     oops::RequiredParameter<std::vector<std::string>> diracFlds{"dirac fields", this};
     oops::RequiredParameter<std::vector<int>> diracProc{"dirac processors", this};
     oops::RequiredParameter<std::vector<int>> diracHorx{"dirac horizontal index", this};
