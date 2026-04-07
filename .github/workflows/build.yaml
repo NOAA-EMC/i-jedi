@@ -17,25 +17,33 @@ jobs:
       uses: actions/cache@v5
       with:
         path: ${{ github.workspace }}/Build/lib/liboops.so
-        key: ${{ runner.os }}-oops
+        key: ${{ runner.os }}-oops-${{ hashFiles('i-jedi/bundle/CMakeLists.txt', '.github/workflows/build.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-oops-
     - name: Cache VADER
       id: cache-vader
       uses: actions/cache@v5
       with:
-        path: ${{ github.workspace }}/Build/lib/libvader.so
-        key: ${{ runner.os }}-vader
+        path: $GITHUB_WORKSPACE/Build/lib/libvader.so
+        key: ${{ runner.os }}-vader-${{ hashFiles('i-jedi/bundle/CMakeLists.txt', '.github/workflows/build.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-vader-
     - name: Cache UFO
       id: cache-ufo
       uses: actions/cache@v5
       with:
-        path: ${{ github.workspace }}/Build/lib/libufo.so
-        key: ${{ runner.os }}-ufo
+        path: $GITHUB_WORKSPACE/Build/lib/libufo.so
+        key: ${{ runner.os }}-ufo-${{ hashFiles('i-jedi/bundle/CMakeLists.txt', '.github/workflows/build.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-ufo-
     - name: Cache IODA
       id: cache-ioda
       uses: actions/cache@v5
       with:
-        path: ${{ github.workspace }}/Build/lib/libioda.so
-        key: ${{ runner.os }}-ioda
+        path: $GITHUB_WORKSPACE/Build/lib/libioda.so
+        key: ${{ runner.os }}-ioda-${{ hashFiles('i-jedi/bundle/CMakeLists.txt', '.github/workflows/build.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-ioda-
     - name: Run ecbuild
       shell: bash
       run: |
