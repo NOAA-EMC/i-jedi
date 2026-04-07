@@ -211,6 +211,22 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "barotropic_eastward_sea_water_velocity";
+    md.units = "ms-1";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "barotropic_northward_sea_water_velocity";
+    md.units = "ms-1";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "brightness_temperature";
     md.units = "none";
     md.kind = "double";
@@ -224,6 +240,14 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "bulk_ice_salinity";
+    md.units = "none";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -271,6 +295,14 @@ namespace ijedi
     md.units = "1";
     md.kind = "double";
     md.tracer = "true";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "eastward_sea_water_velocity";
+    md.units = "ms-1";
+    md.kind = "double";
+    md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
@@ -1115,6 +1147,14 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "mom6_mld";
+    md.units = "meters";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "net_downwelling_longwave_radiation";
     md.units = "none";
     md.kind = "double";
@@ -1125,6 +1165,14 @@ namespace ijedi
 
     md.longName = "net_downwelling_shortwave_radiation";
     md.units = "none";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "northward_sea_water_velocity";
+    md.units = "ms-1";
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
@@ -1259,6 +1307,14 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "sea_ice_area_fraction";
+    md.units = "none";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "sea_ice_category_area_fraction";
     md.units = "none";
     md.kind = "double";
@@ -1271,6 +1327,22 @@ namespace ijedi
     md.units = "none";
     md.kind = "double";
     md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "sea_ice_snow_thickness";
+    md.units = "meters";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "sea_ice_thickness";
+    md.units = "meters";
+    md.kind = "double";
+    md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
@@ -1416,6 +1488,14 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "9";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "snow_ice_surface_temperature";
+    md.units = "K";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
