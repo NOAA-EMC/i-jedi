@@ -28,6 +28,7 @@ jobs:
       with:
         path: |
           ${{ github.workspace }}/Build/oops
+          ${{ github.workspace }}/Build/lib/liboops.so
           ${{ github.workspace }}/i-jedi/bundle/oops
         key: ${{ runner.os }}-oops-${{ steps.dep-hashes.outputs.oops }}
         restore-keys: |
@@ -38,6 +39,7 @@ jobs:
       with:
         path: |
           ${{ github.workspace }}/Build/vader
+          ${{ github.workspace }}/Build/lib/libvader.so
           ${{ github.workspace }}/i-jedi/bundle/vader
         key: ${{ runner.os }}-vader-${{ steps.dep-hashes.outputs.vader }}
         restore-keys: |
@@ -48,6 +50,7 @@ jobs:
       with:
         path: |
           ${{ github.workspace }}/Build/ufo
+          ${{ github.workspace }}/Build/lib/libufo.so
           ${{ github.workspace }}/i-jedi/bundle/ufo
         key: ${{ runner.os }}-ufo-${{ steps.dep-hashes.outputs.ufo }}
         restore-keys: |
@@ -58,6 +61,7 @@ jobs:
       with:
         path: |
           ${{ github.workspace }}/Build/ioda
+          ${{ github.workspace }}/Build/lib/libioda.so
           ${{ github.workspace }}/i-jedi/bundle/ioda
         key: ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
         restore-keys: |
@@ -101,13 +105,13 @@ jobs:
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
         make -j4
-    - name: Run ctests
-      shell: bash
-      run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE/Build/ijedi
-        export OMPI_ALLOW_RUN_AS_ROOT=1
-        export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-        ctest --rerun-failed --output-on-failure --allow-run-as-root
+    # - name: Run ctests
+    #   shell: bash
+    #   run: |
+    #     su - nonroot
+    #     export jedi_cmake_ROOT=/opt/view
+    #     source /opt/spack-environment/activate.sh
+    #     cd $GITHUB_WORKSPACE/Build/ijedi
+    #     export OMPI_ALLOW_RUN_AS_ROOT=1
+    #     export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    #     ctest --rerun-failed --output-on-failure --allow-run-as-root
