@@ -35,6 +35,7 @@ ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.gi
 ecbuild_bundle( PROJECT oops      GIT    "https://github.com/NOAA-EMC/oops.git" UPDATE BRANCH feature/mist )
 ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git" UPDATE BRANCH develop)
 
+list( APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/jedicmake/CMakeModules/Modules )
 find_package(ESMF)
 if(ESMF_FOUND)
   message(STATUS "Found external ESMF, MPAS will use it")
