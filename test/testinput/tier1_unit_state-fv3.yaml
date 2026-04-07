@@ -35,5 +35,6 @@ state test:
         water_vapor_mixing_ratio_wrt_moist_air: spfh
         ozone_mass_mixing_ratio: o3mr
   date: 2020-12-15T00:00:00Z
+  test variable change constructor: false
   norm file: 2927466.62962954445
   tolerance: 1.0e-8
