@@ -52,8 +52,8 @@ ecbuild_bundle( PROJECT mpas      GIT "https://github.com/MPAS-Dev/MPAS-Model.gi
 #ecbuild_bundle( PROJECT mpas      GIT    "https://github.com/MPAS-Dev/MPAS-Model.git" TAG v8.2.1 RECURSIVE )
 
 # ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"      UPDATE BRANCH develop )
-# ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"       UPDATE BRANCH develop )
-# ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"        UPDATE BRANCH develop )
+ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"       UPDATE BRANCH develop )
+ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"        UPDATE BRANCH develop )
 ecbuild_bundle(PROJECT ijedi SOURCE "../")
 
 # ===============================================================================

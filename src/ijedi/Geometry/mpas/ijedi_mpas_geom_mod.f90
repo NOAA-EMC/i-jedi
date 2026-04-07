@@ -16,7 +16,7 @@ use mpas_derived_types
 use mpas_kind_types, only: RKIND
 use mpas_constants, only: pii
 use mpas_dmpar, only: mpas_dmpar_sum_int, mpas_dmpar_exch_halo_field
-use mpas_subdriver, only: mpas_init
+use mpas_subdriver, only: mpas_init, mpas_finalize
 use atm_core
 use mpas_pool_routines, only: mpas_pool_get_subpool, mpas_pool_get_dimension, &
                               mpas_pool_get_array, mpas_pool_get_field
@@ -51,6 +51,7 @@ type :: ijedi_mpas_geom
   integer, allocatable :: cellsOnVertex(:,:)
   integer, allocatable :: bdyMaskVertex(:)
   logical :: is_regional = .false.
+  logical :: owns_mpas = .false.
 
   type(domain_type), pointer :: domain => null()
   type(core_type), pointer :: corelist => null()
@@ -95,6 +96,7 @@ subroutine geom_setup(self, f_conf, comm)
                  external_comm=self%comm%communicator(), &
                  namelistFileParam=trim(nml_file), &
                  streamsFileParam=trim(streams_file))
+  self%owns_mpas = .true.
 
   block_ptr => self%domain%blocklist
   call mpas_pool_get_subpool(block_ptr%structs, 'mesh', meshPool)
@@ -170,6 +172,7 @@ subroutine geom_clone(self, other)
   self%nVertLevelsP1 = other%nVertLevelsP1
   self%vertexDegree = other%vertexDegree
   self%is_regional = other%is_regional
+  self%owns_mpas = .false.
 
   if (.not. allocated(self%latCell)) allocate(self%latCell(other%nCells))
   if (.not. allocated(self%lonCell)) allocate(self%lonCell(other%nCells))
@@ -204,12 +207,11 @@ subroutine geom_delete(self)
   if (allocated(self%cellsOnVertex)) deallocate(self%cellsOnVertex)
   if (allocated(self%bdyMaskVertex)) deallocate(self%bdyMaskVertex)
 
-  ! Intentionally do not call mpas_finalize: in a JEDI context the geometry
-  ! object does not own the MPAS framework lifecycle.  mpas_framework_finalize
-  ! tears down internal MPI communicators and pools that Atlas / eckit C++ objects
-  ! still reference during program-exit destructors, causing heap corruption.
-  ! The process exit / MPI_Finalize path invoked by the OOPS framework is the
-  ! correct point to clean up those resources.
+  if (self%owns_mpas .and. associated(self%corelist) .and. associated(self%domain)) then
+    call mpas_finalize(self%corelist, self%domain)
+  end if
+
+  self%owns_mpas = .false.
   nullify(self%corelist)
   nullify(self%domain)
 

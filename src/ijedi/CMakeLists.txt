@@ -29,8 +29,20 @@ list(APPEND ijedi_src_files
   State/State.h
 
   # Increment
+  Increment/Increment.cc
+  Increment/Increment.h
 
   # IO
+  Io/IoBase.cc
+  Io/IoBase.h
+
+  # Variable change
+  VariableChange/SeaSurfaceTemperature.h
+  VariableChange/SeaSurfaceTemperature_A.cc
+  VariableChange/VaderCookbook.cc
+  VariableChange/VaderCookbook.h
+  VariableChange/VariableChange.cc
+  VariableChange/VariableChange.h
 
   # Utilities
   Utilities/Constants.cc
@@ -53,6 +65,8 @@ if(FMS_FOUND)
     Geometry/fv3/GeometryFV3.h
     Geometry/fv3/GeometryFV3Parameters.h
     Geometry/fv3/GeometryFV3.interface.h
+    Io/fv3-history/IoFV3History.cc
+    Io/fv3-history/IoFV3History.h
   )
   list(APPEND ijedi_fv3_fortran_src_files
     Geometry/fv3/ijedi_fv3_akbk_mod.f90
