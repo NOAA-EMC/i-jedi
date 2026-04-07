@@ -12,6 +12,30 @@ jobs:
       with:
         path: i-jedi
         submodules: recursive
+    - name: Cache OOPS
+      id: cache-oops
+      uses: actions/cache@v5
+      with:
+        path: $GITHUB_WORKSPACE/Build/lib/liboops.so
+        key: ${{ runner.os }}-oops
+    - name: Cache VADER
+      id: cache-vader
+      uses: actions/cache@v5
+      with:
+        path: $GITHUB_WORKSPACE/Build/lib/libvader.so
+        key: ${{ runner.os }}-vader
+    - name: Cache UFO
+      id: cache-ufo
+      uses: actions/cache@v5
+      with:
+        path: $GITHUB_WORKSPACE/Build/lib/libufo.so
+        key: ${{ runner.os }}-ufo
+    - name: Cache IODA
+      id: cache-ioda
+      uses: actions/cache@v5
+      with:
+        path: $GITHUB_WORKSPACE/Build/lib/libioda.so
+        key: ${{ runner.os }}-ioda
     - name: Run ecbuild
       shell: bash
       run: |
