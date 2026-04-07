@@ -12,7 +12,7 @@ jobs:
       with:
         path: i-jedi
         submodules: recursive
-    - name: Build in a bundle
+    - name: Run ecbuild
       shell: bash
       run: |
         su - nonroot
@@ -23,7 +23,21 @@ jobs:
         cd Build
         export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"
         ecbuild ../i-jedi/bundle
-        cd ijedi
+    - name: Run coding style checks
+      shell: bash
+      run: |
+        su - nonroot
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE/Build/ijedi
+        ctest -R coding_norms --output-on-failure        
+    - name: Compile the code
+      shell: bash
+      run: |
+        su - nonroot
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE/Build/ijedi
         make -j4
     - name: Run ctests
       shell: bash

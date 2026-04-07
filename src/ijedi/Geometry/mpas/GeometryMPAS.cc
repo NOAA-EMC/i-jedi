@@ -20,7 +20,7 @@ namespace ijedi
                              eckit::Configuration &geomVariables,
                              atlas::FunctionSpace &functionSpace,
                              atlas::FieldSet &fieldSet,
-                             int &numberLevels) {}
+                             bool &levelsAreTopDown, int &numberLevels) {}
 
   // -----------------------------------------------------------------------------------------------
 
@@ -34,6 +34,7 @@ namespace ijedi
     std::stringstream errorMsg;
     errorMsg << "GeometryMPAS::verticalCoord is not implemented" << std::endl;
     ABORT(errorMsg.str());
+    return {};
   }
 
   // -----------------------------------------------------------------------------------------------
