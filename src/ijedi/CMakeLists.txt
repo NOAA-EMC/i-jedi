@@ -12,6 +12,8 @@ list(APPEND ijedi_src_files
   # Geometry
   Geometry/Geometry.cc
   Geometry/Geometry.h
+  Geometry/atlas/GeometryAtlas.cc
+  Geometry/atlas/GeometryAtlas.h
   Geometry/base/GeometryBase.cc
   Geometry/base/GeometryBase.h
   Geometry/mpas/GeometryMPAS.cc

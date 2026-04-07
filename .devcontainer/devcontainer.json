@@ -24,7 +24,8 @@
   },
   "postCreateCommand": "echo \"Container setup complete\"",
   "features": {
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/sshd:1": { "version": "latest" }
   },
   "mounts": [
     "source=${localWorkspaceFolder},target=/home/builder/,type=bind,consistency=cached"

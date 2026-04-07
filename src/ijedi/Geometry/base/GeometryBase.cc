@@ -6,6 +6,7 @@
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/exception/Exceptions.h"
 
+#include "ijedi/Geometry/atlas/GeometryAtlas.h"
 #include "ijedi/Geometry/base/GeometryBase.h"
 #include "ijedi/Geometry/fv3/GeometryFV3.h"
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
@@ -24,6 +25,11 @@ namespace ijedi
     std::string type;
     type = geomConf.getString("geometry_type");
 
+    if (type == "atlas")
+    {
+      return std::make_shared<GeometryAtlas>(geomConf, comm, geomVars, functionSpace, fieldSet,
+                                            numLevels);
+    }
     if (type == "fv3")
     {
       return std::make_shared<GeometryFV3>(geomConf, comm, geomVars, functionSpace, fieldSet,
