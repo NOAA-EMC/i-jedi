@@ -85,3 +85,16 @@ add_test(NAME ijedi_check_mom6_structured_grid
         ${MOM6_TEST_WORKDIR}/soca_gridspec.72x35x25.nc)
 set_tests_properties(ijedi_check_mom6_structured_grid PROPERTIES
     FIXTURES_REQUIRED mom6_grid_output)
+
+# FV3 test data generation fixture
+# ----------------------------------
+# Runs gen_fv3_testdata.py once; produces atmf006.nc and sfcf006.nc inside the test's
+# own working directory, referenced by tier1_unit_state-fv3.yaml
+# as input_dir: .
+set(FV3_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/state-fv3)
+file(MAKE_DIRECTORY ${FV3_TEST_WORKDIR})
+
+add_test(NAME ijedi_setup_fv3_testdata
+    COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_fv3_testdata.py
+        ${FV3_TEST_WORKDIR})
