@@ -16,6 +16,7 @@ jobs:
       id: dep-hashes
       shell: bash
       run: |
+        set -e
         echo "oops=$(git ls-remote https://github.com/NOAA-EMC/oops.git feature/mist | cut -f1)" >> $GITHUB_OUTPUT
         echo "vader=$(git ls-remote https://github.com/JCSDA/vader.git develop | cut -f1)" >> $GITHUB_OUTPUT
         echo "ioda=$(git ls-remote https://github.com/JCSDA/ioda.git develop | cut -f1)" >> $GITHUB_OUTPUT
