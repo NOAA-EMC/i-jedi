@@ -52,9 +52,6 @@ namespace ijedi
     // Function to access field metadata
     const FieldsMetadata &getFieldMetadata() const { return *fieldsMeta_; }
 
-    // Function to return the geometry variables
-    const eckit::Configuration &geomVariables() const { return *geomVariables_; }
-
     // Access the underlying geometry implementation (for model-specific casts)
     const GeometryBase &geometryImpl() const { return *geometryImpl_; }
 

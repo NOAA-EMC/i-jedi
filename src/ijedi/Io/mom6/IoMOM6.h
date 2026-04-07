@@ -28,8 +28,8 @@ namespace ijedi
 
     // Single filename provided
     oops::OptionalParameter<std::string> filename{"filename",
-                                                  "name of the restart or history file to be read/written",
-                                                  this};
+                                      "name of the restart or history file to be read/written",
+                                      this};
   };
 
   // -------------------------------------------------------------------------------------------------
