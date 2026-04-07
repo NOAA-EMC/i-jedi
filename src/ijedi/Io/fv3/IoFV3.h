@@ -22,7 +22,7 @@ namespace ijedi
     {
         OOPS_CONCRETE_PARAMETERS(IoFV3Parameters, IoParametersBase)
 
-    public:
+     public:
         // Names of files to be read/written to
         oops::Parameter<std::string> source{"source", "history or restart", "history", this};
 
@@ -69,12 +69,14 @@ namespace ijedi
                                                                 this};
 
         // Set date/time on read
-        oops::OptionalParameter<bool> setDateTime{"set datetime on read", "set datetime on read", this};
+        oops::OptionalParameter<bool> setDateTime{"set datetime on read", 
+                                                  "set datetime on read", this};
 
         // Optional list of fields to write out
-        oops::OptionalParameter<std::vector<std::string>> fieldsToWrite{"fields to write",
-                                                                        "names of the fields to write",
-                                                                        this};
+        oops::OptionalParameter<std::vector<std::string>>
+            fieldsToWrite{"fields to write",
+                          "names of the fields to write",
+                           this};
 
         // Floating point precision in bytes for NetCDF write
         oops::OptionalParameter<int> floatPrecision{"float precision in bytes",
@@ -98,7 +100,7 @@ namespace ijedi
     // -------------------------------------------------------------------------------------------------
     class IoFV3 : public IoBase, private util::ObjectCounter<IoFV3>
     {
-    public:
+     public:
         static const std::string classname() { return "ijedi::IoFV3"; }
 
         typedef IoFV3Parameters Parameters_;
@@ -110,7 +112,7 @@ namespace ijedi
         void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
                    const eckit::LocalConfiguration &) const override;
 
-    private:
+     private:
         void print(std::ostream &) const override;
 
         // Helper methods for reading different file formats

@@ -1,8 +1,9 @@
+#include <netcdf.h>
+
 #include <ostream>
 #include <string>
 #include <vector>
 
-#include <netcdf.h>
 #include "atlas/array.h"
 #include "atlas/field.h"
 #include "atlas/functionspace.h"
@@ -44,13 +45,9 @@ namespace ijedi
         if (source == "history")
         {
             readHistoryFiles(x, fileionames, fileioscaling);
-        }
-        else if (source == "restart")
-        {
+        } else if (source == "restart") {
             throw eckit::Exception("Reading restart files not yet implemented");
-        }
-        else
-        {
+        } else {
             throw eckit::Exception("Invalid source parameter: " + source);
         }
 
@@ -161,7 +158,7 @@ namespace ijedi
             for (size_t ifield = 0; ifield < jediNames.size(); ++ifield)
             {
                 if (fieldRead[ifield])
-                    continue; // already read from a previous file
+                    continue;  // already read from a previous file
 
                 const std::string &jediName = jediNames[ifield];
                 const std::string ncVarName = fileionames.getString(jediName);
@@ -197,9 +194,7 @@ namespace ijedi
                     {
                         start = {0, 0, 0, 0, 0};
                         count = {1, ntiles, nz, ny, nx};
-                    }
-                    else
-                    {
+                    } else {
                         start = {0, 0, 0, 0};
                         count = {1, nz, ny, nx};
                     }
@@ -242,9 +237,7 @@ namespace ijedi
                     oops::Log::info() << classname() << " read 3D field: " << jediName
                                       << " (" << ncVarName << ") from " << filepath
                                       << std::endl;
-                }
-                else if (ndims == expected2d)
-                {
+                } else if (ndims == expected2d) {
                     // 2D field — read full data into buffer, then scatter to atlas field
                     const size_t totalSize = ntiles * nxy;
                     std::vector<double> buffer(totalSize);
@@ -289,9 +282,7 @@ namespace ijedi
                     oops::Log::info() << classname() << " read 2D field: " << jediName
                                       << " (" << ncVarName << ") from " << filepath
                                       << std::endl;
-                }
-                else
-                {
+                } else {
                     oops::Log::warning() << classname() << " unexpected ndims=" << ndims
                                          << " for variable " << ncVarName
                                          << ", skipping" << std::endl;
