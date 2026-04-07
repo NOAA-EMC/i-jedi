@@ -85,3 +85,33 @@ add_test(NAME ijedi_check_mom6_structured_grid
         ${MOM6_TEST_WORKDIR}/soca_gridspec.72x35x25.nc)
 set_tests_properties(ijedi_check_mom6_structured_grid PROPERTIES
     FIXTURES_REQUIRED mom6_grid_output)
+
+# MPAS geometry test
+# ----------------------------------
+
+set(MPAS_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mpas)
+set(MPAS_DATA_CLONE_DIR ${CMAKE_SOURCE_DIR}/test/testrun/geometry-mpas)
+file(MAKE_DIRECTORY ${MPAS_TEST_WORKDIR})
+file(CREATE_LINK
+    "${CMAKE_CURRENT_BINARY_DIR}/data"
+    "${MPAS_TEST_WORKDIR}/data"
+    SYMBOLIC
+)
+# Fetch MPAS test data as a setup fixture test so ctest controls execution order.
+add_test(NAME ijedi_setup_mpas_testdata
+    COMMAND ${CMAKE_COMMAND}
+        -DCLONE_DIR=${MPAS_DATA_CLONE_DIR}
+        -DDEST_DIR=${MPAS_TEST_WORKDIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_mpas_testdata.cmake)
+set_tests_properties(ijedi_setup_mpas_testdata PROPERTIES
+    FIXTURES_SETUP mpas_testdata)
+
+add_test(NAME ijedi_mpas_geom
+	COMMAND ijedi_test.x 1 6 ${IJEDI_MPI_ARGS}
+	$<TARGET_FILE:ijedi_test.x tier1_unit_geometry-mpas.yaml)
+set_tests_properties(ijedi_tier1_unit_geometry-mpas PROPERTIES
+    FIXTURES_REQUIRED  mpas_testdata
+    WORKING_DIRECTORY  ${MPAS_TEST_WORKDIR}
+    FIXTURES_SETUP     mpas_grid_output
+    ENVIRONMENT        "OMP_NUM_THREADS=1")
+
