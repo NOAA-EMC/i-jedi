@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "oops/util/DateTime.h"
@@ -23,7 +24,7 @@ namespace ijedi
 
     public:
         // Names of files to be read/written to
-        oops::Parameter<std::string> provider{"provider", "name of the model", "ufs", this};
+        oops::Parameter<std::string> source{"source", "history or restart", "history", this};
 
         // Filenames provided as a list
         oops::OptionalParameter<std::vector<std::string>> filenames{"filenames",
@@ -111,6 +112,15 @@ namespace ijedi
 
     private:
         void print(std::ostream &) const override;
+
+        // Helper methods for reading different file formats
+        void readHistoryFiles(atlas::FieldSet &, const eckit::LocalConfiguration &,
+                              const eckit::LocalConfiguration &) const;
+        void checkNetCDF(int status, const std::string &operation) const;
+
+        // Store parameters and geometry reference
+        Parameters_ parameters_;
+        const Geometry &geom_;
     };
 
     // -------------------------------------------------------------------------------------------------
