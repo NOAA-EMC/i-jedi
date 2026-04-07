@@ -76,7 +76,7 @@ jobs:
         ls -l i-jedi/bundle
         ls -l ../
         ls -l Build
-        ls -l Build/ufo
+        ls -l Build/*
 
     - name: Run ecbuild
       shell: bash
