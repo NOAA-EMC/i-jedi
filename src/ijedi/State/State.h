@@ -1,10 +1,3 @@
-/*
- * (C) Copyright 2026 UCAR
- *
- * This software is licensed under the terms of the Apache Licence Version 2.0
- * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
- */
-
 #pragma once
 
 #include <ostream>
@@ -13,45 +6,95 @@
 #include "mist/base/State.h"
 #include "oops/util/ObjectCounter.h"
 
-namespace eckit {
-class Configuration;
+#include "oops/base/ParameterTraitsVariables.h"
+#include "oops/util/parameters/OptionalParameter.h"
+#include "oops/util/parameters/Parameter.h"
+#include "oops/util/parameters/Parameters.h"
+#include "oops/util/parameters/RequiredParameter.h"
+
+#include "ijedi/Io/IoBase.h"
+
+namespace eckit
+{
+  class Configuration;
 }  // namespace eckit
 
-namespace oops {
-class Variables;
+namespace oops
+{
+  class Variables;
 }  // namespace oops
 
-namespace util {
-class DateTime;
+namespace util
+{
+  class DateTime;
 }  // namespace util
 
-namespace ijedi {
+namespace ijedi
+{
 
-class Geometry;
+  class Geometry;
 
-class State : public mist::base::State, private util::ObjectCounter<State> {
- public:
-  static std::string classname() { return "ijedi::State"; }
+  // -----------------------------------------------------------------------------------------------
 
-  State(const Geometry &, const eckit::Configuration &);
-  State(const Geometry &, const oops::Variables &, const util::DateTime &, bool initToZero = true);
-  State(const Geometry &, const State &);
-  State(const oops::Variables &, const State &);
-  State(const State &);
+  class AnalyticICParameters : public oops::Parameters
+  {
+    OOPS_CONCRETE_PARAMETERS(AnalyticICParameters, Parameters)
+   public:
+    // Analytic initial condition parameters
+    oops::RequiredParameter<std::string> method{"method", this};
+  };
 
-  ~State();
+  // -----------------------------------------------------------------------------------------------
 
-  State & operator=(const State &);
+  class StateParameters : public oops::Parameters
+  {
+    OOPS_CONCRETE_PARAMETERS(StateParameters, Parameters)
+   public:
+    oops::OptionalParameter<util::DateTime> datetime{"datetime", this};
+    oops::OptionalParameter<oops::Variables> stateVariables{"state variables", this};
+    // Analytic initial condition parameters
+    oops::OptionalParameter<AnalyticICParameters> analytic{"analytic init", this};
+    // Io parameters wrapper for polymorphic IO parameters (nested under "io" key)
+    oops::OptionalParameter<IoParametersWrapper> io{"io", this};
+  };
 
-  void read(const eckit::Configuration &);
-  void write(const eckit::Configuration &) const;
+  // -----------------------------------------------------------------------------------------------
 
- private:
-  void analytic_init(const eckit::Configuration &);
+  class StateWriteParameters : public oops::Parameters
+  {
+    OOPS_CONCRETE_PARAMETERS(StateWriteParameters, Parameters)
+   public:
+    // Io parameters for writing (nested under "io" key)
+    oops::OptionalParameter<IoParametersWrapper> io{"io", this};
+  };
 
-  void print(std::ostream & os) const override;
+  // -----------------------------------------------------------------------------------------------
 
-  const Geometry & geom_;
-};
+  class State : public mist::base::State, private util::ObjectCounter<State>
+  {
+   public:
+    static std::string classname() { return "ijedi::State"; }
+
+    State(const Geometry &, const eckit::Configuration &);
+    State(const Geometry &, const oops::Variables &, const util::DateTime &,
+          bool initToZero = true);
+    State(const Geometry &, const State &);
+    State(const oops::Variables &, const State &);
+    State(const State &);
+
+    ~State();
+
+    State &operator=(const State &);
+
+    void read(const eckit::Configuration &);
+    void write(const eckit::Configuration &) const;
+
+   private:
+    void analytic_init(const eckit::Configuration &);
+
+    void print(std::ostream &os) const override;
+
+    const Geometry &geom_;
+  };
 
 }  // namespace ijedi

@@ -2,7 +2,7 @@
   "name": "ijedi",
   "build": {
     "dockerfile": "Dockerfile",
-    "args":{
+    "args": {
       "USERNAME": "builder"
     },
     "context": ".."
@@ -10,15 +10,13 @@
   "remoteUser": "builder",
   "customizations": {
     "vscode": {
-      "extensions": [
-      ],
+      "extensions": [],
       "settings": {
-        "editor.formatOnSave": true,
+        "editor.formatOnSave": false,
         "editor.codeActionsOnSave": {
           "source.organizeImports": "explicit"
         },
-        "[python]": {
-        }
+        "[python]": {}
       }
     }
   },
