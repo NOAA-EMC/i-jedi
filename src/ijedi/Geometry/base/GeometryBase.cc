@@ -19,7 +19,7 @@ namespace ijedi
                                                      eckit::Configuration &geomVars,
                                                      atlas::FunctionSpace &functionSpace,
                                                      atlas::FieldSet &fieldSet,
-                                                     int &numLevels)
+                                                     bool &levelsAreTopDown, int &numLevels)
   {
     // Get the type
     std::string type;
@@ -33,17 +33,17 @@ namespace ijedi
     if (type == "fv3")
     {
       return std::make_shared<GeometryFV3>(geomConf, comm, geomVars, functionSpace, fieldSet,
-                                           numLevels);
+                                           levelsAreTopDown, numLevels);
     }
     if (type == "mpas")
     {
       return std::make_shared<GeometryMPAS>(geomConf, comm, geomVars, functionSpace, fieldSet,
-                                            numLevels);
+                                            levelsAreTopDown, numLevels);
     }
     if (type == "mom6")
     {
       return std::make_shared<GeometryMOM6>(geomConf, comm, geomVars, functionSpace, fieldSet,
-                                            numLevels);
+                                            levelsAreTopDown, numLevels);
     }
 
     throw eckit::BadValue("Unsupported geometry type: " + type,

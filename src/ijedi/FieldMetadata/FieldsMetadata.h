@@ -5,6 +5,7 @@
 #include <iterator>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "oops/util/abor1_cpp.h"
@@ -32,14 +33,12 @@ namespace ijedi
     std::string getDataKind() const { return dataKind_; }
     std::string getVectType() const { return VectType_; }
     std::string getVarUnits() const { return varUnits_; }
-    std::string getGridMask() const { return gridMask_; }
 
     // Set functions (strings)
     // -----------------------
     void setDataKind(std::string dataKind) { dataKind_ = dataKind; }
     void setVectType(std::string VectType) { VectType_ = VectType; }
     void setVarUnits(std::string varUnits) { varUnits_ = varUnits; }
-    void setGridMask(std::string gridMask) { gridMask_ = gridMask; }
 
     // Set number of levels
     // --------------------
@@ -95,7 +94,6 @@ namespace ijedi
     {
       this->validateVariable(ValidDataKind_, dataKind_);
       this->validateVariable(ValidVectType_, VectType_);
-      this->validateVariable(ValidGridMask_, gridMask_);
     }
 
    private:
@@ -105,7 +103,6 @@ namespace ijedi
     int numLevls_;
     std::string VectType_;
     bool isTracer_;
-    std::string gridMask_;
 
     // Picked up from both default and override file
     std::string varUnits_;
@@ -116,8 +113,6 @@ namespace ijedi
     // Valid choices
     const std::vector<std::string> ValidDataKind_ = {"double", "integer"};
     const std::vector<std::string> ValidVectType_ = {"vector", "magnitude", "direction"};
-    const std::vector<std::string> ValidGridMask_ =
-        {"none", "ocean", "land"};
 
     // Print method
     void print(std::ostream &os) const
@@ -134,8 +129,6 @@ namespace ijedi
          << "   Vector type: " << VectType_;
       os << std::endl
          << "   Tracer: " << isTracer_;
-      os << std::endl
-         << "   Mask: " << gridMask_;
     }
   };
 
@@ -150,7 +143,7 @@ namespace ijedi
     FieldMetadata getFieldMetadata(const std::string &) const;
 
     // Get levels from any of the potential field names
-    size_t getLevels(const std::string &) const;
+    std::unordered_map<std::string, size_t> levelsPerVariable() const;
 
     // Function to return all the long names
     const std::vector<std::string> &getLongNames() const { return longNames_; }

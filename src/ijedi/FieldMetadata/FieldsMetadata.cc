@@ -41,12 +41,12 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  size_t FieldsMetadata::getLevels(const std::string &longName) const
-  {
-    // Get the element
-    const FieldMetadata field = this->getFieldMetadata(longName);
-    // Return number of levels
-    return field.getNumLevls();
+  std::unordered_map<std::string, size_t> FieldsMetadata::levelsPerVariable() const {
+    std::unordered_map<std::string, size_t> levelsMap;
+    for (const auto &field : fieldsMetadata_) {
+      levelsMap[field.first] = field.second.getNumLevls();
+    }
+    return levelsMap;
   }
 
   // -----------------------------------------------------------------------------------------------
