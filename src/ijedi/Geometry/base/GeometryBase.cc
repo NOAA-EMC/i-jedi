@@ -18,8 +18,7 @@ namespace ijedi
                                                      eckit::Configuration &geomVars,
                                                      atlas::FunctionSpace &functionSpace,
                                                      atlas::FieldSet &fieldSet,
-                                                     int &numLevels)
-  {
+                                                     int &numLevels) {
     // Get the type
     std::string type;
     type = geomConf.getString("geometry_type");

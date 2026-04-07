@@ -36,13 +36,13 @@ namespace ijedi
     {
       analytic_init(config);
     }
-    else if (config.has("filetype"))
+    else if (config.has("io"))
     {
       read(config);
     }
     else
     {
-      throw eckit::BadParameter("ijedi::State: config must have 'filetype' or 'analytic init'",
+      throw eckit::BadParameter("ijedi::State: config must have 'io' or 'analytic init'",
                                 Here());
     }
   }
@@ -74,19 +74,20 @@ namespace ijedi
     // Create a Parameters object
     StateParameters params;
     params.deserialize(config);
-    // Optionally set the datetime on read (needed for some bump applications)
-    if (params.setdatetime.value() != boost::none)
+
+    // Check that there are IO parameters
+    if (params.io.value() == boost::none ||
+        params.io.value()->ioParameters.value() == nullptr)
     {
-      // if (*params.setdatetime.value() && params.datetime.value() != boost::none)
-      //{
-      //  time_ = *params.datetime.value();
-      //}
+      throw eckit::BadParameter("ijedi::State::read: No IO parameters provided", Here());
     }
+
+    // Get the polymorphic IO parameters
+    const IoParametersBase &ioParams = *params.io.value()->ioParameters.value();
 
     // Create the IO object to use
     // ---------------------------
-    std::unique_ptr<IoBase> io(IoFactory::create(geom_,
-                                                 *params.ioParametersWrapper.ioParameters.value()));
+    std::unique_ptr<IoBase> io(IoFactory::create(geom_, ioParams));
 
     // Call read method of child
     // -------------------------
@@ -98,7 +99,29 @@ namespace ijedi
   void State::write(const eckit::Configuration &config) const
   {
     oops::Log::trace() << "ijedi::State::write starting" << std::endl;
-    // TODO(someone): implement write
+
+    // Create a Parameters object
+    StateWriteParameters params;
+    params.deserialize(config);
+
+    // Check that there are IO parameters
+    if (params.io.value() == boost::none ||
+        params.io.value()->ioParameters.value() == nullptr)
+    {
+      throw eckit::BadParameter("ijedi::State::write: No IO parameters provided", Here());
+    }
+
+    // Get the polymorphic IO parameters
+    const IoParametersBase &ioParams = *params.io.value()->ioParameters.value();
+
+    // Create the IO object to use
+    // ---------------------------
+    std::unique_ptr<IoBase> io(IoFactory::create(geom_, ioParams));
+
+    // Call write method of child
+    // --------------------------
+    io->writeBase(this->fieldSet());
+
     oops::Log::trace() << "ijedi::State::write done" << std::endl;
   }
 

@@ -24,7 +24,7 @@ namespace ijedi
   class IoBase : public util::Printable, private boost::noncopyable
   {
   public:
-    explicit IoBase(const Geometry &, const eckit::LocalConfiguration);
+    explicit IoBase(const Geometry &, const eckit::LocalConfiguration &);
     virtual ~IoBase() {}
     void readBase(atlas::FieldSet &) const;
     void writeBase(const atlas::FieldSet &) const;

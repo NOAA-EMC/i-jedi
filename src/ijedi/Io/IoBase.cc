@@ -54,7 +54,7 @@ namespace ijedi
 
   // -------------------------------------------------------------------------------------------------
 
-  IoBase::IoBase(const Geometry &geom, const eckit::LocalConfiguration conf)
+  IoBase::IoBase(const Geometry &geom, const eckit::LocalConfiguration &conf)
   {
     oops::Log::trace() << "IoBase::IoBase starting" << std::endl;
     // If conf has 'field io names' then extract from the config and overwrite fieldIoNames_

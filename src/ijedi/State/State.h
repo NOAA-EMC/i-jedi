@@ -1,10 +1,3 @@
-/*
- * (C) Copyright 2026 UCAR
- *
- * This software is licensed under the terms of the Apache Licence Version 2.0
- * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
- */
-
 #pragma once
 
 #include <ostream>
@@ -41,7 +34,7 @@ namespace ijedi
 
   class Geometry;
 
-  // -------------------------------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
 
   class AnalyticICParameters : public oops::Parameters
   {
@@ -51,47 +44,36 @@ namespace ijedi
     oops::RequiredParameter<std::string> method{"method", this};
   };
 
-  // -------------------------------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
 
   class StateParameters : public oops::Parameters
   {
     OOPS_CONCRETE_PARAMETERS(StateParameters, Parameters)
   public:
-    // Analytic initial condition parameters
-    oops::OptionalParameter<oops::Variables> stateVariables{"state variables", this};
-    oops::OptionalParameter<AnalyticICParameters> analytic{"analytic init", this};
     oops::OptionalParameter<util::DateTime> datetime{"datetime", this};
-    // Read parameters
-    IoParametersWrapper ioParametersWrapper{this};
-    oops::OptionalParameter<bool> setdatetime{"set datetime on read", this};
+    oops::OptionalParameter<oops::Variables> stateVariables{"state variables", this};
+    // Analytic initial condition parameters
+    oops::OptionalParameter<AnalyticICParameters> analytic{"analytic init", this};
+    // Io parameters wrapper for polymorphic IO parameters (nested under "io" key)
+    oops::OptionalParameter<IoParametersWrapper> io{"io", this};
   };
 
-  // -------------------------------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
 
   class StateWriteParameters : public oops::Parameters
   {
     OOPS_CONCRETE_PARAMETERS(StateWriteParameters, Parameters)
   public:
-    oops::OptionalParameter<std::string> type{"type", this};
-    oops::OptionalParameter<std::string> exp{"exp", this};
-    oops::OptionalParameter<int> member{"member", this};
-    oops::OptionalParameter<std::string> memberPattern{"member pattern", this};
-    oops::OptionalParameter<util::DateTime> date{"date", this};
-    oops::OptionalParameter<int> iteration{"iteration", this};
-    oops::OptionalParameter<std::string> prefix{"prefix", this};
-    oops::Parameter<bool> dateCols{"date colons", true, this};
-    IoParametersWrapper ioParametersWrapper{this};
-    // Additional formats to output
-    oops::OptionalParameter<std::vector<IoParametersWrapper>>
-        additionalIo{"additional output formats", this};
+    // Io parameters for writing (nested under "io" key)
+    oops::OptionalParameter<IoParametersWrapper> io{"io", this};
   };
 
-  // -------------------------------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
 
   class State : public mist::base::State, private util::ObjectCounter<State>
   {
   public:
-    static std::string classname() { return "jedimpas::State"; }
+    static std::string classname() { return "ijedi::State"; }
 
     State(const Geometry &, const eckit::Configuration &);
     State(const Geometry &, const oops::Variables &, const util::DateTime &, bool initToZero = true);
