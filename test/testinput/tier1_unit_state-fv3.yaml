@@ -22,8 +22,7 @@ state test:
     io:
       filetype: fv3
       source: history
-      #datapath: Data/inputs/gfs_c12/bkg
-      datapath: /workspaces/fv3-jedi-data/testinput_tier_1/inputs/gfs_c12/bkg_hist
+      datapath: testrun/state-fv3/
       atm_file: atmf006.nc
       sfc_file: sfcf006.nc
       field io names:
@@ -36,5 +35,5 @@ state test:
         ozone_mass_mixing_ratio: o3mr
   date: 2020-12-15T00:00:00Z
   test variable change constructor: false
-  norm file: 2927466.62962954445
+  norm file: 2916052.09662111802
   tolerance: 1.0e-8
