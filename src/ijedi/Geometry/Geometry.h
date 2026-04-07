@@ -63,7 +63,6 @@ namespace ijedi
     void print(std::ostream &) const;
     std::shared_ptr<FieldsMetadata> fieldsMeta_;
     std::shared_ptr<GeometryBase> geometryImpl_;
-    std::shared_ptr<eckit::Configuration> geomVariables_;
     int numberLevels_;
     std::string type_;
   };

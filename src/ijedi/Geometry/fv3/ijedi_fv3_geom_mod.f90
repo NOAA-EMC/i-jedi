@@ -185,7 +185,7 @@ if (this_grid .ne. 1) call abor1_ftn("Geometry not ready for this_grid > 1")
 ! -----------------------------
 call geom_vars%set("npx", npx)
 call geom_vars%set("npy", npy)
-call geom_vars%set("npz", npz)
+call geom_vars%set("nLevels", npz)
 call geom_vars%set("isc", isc)
 call geom_vars%set("iec", iec)
 call geom_vars%set("jsc", jsc)
@@ -259,9 +259,10 @@ else
 endif
 
 ! Put ak/bk into the configuration for use in other places
-call geom_vars%set("ak", ak)
-call geom_vars%set("bk", bk)
-call geom_vars%set("ptop", ak(1))
+
+call geom_vars%set("sigma_pressure_hybrid_coordinate_a_coefficient", ak)
+call geom_vars%set("sigma_pressure_hybrid_coordinate_b_coefficient", bk)
+call geom_vars%set("air_pressure_at_top_of_atmosphere_model", ak(1))
 
 ! Save some things later needed in Atlas-based Geometry Fields
 ! ------------------------------------------------------------

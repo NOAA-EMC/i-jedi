@@ -1,0 +1,50 @@
+time window:
+  begin: 2020-12-14T21:00:00Z
+  length: PT6H
+geometry:
+  geometry_type: fv3
+  fms initialization:
+    namelist filename: data/fv3/input_c12.nml
+    field table filename: data/fv3/field_table
+  npx: 13
+  npy: 13
+  npz: 127
+  ntiles: 6
+  akbk: gfs_127
+state:
+  date: 2020-12-15T00:00:00Z
+  filetype: fms restart
+  datapath: Data/inputs/gfs_c12/bkg/
+  filename_core: 20201215.000000.fv_core.res.nc
+  filename_trcr: 20201215.000000.fv_tracer.res.nc
+  filename_sfcd: 20201215.000000.sfc_data.nc
+  filename_sfcw: 20201215.000000.fv_srf_wnd.res.nc
+  filename_cplr: 20201215.000000.coupler.res
+  state variables:
+  - eastward_wind
+  - northward_wind
+  - air_temperature
+  - air_pressure_thickness
+  field io names: &field_io_names
+    eastward_wind: ua
+    northward_wind: va
+    air_temperature: T
+    air_pressure_thickness: delp
+observations:
+  observers:
+  - obs space:
+      name: Aircraft
+      obsdatain:
+        engine:
+          type: H5File
+          obsfile: data/obs/aircraft_obs_2020121500_m.nc4
+      simulated variables:
+      - windEastward
+      - windNorthward
+      - airTemperature
+    obs operator:
+      name: VertInterp
+      vertical coordinate: air_pressure
+      observation vertical coordinate: pressure
+      observation vertical coordinate group: MetaData
+      interpolation method: log-linear
