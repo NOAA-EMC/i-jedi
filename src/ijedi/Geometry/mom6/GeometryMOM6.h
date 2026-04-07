@@ -54,6 +54,11 @@ namespace ijedi
     void gatherFromJedi(const atlas::Field & jediField,
                         atlas::Field * mom6Field) const;
 
+    // Public accessors for effective grid size and levels
+    int niEff() const { return niEff_; }
+    int njEff() const { return njEff_; }
+    int numLevels() const { return numLevels_; }
+
    private:
     // Replicates FMS compute_extent() — integer-division domain partition
     static int computeExtent(int N, int ndivs, int pe);

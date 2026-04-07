@@ -55,6 +55,9 @@ namespace ijedi
     // Function to return the geometry variables
     const eckit::Configuration &geomVariables() const { return *geomVariables_; }
 
+    // Access the underlying geometry implementation (for model-specific casts)
+    const GeometryBase &geometryImpl() const { return *geometryImpl_; }
+
    private:
     Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;

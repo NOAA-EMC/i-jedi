@@ -1,0 +1,39 @@
+geometry:
+  geometry_type: mom6
+  ocean_hgrid: INPUT/ocean_hgrid.nc
+  ocean_topog: INPUT/ocean_topog.nc
+  coarsen factor: 1
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [3, 2]
+    MINIMUM_DEPTH: 0.5
+state test:
+  statefile:
+    date: 2021-01-01T00:00:00Z
+    state variables:
+    - sea_water_potential_temperature
+    - sea_water_salinity
+    - sea_surface_height_above_geoid
+    io:
+      filetype: mom6
+      filename: mom6_history.nc
+  write then read test:
+    state write:
+      io:
+        filetype: mom6
+        filename: mom6_history_write_test.nc
+    state read:
+      date: 2021-01-01T00:00:00Z
+      state variables:
+      - sea_water_potential_temperature
+      - sea_water_salinity
+      - sea_surface_height_above_geoid
+      io:
+        filetype: mom6
+        filename: mom6_history_write_test.nc
+  date: 2021-01-01T00:00:00Z
+  norm file: 7.29992564041833430e+03           # TODO: update once analytic_init is implemented
+  tolerance: 1.0e-06
+  test variable change constructor: false
