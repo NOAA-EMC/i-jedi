@@ -10,7 +10,7 @@
 namespace ijedi
 {
   // -------------------------------------------------------------------------------------------------
-  static IoMaker<IoFV3History> makerIoFV3History_("cube sphere history");
+  static IoMaker<IoFV3History> makerIoFV3History_("fv3 history");
   // -------------------------------------------------------------------------------------------------
   IoFV3History::IoFV3History(const Geometry &geom, const Parameters_ &params)
       : IoBase(geom, params.toConfiguration())
@@ -52,4 +52,4 @@ namespace ijedi
     os << classname() << " Io for Cube Sphere Histories";
   }
   // -------------------------------------------------------------------------------------------------
-} // namespace ijedi
+}  // namespace ijedi

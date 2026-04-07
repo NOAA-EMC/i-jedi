@@ -22,7 +22,7 @@ namespace ijedi
   {
     OOPS_CONCRETE_PARAMETERS(IoFV3HistoryParameters, IoParametersBase)
 
-  public:
+   public:
     // Names of files to be read/written to
     oops::Parameter<std::string> provider{"provider", "name of the model", "geos", this};
 
@@ -71,9 +71,6 @@ namespace ijedi
     // Set date/time on read
     oops::OptionalParameter<bool> setDateTime{"set datetime on read", "set datetime on read", this};
 
-    // Optionally the config may contain member
-    oops::OptionalParameter<int> member{"member", "ensemble member number", this};
-
     // Optional list of fields to write out
     oops::OptionalParameter<std::vector<std::string>> fieldsToWrite{"fields to write",
                                                                     "names of the fields to write",
@@ -101,7 +98,7 @@ namespace ijedi
   // -------------------------------------------------------------------------------------------------
   class IoFV3History : public IoBase, private util::ObjectCounter<IoFV3History>
   {
-  public:
+   public:
     static const std::string classname() { return "ijedi::IoFV3History"; }
 
     typedef IoFV3HistoryParameters Parameters_;
@@ -113,10 +110,10 @@ namespace ijedi
     void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
                const eckit::LocalConfiguration &) const override;
 
-  private:
+   private:
     void print(std::ostream &) const override;
   };
 
   // -------------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi

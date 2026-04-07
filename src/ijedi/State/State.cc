@@ -11,6 +11,7 @@
 #include <cmath>
 #include <iomanip>
 #include <limits>
+#include <memory>
 
 #include "atlas/field.h"
 #include "eckit/config/Configuration.h"
@@ -32,16 +33,11 @@ namespace ijedi
                           util::DateTime(config.getString("date")), false),
         geom_(geom)
   {
-    if (config.has("analytic init"))
-    {
+    if (config.has("analytic init")) {
       analytic_init(config);
-    }
-    else if (config.has("io"))
-    {
+    } else if (config.has("io")) {
       read(config);
-    }
-    else
-    {
+    } else {
       throw eckit::BadParameter("ijedi::State: config must have 'io' or 'analytic init'",
                                 Here());
     }
@@ -140,16 +136,14 @@ namespace ijedi
 
     const auto &comm = geom_.comm();
     const auto &fs = this->fieldSet();
-    int fieldIndex = 0;
     for (const auto &var : this->variables())
     {
       const atlas::Field &field = fs.field(var.name());
-      const auto [globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
-      ++fieldIndex;
+      const auto[globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
       os << std::endl
-         << "Fld=" << fieldIndex << std::scientific << std::setprecision(16) << "  Min=" << globalMin
-         << ", Max=" << globalMax << ", RMS=" << rms << " : " << var.name();
+         << var.name() << " : " << std::scientific << std::setprecision(16) << "Min=" << globalMin
+         << ", Max=" << globalMax << ", RMS=" << rms;
     }
   }
 
-} // namespace ijedi
+}  // namespace ijedi

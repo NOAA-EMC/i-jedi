@@ -17,17 +17,17 @@
 namespace eckit
 {
   class Configuration;
-} // namespace eckit
+}  // namespace eckit
 
 namespace oops
 {
   class Variables;
-} // namespace oops
+}  // namespace oops
 
 namespace util
 {
   class DateTime;
-} // namespace util
+}  // namespace util
 
 namespace ijedi
 {
@@ -39,7 +39,7 @@ namespace ijedi
   class AnalyticICParameters : public oops::Parameters
   {
     OOPS_CONCRETE_PARAMETERS(AnalyticICParameters, Parameters)
-  public:
+   public:
     // Analytic initial condition parameters
     oops::RequiredParameter<std::string> method{"method", this};
   };
@@ -49,7 +49,7 @@ namespace ijedi
   class StateParameters : public oops::Parameters
   {
     OOPS_CONCRETE_PARAMETERS(StateParameters, Parameters)
-  public:
+   public:
     oops::OptionalParameter<util::DateTime> datetime{"datetime", this};
     oops::OptionalParameter<oops::Variables> stateVariables{"state variables", this};
     // Analytic initial condition parameters
@@ -63,7 +63,7 @@ namespace ijedi
   class StateWriteParameters : public oops::Parameters
   {
     OOPS_CONCRETE_PARAMETERS(StateWriteParameters, Parameters)
-  public:
+   public:
     // Io parameters for writing (nested under "io" key)
     oops::OptionalParameter<IoParametersWrapper> io{"io", this};
   };
@@ -72,11 +72,12 @@ namespace ijedi
 
   class State : public mist::base::State, private util::ObjectCounter<State>
   {
-  public:
+   public:
     static std::string classname() { return "ijedi::State"; }
 
     State(const Geometry &, const eckit::Configuration &);
-    State(const Geometry &, const oops::Variables &, const util::DateTime &, bool initToZero = true);
+    State(const Geometry &, const oops::Variables &, const util::DateTime &,
+          bool initToZero = true);
     State(const Geometry &, const State &);
     State(const oops::Variables &, const State &);
     State(const State &);
@@ -88,7 +89,7 @@ namespace ijedi
     void read(const eckit::Configuration &);
     void write(const eckit::Configuration &) const;
 
-  private:
+   private:
     void analytic_init(const eckit::Configuration &);
 
     void print(std::ostream &os) const override;
@@ -96,4 +97,4 @@ namespace ijedi
     const Geometry &geom_;
   };
 
-} // namespace ijedi
+}  // namespace ijedi

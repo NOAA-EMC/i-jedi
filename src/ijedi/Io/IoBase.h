@@ -23,13 +23,13 @@ namespace ijedi
 
   class IoBase : public util::Printable, private boost::noncopyable
   {
-  public:
+   public:
     explicit IoBase(const Geometry &, const eckit::LocalConfiguration &);
     virtual ~IoBase() {}
     void readBase(atlas::FieldSet &) const;
     void writeBase(const atlas::FieldSet &) const;
 
-  private:
+   private:
     // Child read/write methods
     virtual void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
                       const eckit::LocalConfiguration &) const = 0;
@@ -51,15 +51,7 @@ namespace ijedi
   class IoParametersBase : public oops::Parameters
   {
     OOPS_ABSTRACT_PARAMETERS(IoParametersBase, Parameters)
-  public:
-    oops::OptionalParameter<std::string> type{"type", this};
-    oops::OptionalParameter<std::string> exp{"exp", this};
-    oops::OptionalParameter<int> member{"member", this};
-    oops::OptionalParameter<std::string> memberPattern{"member pattern", this};
-    oops::OptionalParameter<util::DateTime> date{"date", this};
-    oops::OptionalParameter<int> iteration{"iteration", this};
-    oops::OptionalParameter<std::string> prefix{"prefix", this};
-    oops::Parameter<bool> dateCols{"date colons", true, this};
+   public:
     oops::OptionalParameter<std::string> filetype{"filetype", this};
     oops::OptionalParameter<eckit::LocalConfiguration> fieldIoNames{"field io names", this};
   };
@@ -73,7 +65,7 @@ namespace ijedi
   class IoParametersWrapper : public oops::Parameters
   {
     OOPS_CONCRETE_PARAMETERS(IoParametersWrapper, Parameters)
-  public:
+   public:
     oops::OptionalPolymorphicParameter<IoParametersBase, IoFactory> ioParameters{"filetype", this};
   };
 
@@ -81,7 +73,7 @@ namespace ijedi
 
   class IoFactory
   {
-  public:
+   public:
     static IoBase *create(const Geometry &, const IoParametersBase &params);
 
     static std::unique_ptr<IoParametersBase> createParameters(const std::string &name);
@@ -93,10 +85,10 @@ namespace ijedi
 
     virtual ~IoFactory() = default;
 
-  protected:
+   protected:
     explicit IoFactory(const std::string &name);
 
-  private:
+   private:
     virtual IoBase *make(const Geometry &, const IoParametersBase &) = 0;
 
     virtual std::unique_ptr<IoParametersBase> makeParameters() const = 0;
@@ -125,10 +117,10 @@ namespace ijedi
       return std::make_unique<Parameters_>();
     }
 
-  public:
+   public:
     explicit IoMaker(const std::string &name) : IoFactory(name) {}
   };
 
   // -------------------------------------------------------------------------------------------------
 
-} // namespace ijedi
+}  // namespace ijedi
