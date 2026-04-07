@@ -104,7 +104,7 @@ endif()
 # ###############################################################################
 # MPAS specific project source files and setup
 # ###############################################################################
-if(MPAS_FOUND)
+if(BUILD_MPAS)
 
   list(APPEND ijedi_mpas_src_files
     Geometry/mpas/GeometryMPAS.cc
@@ -147,7 +147,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
 if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
 endif()
-if(MPAS_FOUND)
+if(BUILD_MPAS)
   target_link_libraries(${PROJECT_NAME} PUBLIC MPAS::core::atmosphere)
 endif()
 

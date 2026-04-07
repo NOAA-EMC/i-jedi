@@ -35,13 +35,14 @@ ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.gi
 ecbuild_bundle( PROJECT oops      GIT    "https://github.com/NOAA-EMC/oops.git" UPDATE BRANCH feature/mist )
 ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git" UPDATE BRANCH develop)
 
-find_package(ESMF)
-if(ESMF_FOUND)
-  message(STATUS "Found external ESMF, MPAS will use it")
-else()
-  message(WARNING "ESMF not found, MPAS will try to build internal ESMF")
-endif()
-ecbuild_bundle( PROJECT mpas      GIT    "https://github.com/ufs-community/MPAS-Model.git" UPDATE BRANCH gsl/develop RECURSIVE )
+option(BUILD_MPAS "Build mpas-jedi" ON)
+set(MPAS_DOUBLE_PRECISION "ON" CACHE STRING "MPAS-Model: Use double precision 64-bit Floating point.")
+set(MPAS_CORES init_atmosphere atmosphere CACHE STRING "MPAS-Model: cores to build.")
+set(MPAS_OPENMP "ON" CACHE STRING "MPAS-Model: Enable OpenMP.")
+
+# Temporary, see https://github.com/JCSDA-internal/jedi-bundle/pull/140
+ecbuild_bundle( PROJECT mpas      GIT "https://github.com/MPAS-Dev/MPAS-Model.git"     TAG 0e5a47a0e1bcccd6e3d99909b76e740a643c4db6 )
+#ecbuild_bundle( PROJECT mpas      GIT    "https://github.com/MPAS-Dev/MPAS-Model.git" TAG v8.2.1 RECURSIVE )
 
 # ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"      UPDATE BRANCH develop )
 # ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"       UPDATE BRANCH develop )
