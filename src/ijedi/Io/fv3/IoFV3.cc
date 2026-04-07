@@ -71,24 +71,10 @@ namespace ijedi
     {
         const std::string datapath = parameters_.datapath.value();
 
-        // Build the list of file paths
+        // Build the list of file paths from atm_file and sfc_file
         std::vector<std::string> filepaths;
-        if (parameters_.filenames.value())
-        {
-            for (const auto &fn : parameters_.filenames.value().value())
-            {
-                filepaths.push_back(datapath + "/" + fn);
-            }
-        }
-        else if (parameters_.filename.value())
-        {
-            filepaths.push_back(datapath + "/" + parameters_.filename.value().value());
-        }
-        else
-        {
-            throw eckit::BadValue(classname() + "::readHistoryFiles: "
-                                                "No filename or filenames specified");
-        }
+        filepaths.push_back(datapath + "/" + parameters_.atm_file.value());
+        filepaths.push_back(datapath + "/" + parameters_.sfc_file.value());
 
         // Get per-file dimension name overrides (or use defaults)
         const auto &xdimOpt = parameters_.xdim.value();

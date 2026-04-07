@@ -26,14 +26,14 @@ namespace ijedi
         // Names of files to be read/written to
         oops::Parameter<std::string> source{"source", "history or restart", "history", this};
 
-        // Filenames provided as a list
-        oops::OptionalParameter<std::vector<std::string>> filenames{"filenames",
-                                                                    "names of the files to be read",
-                                                                    this};
+        // Atmosphere file name
+        oops::RequiredParameter<std::string> atm_file{"atm_file",
+                                                      "atmosphere file name",
+                                                      this};
 
-        // Single filename provided
-        oops::OptionalParameter<std::string> filename{"filename",
-                                                      "name of the file to be read",
+        // Surface file name
+        oops::RequiredParameter<std::string> sfc_file{"sfc_file",
+                                                      "surface file name",
                                                       this};
 
         // Path prepended to all files
