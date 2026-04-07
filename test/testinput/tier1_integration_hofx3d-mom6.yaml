@@ -1,0 +1,37 @@
+time window:
+  begin: 2020-12-14T21:00:00Z
+  length: PT6H
+geometry:
+  geometry_type: mom6
+  ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+  ocean_topog: data_generated/mom6/ocean_topog.nc
+  coarsen factor: 1
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [3, 2]
+    MINIMUM_DEPTH: 0.5
+state:
+  date: 2020-12-15T00:00:00Z
+  state variables:
+  - sea_ice_area_fraction
+  - sea_ice_thickness
+  - sea_ice_snow_thickness
+  - sea_water_salinity
+  - sea_water_potential_temperature
+  - sea_surface_height_above_geoid
+  io:
+    filetype: fv3 history # wrong! but the only one currently available, setting as placeholder
+observations:
+  observers:
+  - obs space:
+      name: SST
+      obsdatain:
+        engine:
+          type: H5File
+          obsfile: data_generated/obs/sst.nc
+      simulated variables: [seaSurfaceTemperature]
+    obs operator:
+      name: Identity
+      observation alias file: data/obs/obsop_name_map.yml
