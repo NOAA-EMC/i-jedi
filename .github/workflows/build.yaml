@@ -30,7 +30,7 @@ jobs:
           ${{ github.workspace }}/i-jedi/bundle/oops
         key: ${{ runner.os }}-oops-${{ steps.dep-hashes.outputs.oops }}
         restore-keys: |
-          ${{ runner.os }}-oops-
+          ${{ runner.os }}-oops-${{ steps.dep-hashes.outputs.oops }}
     - name: Cache VADER
       id: cache-vader
       uses: actions/cache@v5
@@ -40,7 +40,7 @@ jobs:
           ${{ github.workspace }}/i-jedi/bundle/vader
         key: ${{ runner.os }}-vader-${{ steps.dep-hashes.outputs.vader }}
         restore-keys: |
-          ${{ runner.os }}-vader-
+          ${{ runner.os }}-vader-${{ steps.dep-hashes.outputs.vader }}
     - name: Cache UFO
       id: cache-ufo
       uses: actions/cache@v5
@@ -50,7 +50,7 @@ jobs:
           ${{ github.workspace }}/i-jedi/bundle/ufo
         key: ${{ runner.os }}-ufo-${{ steps.dep-hashes.outputs.ufo }}
         restore-keys: |
-          ${{ runner.os }}-ufo-
+          ${{ runner.os }}-ufo-${{ steps.dep-hashes.outputs.ufo }}
     - name: Cache IODA
       id: cache-ioda
       uses: actions/cache@v5
@@ -60,7 +60,7 @@ jobs:
           ${{ github.workspace }}/i-jedi/bundle/ioda
         key: ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
         restore-keys: |
-          ${{ runner.os }}-ioda-
+          ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
     - name: Run ecbuild
       shell: bash
       run: |
