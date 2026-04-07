@@ -71,6 +71,8 @@ subroutine c_ijedi_mpas_geom_delete(c_geom) &
 
   type(ijedi_mpas_geom), pointer :: geom
 
+  if (.not. c_associated(c_geom)) return
+
   call c_f_pointer(c_geom, geom)
   call geom_delete(geom)
   deallocate(geom)

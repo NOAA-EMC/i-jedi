@@ -8,6 +8,7 @@ module ijedi_mpas_geom_mod
 use fckit_configuration_module, only: fckit_configuration
 use fckit_mpi_module, only: fckit_mpi_comm
 use iso_c_binding
+use ESMF
 
 use kinds, only: kind_real
 
@@ -15,7 +16,7 @@ use mpas_derived_types
 use mpas_kind_types, only: RKIND
 use mpas_constants, only: pii
 use mpas_dmpar, only: mpas_dmpar_sum_int, mpas_dmpar_exch_halo_field
-use mpas_subdriver
+use mpas_subdriver, only: mpas_init
 use atm_core
 use mpas_pool_routines, only: mpas_pool_get_subpool, mpas_pool_get_dimension, &
                               mpas_pool_get_array, mpas_pool_get_field
@@ -29,10 +30,7 @@ public :: ijedi_mpas_geom, &
 real(kind=kind_real), parameter :: RAD2DEG = 180.0_kind_real / real(pii, kind_real)
 real(kind=kind_real), parameter :: HALF_PI = real(pii, kind_real) / 2.0_kind_real
 
-integer, parameter :: MAX_DOMAINS = 16
-integer, save :: geom_ids(MAX_DOMAINS)  = 0
-integer, save :: geom_refs(MAX_DOMAINS) = 0
-integer, save :: geom_n                 = 0
+logical, save :: esmf_initialized = .false.
 
 character(len=1024) :: message
 
@@ -88,20 +86,15 @@ subroutine geom_setup(self, f_conf, comm)
   call f_conf%get_or_die("streams_file", str)
   streams_file = str
 
+  if (.not. esmf_initialized) then
+    call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN)
+    esmf_initialized = .true.
+  end if
+
   call mpas_init(self%corelist, self%domain, &
                  external_comm=self%comm%communicator(), &
                  namelistFileParam=trim(nml_file), &
                  streamsFileParam=trim(streams_file))
-
-  ! Reference counting for domain lifecycle
-  geom_n = geom_n + 1
-  if (geom_n > MAX_DOMAINS) then
-    write(message, '(A,I3,A)') 'jedi-mpas geom_setup: exceeded MAX_DOMAINS (', &
-                               MAX_DOMAINS, ') limit; increase MAX_DOMAINS in ijedi_mpas_geom_mod'
-    call abor1_ftn(message)
-  end if
-  geom_ids(geom_n)  = self%domain%domainID
-  geom_refs(geom_n) = 1
 
   block_ptr => self%domain%blocklist
   call mpas_pool_get_subpool(block_ptr%structs, 'mesh', meshPool)
@@ -196,18 +189,6 @@ subroutine geom_clone(self, other)
   self%corelist => other%corelist
   self%domain => other%domain
 
-  do ii = 1, geom_n
-    if (geom_ids(ii) == self%domain%domainID) then
-      geom_refs(ii) = geom_refs(ii) + 1
-      exit
-    end if
-  end do
-  if (ii > geom_n) then
-    write(message, '(A,I6,A)') 'jedi-mpas geom_clone: domainID ', &
-                               self%domain%domainID, ' not found in reference table'
-    call abor1_ftn(message)
-  end if
-
 end subroutine geom_clone
 
 ! ------------------------------------------------------------------------------
@@ -216,8 +197,6 @@ subroutine geom_delete(self)
 
   type(ijedi_mpas_geom), intent(inout) :: self
 
-  integer :: ii
-
   if (allocated(self%latCell)) deallocate(self%latCell)
   if (allocated(self%lonCell)) deallocate(self%lonCell)
   if (allocated(self%areaCell)) deallocate(self%areaCell)
@@ -225,26 +204,14 @@ subroutine geom_delete(self)
   if (allocated(self%cellsOnVertex)) deallocate(self%cellsOnVertex)
   if (allocated(self%bdyMaskVertex)) deallocate(self%bdyMaskVertex)
 
-  do ii = 1, geom_n
-    if (geom_ids(ii) == self%domain%domainID) then
-      geom_refs(ii) = geom_refs(ii) - 1
-      if (associated(self%corelist) .and. associated(self%domain)) then
-        if (geom_refs(ii) == 0) then
-          call mpas_timer_set_context(self%domain)
-          call mpas_finalize(self%corelist, self%domain)
-        else
-          nullify(self%corelist)
-          nullify(self%domain)
-        end if
-      end if
-      exit
-    end if
-  end do
-  if (ii > geom_n) then
-    write(message, '(A,I6,A)') 'jedi-mpas geom_delete: domainID ', &
-                               self%domain%domainID, ' not found in reference table'
-    call abor1_ftn(message)
-  end if
+  ! Intentionally do not call mpas_finalize: in a JEDI context the geometry
+  ! object does not own the MPAS framework lifecycle.  mpas_framework_finalize
+  ! tears down internal MPI communicators and pools that Atlas / eckit C++ objects
+  ! still reference during program-exit destructors, causing heap corruption.
+  ! The process exit / MPI_Finalize path invoked by the OOPS framework is the
+  ! correct point to clean up those resources.
+  nullify(self%corelist)
+  nullify(self%domain)
 
 end subroutine geom_delete
 
