@@ -12,36 +12,44 @@ jobs:
       with:
         path: i-jedi
         submodules: recursive
+    - name: Get dependency commit hashes
+      id: dep-hashes
+      shell: bash
+      run: |
+        echo "oops=$(git ls-remote https://github.com/NOAA-EMC/oops.git feature/mist | cut -f1)" >> $GITHUB_OUTPUT
+        echo "vader=$(git ls-remote https://github.com/JCSDA/vader.git develop | cut -f1)" >> $GITHUB_OUTPUT
+        echo "ioda=$(git ls-remote https://github.com/JCSDA/ioda.git develop | cut -f1)" >> $GITHUB_OUTPUT
+        echo "ufo=$(git ls-remote https://github.com/JCSDA/ufo.git develop | cut -f1)" >> $GITHUB_OUTPUT
     - name: Cache OOPS
       id: cache-oops
       uses: actions/cache@v5
       with:
         path: ${{ github.workspace }}/Build/lib/liboops.so
-        key: ${{ runner.os }}-oops-${{ hashFiles('i-jedi/bundle/CMakeLists.txt', '.github/workflows/build.yaml') }}
+        key: ${{ runner.os }}-oops-${{ steps.dep-hashes.outputs.oops }}
         restore-keys: |
           ${{ runner.os }}-oops-
     - name: Cache VADER
       id: cache-vader
       uses: actions/cache@v5
       with:
-        path: $GITHUB_WORKSPACE/Build/lib/libvader.so
-        key: ${{ runner.os }}-vader-${{ hashFiles('i-jedi/bundle/CMakeLists.txt', '.github/workflows/build.yaml') }}
+        path: ${{ github.workspace }}/Build/lib/libvader.so
+        key: ${{ runner.os }}-vader-${{ steps.dep-hashes.outputs.vader }}
         restore-keys: |
           ${{ runner.os }}-vader-
     - name: Cache UFO
       id: cache-ufo
       uses: actions/cache@v5
       with:
-        path: $GITHUB_WORKSPACE/Build/lib/libufo.so
-        key: ${{ runner.os }}-ufo-${{ hashFiles('i-jedi/bundle/CMakeLists.txt', '.github/workflows/build.yaml') }}
+        path: ${{ github.workspace }}/Build/lib/libufo.so
+        key: ${{ runner.os }}-ufo-${{ steps.dep-hashes.outputs.ufo }}
         restore-keys: |
           ${{ runner.os }}-ufo-
     - name: Cache IODA
       id: cache-ioda
       uses: actions/cache@v5
       with:
-        path: $GITHUB_WORKSPACE/Build/lib/libioda.so
-        key: ${{ runner.os }}-ioda-${{ hashFiles('i-jedi/bundle/CMakeLists.txt', '.github/workflows/build.yaml') }}
+        path: ${{ github.workspace }}/Build/lib/libioda.so
+        key: ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
         restore-keys: |
           ${{ runner.os }}-ioda-
     - name: Run ecbuild
