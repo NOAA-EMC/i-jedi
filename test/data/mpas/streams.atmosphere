@@ -1,0 +1,58 @@
+<streams>
+<immutable_stream name="invariant"
+          type="none"
+          filename_template="invariant.nc"
+          input_interval="none" />
+
+<immutable_stream name="input"
+          type="none"
+          filename_template="x1.40962.init.nc"
+          input_interval="none" />
+
+<immutable_stream name="restart"
+          type="input"
+          filename_template="./Data/480km/bg/restart.2018-04-15_00.00.00.nc"
+          input_interval="initial_only"
+          reference_time="2018-04-15_00:00:00" />
+
+<immutable_stream name="iau"
+          type="none"
+          filename_template="x1.40962.AmB.$Y-$M-$D_$h.$m.$s.nc"
+          input_interval="none"
+          packages="iau" />
+
+<immutable_stream name="lbc_in"
+          type="none"
+          filename_template="lbc.$Y-$M-$D_$h.$m.$s.nc"
+          input_interval="none"
+          packages="limited_area" />
+
+<immutable_stream name="ugwp_oro_data_in"
+          type="none"
+          filename_template="x1.40962.ugwp_oro_data.nc"
+          input_interval="none"
+          packages="ugwp_orog_stream" />
+
+<immutable_stream name="ugwp_ngw_in"
+          type="none"
+          filename_template="ugwp_limb_tau.nc"
+          input_interval="none"
+          packages="ugwp_ngw_stream" />
+
+<immutable_stream name="da_state"
+          type="none"
+          filename_template="mpasout.$Y-$M-$D_$h.$m.$s.nc"
+          input_interval="none"
+          output_interval="none"
+          packages="jedi_da" />
+
+<stream name="output"
+    type="output"
+    filename_template="output.nc"
+    output_interval="0_01:00:00" />
+
+<stream name="diagnostics"
+    type="output"
+    filename_template="diagnostics.nc"
+    output_interval="0_01:00:00" />
+</streams>

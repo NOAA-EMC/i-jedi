@@ -1,0 +1,7 @@
+geometry:
+  geometry_type: mpas
+  nml_file: "data/mpas/namelist.atmosphere_2018041500"
+  streams_file: "data/mpas/streams.atmosphere"
+  deallocate non-da fields: true
+  gmsh_save: true
+  gmsh_filename: "./global480km.msh"
