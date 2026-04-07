@@ -5,6 +5,7 @@
 #include <netcdf.h>
 #include "atlas/array.h"
 #include "atlas/field.h"
+#include "atlas/functionspace.h"
 #include "eckit/config/LocalConfiguration.h"
 #include "eckit/exception/Exceptions.h"
 #include "oops/util/Logger.h"
@@ -88,6 +89,8 @@ namespace ijedi
 
         // Track which fields have been read (to avoid reading from a second file)
         std::vector<bool> fieldRead(jediNames.size(), false);
+        oops::Log::info() << classname() << " reading history files for "
+                          << jediNames.size() << " requested fields" << std::endl;
 
         // Loop over each file (e.g. atm file, sfc file)
         for (size_t ifile = 0; ifile < filepaths.size(); ++ifile)
@@ -147,6 +150,13 @@ namespace ijedi
                                << " nx=" << nx << " ny=" << ny << " nz=" << nz
                                << " ntiles=" << ntiles << std::endl;
 
+            // Get local-to-global index mapping from the function space
+            const auto &funcSpace = geom_.functionSpace();
+            const size_t numNodes = funcSpace.size();
+            auto globalIdx = atlas::array::make_view<atlas::gidx_t, 1>(
+                funcSpace.global_index());
+            const size_t nxy = ny * nx;  // spatial points per tile
+
             // Loop over requested fields and attempt to read from this file
             for (size_t ifield = 0; ifield < jediNames.size(); ++ifield)
             {
@@ -160,7 +170,7 @@ namespace ijedi
                 int varid;
                 if (nc_inq_varid(ncid, ncVarName.c_str(), &varid) != NC_NOERR)
                 {
-                    continue; // variable not in this file, try next file
+                    continue;  // variable not in this file, try next file
                 }
 
                 // Determine number of dimensions
@@ -169,21 +179,18 @@ namespace ijedi
                             "getting ndims for " + ncVarName);
 
                 // Variables are either:
-                //   5D: (time, tile, z, y, x) → atlas field shape (ntiles, nz, ny, nx)
-                //   4D: (time, tile, y, x)    → atlas field shape (ntiles, ny, nx)
+                //   5D: (time, tile, z, y, x)
+                //   4D: (time, tile, y, x)
                 //   When tile is not a dimension, reduce by 1D each
 
-                const int expected3d = hasTileDim ? 5 : 4; // with z
-                const int expected2d = hasTileDim ? 4 : 3; // without z
+                const int expected3d = hasTileDim ? 5 : 4;  // with z
+                const int expected2d = hasTileDim ? 4 : 3;  // without z
 
                 if (ndims == expected3d)
                 {
-                    // 3D field (has vertical levels)
-                    std::vector<size_t> shape = {ntiles, nz, ny, nx};
-                    atlas::Field field(jediName,
-                                       atlas::array::make_datatype<double>(),
-                                       atlas::array::ArrayShape(shape));
-                    auto view = atlas::array::make_view<double, 4>(field);
+                    // 3D field — read full data into buffer, then scatter to atlas field
+                    const size_t totalSize = ntiles * nz * nxy;
+                    std::vector<double> buffer(totalSize);
 
                     std::vector<size_t> start, count;
                     if (hasTileDim)
@@ -198,22 +205,39 @@ namespace ijedi
                     }
                     checkNetCDF(nc_get_vara_double(ncid, varid,
                                                    start.data(), count.data(),
-                                                   view.data()),
+                                                   buffer.data()),
                                 "reading " + ncVarName);
+
+                    // Populate existing rank-2 atlas field (nodes, levels)
+                    atlas::Field &field = fieldSet.field(jediName);
+                    auto view = atlas::array::make_view<double, 2>(field);
+
+                    for (size_t jnode = 0; jnode < numNodes; ++jnode)
+                    {
+                        const size_t gid0 = static_cast<size_t>(globalIdx(jnode)) - 1;
+                        const size_t tile0 = gid0 / nxy;
+                        const size_t spatialIdx = gid0 % nxy;
+                        for (size_t z = 0; z < nz; ++z)
+                        {
+                            // NetCDF C-order: buffer[tile][z][y][x]
+                            const size_t bufIdx = tile0 * (nz * nxy) + z * nxy + spatialIdx;
+                            view(jnode, z) = buffer[bufIdx];
+                        }
+                    }
 
                     // Apply scaling if provided
                     if (fileioscaling.has(jediName))
                     {
                         const double scale = fileioscaling.getDouble(jediName);
-                        const size_t total = ntiles * nz * ny * nx;
-                        double *raw = view.data();
-                        for (size_t i = 0; i < total; ++i)
+                        for (size_t jnode = 0; jnode < numNodes; ++jnode)
                         {
-                            raw[i] *= scale;
+                            for (size_t z = 0; z < nz; ++z)
+                            {
+                                view(jnode, z) *= scale;
+                            }
                         }
                     }
 
-                    fieldSet.add(field);
                     fieldRead[ifield] = true;
                     oops::Log::info() << classname() << " read 3D field: " << jediName
                                       << " (" << ncVarName << ") from " << filepath
@@ -221,12 +245,9 @@ namespace ijedi
                 }
                 else if (ndims == expected2d)
                 {
-                    // 2D field (no vertical levels)
-                    std::vector<size_t> shape = {ntiles, ny, nx};
-                    atlas::Field field(jediName,
-                                       atlas::array::make_datatype<double>(),
-                                       atlas::array::ArrayShape(shape));
-                    auto view = atlas::array::make_view<double, 3>(field);
+                    // 2D field — read full data into buffer, then scatter to atlas field
+                    const size_t totalSize = ntiles * nxy;
+                    std::vector<double> buffer(totalSize);
 
                     std::vector<size_t> start, count;
                     if (hasTileDim)
@@ -241,22 +262,29 @@ namespace ijedi
                     }
                     checkNetCDF(nc_get_vara_double(ncid, varid,
                                                    start.data(), count.data(),
-                                                   view.data()),
+                                                   buffer.data()),
                                 "reading " + ncVarName);
+
+                    // Populate existing rank-2 atlas field (nodes, levels=1)
+                    atlas::Field &field = fieldSet.field(jediName);
+                    auto view = atlas::array::make_view<double, 2>(field);
+
+                    for (size_t jnode = 0; jnode < numNodes; ++jnode)
+                    {
+                        const size_t gid0 = static_cast<size_t>(globalIdx(jnode)) - 1;
+                        view(jnode, 0) = buffer[gid0];
+                    }
 
                     // Apply scaling if provided
                     if (fileioscaling.has(jediName))
                     {
                         const double scale = fileioscaling.getDouble(jediName);
-                        const size_t total = ntiles * ny * nx;
-                        double *raw = view.data();
-                        for (size_t i = 0; i < total; ++i)
+                        for (size_t jnode = 0; jnode < numNodes; ++jnode)
                         {
-                            raw[i] *= scale;
+                            view(jnode, 0) *= scale;
                         }
                     }
 
-                    fieldSet.add(field);
                     fieldRead[ifield] = true;
                     oops::Log::info() << classname() << " read 2D field: " << jediName
                                       << " (" << ncVarName << ") from " << filepath
@@ -305,4 +333,4 @@ namespace ijedi
         }
     }
     // -------------------------------------------------------------------------------------------------
-} // namespace ijedi
+}  // namespace ijedi
