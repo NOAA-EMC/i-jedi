@@ -72,37 +72,18 @@ foreach(TIER RANGE 1 3)
     endforeach()
 endforeach()
 
-# Link the directory 'data' to the test directory of the build
-# ------------------------------------------------------------
-file(CREATE_LINK
-    "${CMAKE_CURRENT_SOURCE_DIR}/data"
-    "${CMAKE_CURRENT_BINARY_DIR}/data"
-    SYMBOLIC
-)
-
 # MOM6 test data generation fixture
-# ----------------------------------
-# Runs gen_mom6_testdata.py once; produces INPUT/*.nc inside the test's
-# own working directory, referenced by tier1_unit_geometry-mom6.yaml
-# as input_dir: .
-set(MOM6_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mom6)
-file(MAKE_DIRECTORY ${MOM6_TEST_WORKDIR})
-
-add_test(NAME ijedi_setup_mom6_testdata
-    COMMAND ${Python3_EXECUTABLE}
-        ${CMAKE_CURRENT_SOURCE_DIR}/data/mom6/gen_mom6_testdata.py
-        ${MOM6_TEST_WORKDIR})
 set_tests_properties(ijedi_setup_mom6_testdata PROPERTIES
     FIXTURES_SETUP mom6_testdata)
 
 set_tests_properties(ijedi_tier1_unit_geometry-mom6 PROPERTIES
     FIXTURES_REQUIRED  mom6_testdata
-    WORKING_DIRECTORY  ${MOM6_TEST_WORKDIR}
+    WORKING_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR}
     FIXTURES_SETUP     mom6_grid_output)
 
 set_tests_properties(ijedi_tier1_unit_state-mom6 PROPERTIES
     FIXTURES_REQUIRED  mom6_testdata
-    WORKING_DIRECTORY  ${MOM6_TEST_WORKDIR})
+    WORKING_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR})
 
 # MOM6 structured-grid check against SOCA reference gridspec
 add_test(NAME ijedi_check_mom6_structured_grid

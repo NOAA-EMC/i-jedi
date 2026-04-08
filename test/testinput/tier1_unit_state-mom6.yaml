@@ -1,7 +1,7 @@
 geometry:
   geometry_type: mom6
-  ocean_hgrid: INPUT/ocean_hgrid.nc
-  ocean_topog: INPUT/ocean_topog.nc
+  ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+  ocean_topog: data_generated/mom6/ocean_topog.nc
   coarsen factor: 1
   MOM_input:
     NIGLOBAL: 72
@@ -18,6 +18,7 @@ state test:
     - sea_surface_height_above_geoid
     io:
       filetype: mom6
+      datapath: data_generated/mom6
       filename: mom6_history.nc
       field io names: &mom6_field_io_names
         sea_water_potential_temperature: Temp
@@ -27,6 +28,7 @@ state test:
     state write:
       io:
         filetype: mom6
+        datapath: data_generated/mom6
         filename: mom6_history_write_test.nc
         field io names: *mom6_field_io_names
     state read:
@@ -37,6 +39,7 @@ state test:
       - sea_surface_height_above_geoid
       io:
         filetype: mom6
+        datapath: data_generated/mom6
         filename: mom6_history_write_test.nc
         field io names: *mom6_field_io_names
   date: 2021-01-01T00:00:00Z
