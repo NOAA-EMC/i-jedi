@@ -66,17 +66,17 @@ jobs:
         key: ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
         restore-keys: |
           ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
-    # - name: Show me things
-    #   shell: bash
-    #   run: |
-    #     cd $GITHUB_WORKSPACE
-    #     pwd
-    #     ls -l
-    #     ls -l i-jedi
-    #     ls -l i-jedi/bundle
-    #     ls -l ../
-    #     ls -l Build
-    #     ls -l Build/*
+    - name: Show me things
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE
+        pwd
+        ls -l
+        ls -l i-jedi
+        ls -l i-jedi/bundle
+        ls -l ../
+        ls -l Build
+        ls -l Build/*
 
     - name: Run ecbuild
       shell: bash
