@@ -79,14 +79,14 @@ namespace ijedi {
     oops::Log::trace() << "ijedi::Increment::write starting" << std::endl;
 
     // Create a Parameters object
-    IncrementParameters params;
+    IncrementWriteParameters params;
     params.deserialize(config);
 
     // Check that there are IO parameters
     if (params.io.value() == boost::none ||
         params.io.value()->ioParameters.value() == nullptr)
     {
-      throw eckit::BadParameter("ijedi::Increment::read: No IO parameters provided", Here());
+      throw eckit::BadParameter("ijedi::Increment::write: No IO parameters provided", Here());
     }
 
     // Get the polymorphic IO parameters
