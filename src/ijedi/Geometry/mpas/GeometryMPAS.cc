@@ -225,6 +225,8 @@ namespace ijedi {
   // Set vertical metadata
   levelsAreTopDown_  = true;
   levelsPerVariable_ = createLevelsPerVariable(nVertLevels);
+  levelsAreTopDown = levelsAreTopDown_;
+  numberLevels = nVertLevels;
 
   // Build GeometryData
   geomData_.reset(new oops::GeometryData(functionSpace, fieldSet, levelsAreTopDown_, comm));
@@ -264,6 +266,24 @@ namespace ijedi {
     errorMsg << "GeometryMPAS::verticalCoord is not implemented" << std::endl;
     ABORT(errorMsg.str());
     return std::vector<double>();  // Never reached, but satisfies compiler
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  int GeometryMPAS::nVertLevels() const
+  {
+    int nVertLevels;
+    ijedi_mpas_geom_get_vertical_resolution_f90(fortranGeom_, nVertLevels);
+    return nVertLevels;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  int GeometryMPAS::nCellsGlobal() const
+  {
+    int nCellsGlobal;
+    ijedi_mpas_geom_get_global_cell_count_f90(fortranGeom_, nCellsGlobal);
+    return nCellsGlobal;
   }
 
   // -----------------------------------------------------------------------------------------------

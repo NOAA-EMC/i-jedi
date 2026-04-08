@@ -52,6 +52,9 @@ namespace ijedi
     // Function to access field metadata
     const FieldsMetadata &getFieldMetadata() const { return *fieldsMeta_; }
 
+    // Access the underlying geometry implementation for model-specific casts.
+    const GeometryBase &geometryImpl() const { return *geometryImpl_; }
+
    private:
     Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;

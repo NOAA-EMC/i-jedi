@@ -115,6 +115,11 @@ set_tests_properties(ijedi_tier1_unit_geometry-mpas PROPERTIES
     FIXTURES_SETUP     mpas_grid_output
     ENVIRONMENT        "OMP_NUM_THREADS=1")
 
+set_tests_properties(ijedi_tier1_unit_state-mpas PROPERTIES
+    FIXTURES_REQUIRED  mpas_testdata
+    WORKING_DIRECTORY  ${MPAS_TEST_WORKDIR}
+    ENVIRONMENT        "OMP_NUM_THREADS=1")
+
 # Integration tests
 foreach(TIER RANGE 1 3)
     # Find all YAML files for this tier

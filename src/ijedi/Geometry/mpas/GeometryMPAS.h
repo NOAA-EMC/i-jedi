@@ -35,6 +35,8 @@ namespace ijedi
     GeometryMPAS & operator=(const GeometryMPAS &) = delete;
 
     void * fortranGeom() const { return fortranGeom_; }
+    int nVertLevels() const;
+    int nCellsGlobal() const;
 
    private:
     void * fortranGeom_ = nullptr;

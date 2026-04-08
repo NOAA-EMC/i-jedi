@@ -1,0 +1,47 @@
+geometry:
+  geometry_type: mpas
+  nml_file: "data/mpas/namelist.atmosphere_2018041500"
+  streams_file: "data/mpas/streams.atmosphere"
+  deallocate non-da fields: true
+state test:
+  statefile:
+    date: &date 2018-04-15T00:00:00Z
+    state variables:
+    - air_temperature
+    - water_vapor_mixing_ratio_wrt_moist_air
+    - eastward_wind
+    - northward_wind
+    - air_pressure_at_surface
+    io:
+      filetype: mpas
+      datapath: Data/480km/bg
+      filename: restart.2018-04-15_00.00.00.nc
+      field io names: &mpas_field_io_names
+        air_temperature: theta
+        water_vapor_mixing_ratio_wrt_moist_air: qv
+        eastward_wind: uReconstructZonal
+        northward_wind: uReconstructMeridional
+        air_pressure_at_surface: surface_pressure
+  date: *date
+  norm file: 19735.265702001503
+  tolerance: 1.0e-08
+  write then read test:
+    state write:
+      io:
+        filetype: mpas
+        datapath: Data/480km/bg
+        filename: restart.write_test.2018-04-15_00.00.00.nc
+        field io names: *mpas_field_io_names
+    state read:
+      date: *date
+      state variables:
+      - air_temperature
+      - water_vapor_mixing_ratio_wrt_moist_air
+      - eastward_wind
+      - northward_wind
+      - air_pressure_at_surface
+      io:
+        filetype: mpas
+        datapath: Data/480km/bg
+        filename: restart.write_test.2018-04-15_00.00.00.nc
+        field io names: *mpas_field_io_names
