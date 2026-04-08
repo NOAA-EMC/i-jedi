@@ -69,6 +69,7 @@ jobs:
         ls -l ../
         ls -l Build
         ls -l Build/*
+        pwd
 
     - name: Run ecbuild
       shell: bash
