@@ -48,6 +48,11 @@ foreach(TIER RANGE 1 3)
         # Get the filename without directory and extension
         get_filename_component(TEST_NAME ${YAML_FILE} NAME_WE)
 
+        # Skip this here since we have a special test that downloads the mpas test data and we do not want to double register 
+        if(TEST_NAME STREQUAL "tier1_unit_geometry-mpas")
+            continue()
+        endif()
+
         # Extract components: tier<N>_<type>_<name>
         string(REPLACE "_" ";" NAME_PARTS ${TEST_NAME})
         list(LENGTH NAME_PARTS NUM_PARTS)
@@ -86,6 +91,7 @@ set_tests_properties(ijedi_check_mom6_structured_grid PROPERTIES
 
 set(MPAS_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mpas)
 set(MPAS_DATA_CLONE_DIR ${CMAKE_SOURCE_DIR}/test/testrun/geometry-mpas)
+set(MPAS_GEOMETRY_YAML ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mpas.yaml)
 file(MAKE_DIRECTORY ${MPAS_TEST_WORKDIR})
 file(CREATE_LINK
     "${CMAKE_CURRENT_BINARY_DIR}/data"
@@ -101,9 +107,8 @@ add_test(NAME ijedi_setup_mpas_testdata
 set_tests_properties(ijedi_setup_mpas_testdata PROPERTIES
     FIXTURES_SETUP mpas_testdata)
 
-add_test(NAME ijedi_mpas_geom
-	COMMAND ijedi_test.x 1 6 ${IJEDI_MPI_ARGS}
-	$<TARGET_FILE:ijedi_test.x tier1_unit_geometry-mpas.yaml)
+add_test(NAME ijedi_tier1_unit_geometry-mpas
+    COMMAND $<TARGET_FILE:ijedi_test.x> geometry ${MPAS_GEOMETRY_YAML})
 set_tests_properties(ijedi_tier1_unit_geometry-mpas PROPERTIES
     FIXTURES_REQUIRED  mpas_testdata
     WORKING_DIRECTORY  ${MPAS_TEST_WORKDIR}
@@ -146,4 +151,3 @@ foreach(TIER RANGE 1 3)
         endif()
     endforeach()
 endforeach()
->>>>>>> origin/develop
