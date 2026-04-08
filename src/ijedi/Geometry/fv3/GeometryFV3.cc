@@ -238,6 +238,7 @@ namespace ijedi
     std::stringstream errorMsg;
     errorMsg << "GeometryFV3::verticalCoord is not implemented" << std::endl;
     ABORT(errorMsg.str());
+    return std::vector<double>();  // Never reached, but silences compiler warning
   }
 
   // -----------------------------------------------------------------------------------------------
