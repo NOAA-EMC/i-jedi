@@ -46,14 +46,6 @@ def main():
         print(f"  {nc}")
 
     # -------------------------------------------------------------------------
-    # MOM6 history file (used by IO tests)
-    # -------------------------------------------------------------------------
-    history_cdl = os.path.join(script_dir, "mom6_history.cdl")
-    history_nc  = os.path.join(outdir, "mom6_history.nc")
-    ncgen(history_cdl, history_nc)
-    print(f"  {history_nc}")
-
-    # -------------------------------------------------------------------------
     # SOCA reference gridspec (used by comparison test)
     # -------------------------------------------------------------------------
     soca_cdl = os.path.join(script_dir, "soca_gridspec.72x35x25.cdl")

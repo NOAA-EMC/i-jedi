@@ -19,7 +19,7 @@ state test:
     io:
       filetype: mom6
       datapath: data_generated/mom6
-      filename: mom6_history.nc
+      filename: MOM.res.nc
       field io names: &mom6_field_io_names
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt
