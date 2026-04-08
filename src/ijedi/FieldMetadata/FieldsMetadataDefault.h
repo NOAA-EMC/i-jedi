@@ -299,6 +299,14 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "dry_air_density";
+    md.units = "kgm-3";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "eastward_sea_water_velocity";
     md.units = "ms-1";
     md.kind = "double";
@@ -312,6 +320,14 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "eastward_wind_at_10m";
+    md.units = "ms-1";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -723,6 +739,30 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "graupel_number_concentration";
+    md.units = "kg-1";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "hail";
+    md.units = "kgkg-1";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "hail_number_concentration";
+    md.units = "kg-1";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "height_above_mean_sea_level";
     md.units = "m";
     md.kind = "double";
@@ -796,6 +836,30 @@ namespace ijedi
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "land_type_index_NPOESS";
+    md.units = "none";
+    md.kind = "integer";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "land_type_index_USGS";
+    md.units = "none";
+    md.kind = "integer";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "land_type_index_IGBP";
+    md.units = "none";
+    md.kind = "integer";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "landmask";
     md.units = "none";
     md.kind = "integer";
     md.tracer = "false";
@@ -1187,6 +1251,14 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "northward_wind_at_10m";
+    md.units = "ms-1";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "northward_wind_at_surface";
     md.units = "ms-1";
     md.kind = "double";
@@ -1419,6 +1491,14 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "seaice_fraction";
+    md.units = "none";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "sgs_tke";
     md.units = "m2/s2";
     md.kind = "double";
@@ -1496,6 +1576,14 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "snow_number_concentration";
+    md.units = "kg-1";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "full";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -1868,9 +1956,9 @@ namespace ijedi
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "water_vapor_mixing_ratio_wrt_dry_air";
-    md.units = "1";
+    md.units = "kgkg-1";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
@@ -1880,6 +1968,14 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "water_vapor_mixing_ratio_wrt_moist_air_at_2m";
+    md.units = "kgkg-1";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
