@@ -1,0 +1,29 @@
+increment test:
+  date: 2020-12-15T00:00:00Z
+  dirac:
+    dirac fields: [air_temperature, air_temperature]
+    dirac processors: [0, 1]
+    dirac horizontal index: [0, 0]
+    dirac vertical level: [120, 150]
+  tolerance AD resolution change: 1.0e-13
+geometry:
+  fms initialization:
+    namelist filename: data/fv3/input_c12.nml
+    field table filename: data/fv3/field_table
+  geometry_type: fv3
+  npx: 13
+  npy: 13
+  npz: 127
+  ntiles: 6
+  akbk: gfs_127
+other geometry:
+  geometry_type: fv3
+  akbk: gfs_127
+  npx: 25
+  npy: 25
+  npz: 127
+inc variables:
+- eastward_wind
+- northward_wind
+- air_temperature
+- air_pressure_thickness
