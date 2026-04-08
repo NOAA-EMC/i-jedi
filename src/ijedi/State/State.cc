@@ -42,6 +42,14 @@ namespace ijedi
       throw eckit::BadParameter("ijedi::State: config must have 'io' or 'analytic init'",
                                 Here());
     }
+    // A temporary hack for interpolation masks for MOM6.
+    // This should be replaced by using a proper mask field for different fields
+    // (probably coming from FieldsMetaData)
+    if (geom.fields().has("mask2d")) {
+      for (auto & field : this->fieldSet()) {
+        field.metadata().set("mask", "mask2d");
+      }
+    }
   }
 
   State::State(const Geometry &geom, const oops::Variables &vars, const util::DateTime &time,
