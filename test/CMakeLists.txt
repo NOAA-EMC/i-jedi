@@ -2,27 +2,49 @@
 # -------------------------
 add_subdirectory(mains)
 
-# Automatically discover and add tests organized by tier
-# -------------------------------------------------------
-# All tests are built; use ctest -R tier<N> to run specific tiers
-# Note: CONFIGURE_DEPENDS tells CMake to recheck for new/removed test files
-# `export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"` to allow MPI oversubscription (useful for CI/local testing)
-set(IJEDI_MPI_ARGS $ENV{IJEDI_MPI_ARGS})
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-if(IJEDI_MPI_ARGS)
-    separate_arguments(IJEDI_MPI_ARGS)
-endif()
-
-# Link the directory 'data' to the test directory of the build
-# ------------------------------------------------------------
+# Test Data Setup
+# ---------------
+# Link the directory 'data' to the test directory of the build.
 file(CREATE_LINK
     "${CMAKE_CURRENT_SOURCE_DIR}/data"
     "${CMAKE_CURRENT_BINARY_DIR}/data"
     SYMBOLIC
 )
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
+
+set(MPAS_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mpas)
+set(MPAS_DATA_CLONE_DIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/mpas-jedi-data)
+set(MPAS_GEOMETRY_YAML ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mpas.yaml)
+set(MPAS_GEOMETRY_EXECUTABLE geometry)
+
+# Fetch MPAS test data at configure time.
+execute_process(
+    COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_SOURCE_DIR}/../util/fetch_mpas_testdata.py
+        --clone-dir ${MPAS_DATA_CLONE_DIR}
+        --dest-dir ${MPAS_TEST_WORKDIR}
+        --data-link-source ${CMAKE_CURRENT_BINARY_DIR}/data
+    RESULT_VARIABLE MPAS_FETCH_RC
+)
+if(NOT MPAS_FETCH_RC EQUAL 0)
+    message(FATAL_ERROR "Failed to fetch MPAS test data at configure time (rc=${MPAS_FETCH_RC})")
+endif()
+
+# Test Definitions
+# ----------------
+# All tests are built; use ctest -R tier<N> to run specific tiers.
+# Note: CONFIGURE_DEPENDS tells CMake to recheck for new/removed test files.
+# `export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"` to allow MPI oversubscription (useful for CI/local testing).
+set(IJEDI_MPI_ARGS $ENV{IJEDI_MPI_ARGS})
+
+if(IJEDI_MPI_ARGS)
+    separate_arguments(IJEDI_MPI_ARGS)
+endif()
 
 # Test data generation fixture
 add_test(NAME ijedi_setup_mom6_testdata
@@ -88,30 +110,11 @@ add_test(NAME ijedi_check_mom6_structured_grid
 # MPAS geometry test
 # ----------------------------------
 
-set(MPAS_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mpas)
-set(MPAS_DATA_CLONE_DIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mpas)
-set(MPAS_GEOMETRY_YAML ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mpas.yaml)
-file(MAKE_DIRECTORY ${MPAS_TEST_WORKDIR})
-file(CREATE_LINK
-    "${CMAKE_CURRENT_BINARY_DIR}/data"
-    "${MPAS_TEST_WORKDIR}/data"
-    SYMBOLIC
-)
-# Fetch MPAS test data as a setup fixture test so ctest controls execution order.
-add_test(NAME ijedi_setup_mpas_testdata
-    COMMAND ${CMAKE_COMMAND}
-        -DCLONE_DIR=${MPAS_DATA_CLONE_DIR}
-        -DDEST_DIR=${MPAS_TEST_WORKDIR}
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_mpas_testdata.cmake)
-set_tests_properties(ijedi_setup_mpas_testdata PROPERTIES
-    FIXTURES_SETUP mpas_testdata)
-
 # Run geometry test
 add_test(NAME ijedi_tier1_unit_geometry-mpas
     COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
-    $<TARGET_FILE:ijedi_test.x> ${EXECUTABLE_BASE} ${YAML_FILE})
+    $<TARGET_FILE:ijedi_test.x> ${MPAS_GEOMETRY_EXECUTABLE} ${MPAS_GEOMETRY_YAML})
 set_tests_properties(ijedi_tier1_unit_geometry-mpas PROPERTIES
-    FIXTURES_REQUIRED  mpas_testdata
     WORKING_DIRECTORY  ${MPAS_TEST_WORKDIR}
     FIXTURES_SETUP     mpas_grid_output
     ENVIRONMENT        "OMP_NUM_THREADS=1")
