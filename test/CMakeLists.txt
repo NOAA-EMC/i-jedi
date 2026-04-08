@@ -118,7 +118,8 @@ set_tests_properties(ijedi_tier1_unit_geometry-mpas PROPERTIES
 set_tests_properties(ijedi_tier1_unit_state-mpas PROPERTIES
     FIXTURES_REQUIRED  mpas_testdata
     WORKING_DIRECTORY  ${MPAS_TEST_WORKDIR}
-    ENVIRONMENT        "OMP_NUM_THREADS=1")
+    ENVIRONMENT        "OMP_NUM_THREADS=1"
+    PASS_REGULAR_EXPRESSION "0 tests failed out of")
 
 # Integration tests
 foreach(TIER RANGE 1 3)

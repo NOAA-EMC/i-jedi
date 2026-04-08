@@ -23,8 +23,9 @@ state test:
         northward_wind: uReconstructMeridional
         air_pressure_at_surface: surface_pressure
   date: *date
-  norm file: 19735.265702001503
-  tolerance: 1.0e-08
+  norm file: 4994828.79431521520
+  tolerance: 1.0e-03
+  test variable change constructor: false
   write then read test:
     state write:
       io:

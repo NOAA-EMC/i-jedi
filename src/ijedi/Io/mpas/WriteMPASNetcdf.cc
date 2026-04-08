@@ -28,16 +28,6 @@ std::string dimName(const int ncid, const int dimid) {
   return std::string(name);
 }
 
-std::vector<size_t> dimLengths(const int ncid, const std::vector<int> & dimids) {
-  std::vector<size_t> lengths(dimids.size(), 0);
-  for (size_t i = 0; i < dimids.size(); ++i) {
-    const int status = nc_inq_dimlen(ncid, dimids[i], &lengths[i]);
-    ASSERT_MSG(status == NC_NOERR, std::string("writeMPASNetcdf: nc_inq_dimlen failed: ") +
-                                   nc_strerror(status));
-  }
-  return lengths;
-}
-
 std::vector<size_t> makeStrides(const std::vector<size_t> & dims) {
   std::vector<size_t> strides(dims.size(), 1);
   if (dims.empty()) {
@@ -226,10 +216,6 @@ void writeMPASNetcdf(const std::string & filepath,
                  std::string("writeMPASNetcdf: nc_inq_var failed for ") + varName + ": " +
                      nc_strerror(inqVarStatus));
 
-      std::vector<int> dimidVec(dimids, dimids + ndims);
-      std::vector<size_t> dims = dimLengths(ncid, dimidVec);
-      std::vector<size_t> strides = makeStrides(dims);
-
       int cellPos = -1;
       int levelPos = -1;
       int timePos = -1;
@@ -252,28 +238,46 @@ void writeMPASNetcdf(const std::string & filepath,
         ASSERT_MSG(levelPos >= 0,
                    "writeMPASNetcdf: variable '" + varName +
                        "' has no vertical dimension for a 3D JEDI field");
-        ASSERT_MSG(static_cast<int>(dims[levelPos]) == nLevelsField,
+        size_t levelDimLen = 0;
+        nc_inq_dimlen(ncid, dimids[levelPos], &levelDimLen);
+        ASSERT_MSG(static_cast<int>(levelDimLen) == nLevelsField,
                    "writeMPASNetcdf: variable '" + varName +
                        "' vertical size does not match field levels");
       }
 
+      // Build start/count for nc_put_vara — always write exactly one time record (index 0).
+      // This avoids relying on nc_inq_dimlen for the UNLIMITED Time dim, which returns 0
+      // on a freshly created file (causing a zero-size buffer and heap overflow otherwise).
+      std::vector<size_t> start(ndims, 0);
+      std::vector<size_t> count(ndims, 1);
       for (int i = 0; i < ndims; ++i) {
-        if (i == cellPos || i == levelPos || i == timePos) {
-          continue;
+        if (i == cellPos) {
+          count[i] = static_cast<size_t>(nCellsGlobal);
+        } else if (i == levelPos) {
+          count[i] = static_cast<size_t>(nLevelsField);
         }
-        ASSERT_MSG(dims[i] == 1,
-                   "writeMPASNetcdf: unsupported extra dimension with length > 1 in variable '" +
-                       varName + "'");
+        // timePos stays start=0, count=1
       }
 
-      size_t total = 1;
-      for (const size_t d : dims) {
-        total *= d;
-      }
-      std::vector<double> buffer(total, 0.0);
+      // Allocate a compact (nCells × nLevels) buffer in C-order: [cell][level]
+      const size_t bufTotal = static_cast<size_t>(nCellsGlobal) *
+                              static_cast<size_t>(nLevelsField > 1 ? nLevelsField : 1);
+      std::vector<double> buffer(bufTotal, 0.0);
 
       auto gView = atlas::array::make_view<double, 2>(gf);
       const int nGlobal = static_cast<int>(gf.shape(0));
+
+      // Build strides for the compact buffer (same dimension ordering as count, minus Time).
+      // The compact layout is always [nCells][nLevels] regardless of the on-file dim order.
+      // We'll rearrange into on-file order when filling the buffer.
+      // Actually: match the on-file layout so nc_put_vara writes directly.
+      // On-file order for start/count is the same as the dim order of the variable.
+      // We need to fill the buffer in that same order.
+      std::vector<size_t> bufDims(ndims);
+      for (int i = 0; i < ndims; ++i) {
+        bufDims[i] = count[i];
+      }
+      const std::vector<size_t> bufStrides = makeStrides(bufDims);
 
       for (int n = 0; n < nGlobal; ++n) {
         const int flatIdx = static_cast<int>(gIdx(n, 0)) - 1;
@@ -282,30 +286,23 @@ void writeMPASNetcdf(const std::string & filepath,
 
         if (nLevelsField > 1) {
           for (int k = 0; k < nLevelsField; ++k) {
-            std::vector<size_t> index(dims.size(), 0);
+            std::vector<size_t> index(ndims, 0);
             index[cellPos] = static_cast<size_t>(flatIdx);
-            if (timePos >= 0) {
-              index[timePos] = 0;
-            }
             index[levelPos] = static_cast<size_t>(k);
-            buffer[linearIndex(index, strides)] = gView(n, k);
+            // timePos index stays 0
+            buffer[linearIndex(index, bufStrides)] = gView(n, k);
           }
         } else {
-          std::vector<size_t> index(dims.size(), 0);
+          std::vector<size_t> index(ndims, 0);
           index[cellPos] = static_cast<size_t>(flatIdx);
-          if (timePos >= 0) {
-            index[timePos] = 0;
-          }
-          if (levelPos >= 0) {
-            index[levelPos] = 0;
-          }
-          buffer[linearIndex(index, strides)] = gView(n, 0);
+          buffer[linearIndex(index, bufStrides)] = gView(n, 0);
         }
       }
 
-      const int putStatus = nc_put_var_double(ncid, varid, buffer.data());
+      const int putStatus = nc_put_vara_double(ncid, varid, start.data(), count.data(),
+                                               buffer.data());
       ASSERT_MSG(putStatus == NC_NOERR,
-                 std::string("writeMPASNetcdf: nc_put_var_double failed for ") + varName +
+                 std::string("writeMPASNetcdf: nc_put_vara_double failed for ") + varName +
                      ": " + nc_strerror(putStatus));
 
       oops::Log::info() << "writeMPASNetcdf: " << field.name() << " -> " << varName
