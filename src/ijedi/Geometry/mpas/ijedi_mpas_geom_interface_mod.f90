@@ -30,9 +30,6 @@ subroutine c_ijedi_mpas_geom_setup(c_geom, c_conf, c_comm) &
   call geom_setup(geom, conf, comm)
   c_geom = c_loc(geom)
 
-  call conf%final()
-  call comm%final()
-
 end subroutine c_ijedi_mpas_geom_setup
 
 ! ------------------------------------------------------------------------------

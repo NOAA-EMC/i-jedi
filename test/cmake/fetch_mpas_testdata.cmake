@@ -1,17 +1,11 @@
 # fetch_mpas_testdata.cmake
 # -------------------------
-# Run at CMake configure time (via execute_process in test/CMakeLists.txt).
+# Run by ctest at test runtime via add_test(... -P fetch_mpas_testdata.cmake),
+# not at CMake configure time. This script may therefore perform network access
+# and write into test-time scratch/working directories when the test executes.
 # Sparse-clones testinput_tier_1/480km/bg from mpas-jedi-data (with LFS) and
 # stages the files the MPAS geometry unit test needs inside DEST_DIR, which is
-# the WORKING_DIRECTORY of the ctest (geometry-mpas/).
-#
-# Expected layout after staging (paths relative to DEST_DIR):
-#   Data/480km/bg/restart.2018-04-15_00.00.00.nc   ← from mpas-jedi-data LFS
-#   x1.2562.graph.info.part.6                       ← generated block-partition
-#
-# Variables set by the caller (-D):
-#   CLONE_DIR  – scratch directory for the cloned repo
-#   DEST_DIR   – MPAS test working directory (geometry-mpas/)
+# the ctest WORKING_DIRECTORY for geometry-mpas/.
 
 cmake_minimum_required(VERSION 3.15)
 

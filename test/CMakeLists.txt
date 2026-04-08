@@ -81,16 +81,15 @@ endforeach()
 add_test(NAME ijedi_check_mom6_structured_grid
     COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/data/mom6/check_mom6_structured_grid.py
-        ${MOM6_TEST_WORKDIR}/mom6_structured_grid.nc
-        ${MOM6_TEST_WORKDIR}/soca_gridspec.72x35x25.nc)
-set_tests_properties(ijedi_check_mom6_structured_grid PROPERTIES
-    FIXTURES_REQUIRED mom6_grid_output)
+        ${CMAKE_CURRENT_BINARY_DIR}/mom6_structured_grid.nc
+        ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6/soca_gridspec.72x35x25.nc)
+
 
 # MPAS geometry test
 # ----------------------------------
 
 set(MPAS_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mpas)
-set(MPAS_DATA_CLONE_DIR ${CMAKE_SOURCE_DIR}/test/testrun/geometry-mpas)
+set(MPAS_DATA_CLONE_DIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mpas)
 set(MPAS_GEOMETRY_YAML ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mpas.yaml)
 file(MAKE_DIRECTORY ${MPAS_TEST_WORKDIR})
 file(CREATE_LINK
@@ -107,8 +106,10 @@ add_test(NAME ijedi_setup_mpas_testdata
 set_tests_properties(ijedi_setup_mpas_testdata PROPERTIES
     FIXTURES_SETUP mpas_testdata)
 
+# Run geometry test
 add_test(NAME ijedi_tier1_unit_geometry-mpas
-    COMMAND $<TARGET_FILE:ijedi_test.x> geometry ${MPAS_GEOMETRY_YAML})
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+    $<TARGET_FILE:ijedi_test.x> ${EXECUTABLE_BASE} ${YAML_FILE})
 set_tests_properties(ijedi_tier1_unit_geometry-mpas PROPERTIES
     FIXTURES_REQUIRED  mpas_testdata
     WORKING_DIRECTORY  ${MPAS_TEST_WORKDIR}

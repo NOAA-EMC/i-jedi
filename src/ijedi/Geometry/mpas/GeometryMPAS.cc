@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <array>
 
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
@@ -47,10 +48,10 @@ namespace {
         fortranGeom, num_nodes, lons.data(), lats.data(), ghosts.data(), global_indices.data(),
         remote_indices.data(), partitions.data(), num_tri_nodes, raw_tri_boundary_nodes.data());
 
-    // Per-PE global tri numbering offset
+    // Per-PE global tri numbering offset (1-based global element IDs)
     std::vector<int> num_elements_per_rank(comm.size());
     comm.allGather(num_tri_elements, num_elements_per_rank.begin(), num_elements_per_rank.end());
-    int global_element_index = 0;
+    int global_element_index = 1;
     for (size_t i = 0; i < comm.rank(); ++i) {
       global_element_index += num_elements_per_rank[i];
     }
@@ -222,12 +223,14 @@ namespace ijedi {
   fieldSet = atlas::FieldSet();
   fillGeometryFields(fortranGeom_, functionSpace, nVertLevels, fieldSet);
 
-  // Set vertical metadata
-  levelsAreTopDown_  = true;
-  levelsPerVariable_ = createLevelsPerVariable(nVertLevels);
+  // Set vertical metadata for both the factory outputs and internal storage
+  levelsAreTopDown   = true;
+  numberLevels       = nVertLevels;
+  levelsAreTopDown_  = levelsAreTopDown;
+  levelsPerVariable_ = createLevelsPerVariable(numberLevels);
 
   // Build GeometryData
-  geomData_.reset(new oops::GeometryData(functionSpace, fieldSet, levelsAreTopDown_, comm));
+  geomData_.reset(new oops::GeometryData(functionSpace, fieldSet, levelsAreTopDown, comm));
   comm_ = &comm;  // Store the communicator pointer
 
   oops::Log::trace() << "ijedi_mpas::GeometryMPAS::GeometryMPAS from config done" << std::endl;
