@@ -54,15 +54,51 @@ namespace ijedi
 
   State::State(const Geometry &geom, const oops::Variables &vars, const util::DateTime &time,
                bool initToZero)
-      : mist::base::State(geom, vars, time, initToZero), geom_(geom) {}
+      : mist::base::State(geom, vars, time, initToZero), geom_(geom) {
+    // A temporary hack for interpolation masks for MOM6.
+    // This should be replaced by using a proper mask field for different fields
+    // (probably coming from FieldsMetaData)
+    if (geom.fields().has("mask2d")) {
+      for (auto & field : this->fieldSet()) {
+        field.metadata().set("mask", "mask2d");
+      }
+    }
+  }
 
   State::State(const Geometry &geom, const State &other)
-      : mist::base::State(geom, other), geom_(geom) {}
+      : mist::base::State(geom, other), geom_(geom) {
+    // A temporary hack for interpolation masks for MOM6.
+    // This should be replaced by using a proper mask field for different fields
+    // (probably coming from FieldsMetaData)
+    if (geom.fields().has("mask2d")) {
+      for (auto & field : this->fieldSet()) {
+        field.metadata().set("mask", "mask2d");
+      }
+    }
+  }
 
   State::State(const oops::Variables &vars, const State &other)
-      : mist::base::State(vars, other), geom_(other.geom_) {}
+      : mist::base::State(vars, other), geom_(other.geom_) {
+    // A temporary hack for interpolation masks for MOM6.
+    // This should be replaced by using a proper mask field for different fields
+    // (probably coming from FieldsMetaData)
+    if (geom_.fields().has("mask2d")) {
+      for (auto & field : this->fieldSet()) {
+        field.metadata().set("mask", "mask2d");
+      }
+    }
+  }
 
-  State::State(const State &other) : mist::base::State(other), geom_(other.geom_) {}
+  State::State(const State &other) : mist::base::State(other), geom_(other.geom_) {
+    // A temporary hack for interpolation masks for MOM6.
+    // This should be replaced by using a proper mask field for different fields
+    // (probably coming from FieldsMetaData)
+    if (geom_.fields().has("mask2d")) {
+      for (auto & field : this->fieldSet()) {
+        field.metadata().set("mask", "mask2d");
+      }
+    }
+  }
 
   State::~State() = default;
 
