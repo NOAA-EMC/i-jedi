@@ -32,8 +32,7 @@ def main():
         sys.exit(1)
 
     outdir = sys.argv[1]
-    input_dir = os.path.join(outdir, "INPUT")
-    os.makedirs(input_dir, exist_ok=True)
+    os.makedirs(outdir, exist_ok=True)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -42,7 +41,7 @@ def main():
     # -------------------------------------------------------------------------
     for name in ("ocean_hgrid", "ocean_topog"):
         cdl = os.path.join(script_dir, f"{name}.cdl")
-        nc  = os.path.join(input_dir, f"{name}.nc")
+        nc  = os.path.join(outdir, f"{name}.nc")
         ncgen(cdl, nc)
         print(f"  {nc}")
 

@@ -42,6 +42,14 @@ list(APPEND ijedi_src_files
   Io/mom6/WriteMOM6Netcdf.cc
   Io/mom6/WriteMOM6Netcdf.h
 
+  # Variable change
+  VariableChange/SeaSurfaceTemperature.h
+  VariableChange/SeaSurfaceTemperature_A.cc
+  VariableChange/VaderCookbook.cc
+  VariableChange/VaderCookbook.h
+  VariableChange/VariableChange.cc
+  VariableChange/VariableChange.h
+
   # Utilities
   Utilities/Constants.cc
   Utilities/Constants.h
