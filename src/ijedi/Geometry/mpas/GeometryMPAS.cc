@@ -82,8 +82,9 @@ namespace {
     meshConfig.set("mpi_comm", comm.name());
     const atlas::mesh::MeshBuilder mesh_builder{};
     atlas::Mesh mesh = mesh_builder(
-        lons, lats, ghosts, atlas_global_indices, atlas_remote_indices, remote_index_base, partitions,
-        tri_boundary_nodes, tri_global_indices, quad_boundary_nodes, quad_global_indices, meshConfig);
+        lons, lats, ghosts, atlas_global_indices, atlas_remote_indices, remote_index_base,
+        partitions, tri_boundary_nodes, tri_global_indices, quad_boundary_nodes, 
+        quad_global_indices, meshConfig);
     atlas::mesh::actions::build_halo(mesh, 1);
     return atlas::functionspace::NodeColumns(mesh, meshConfig);
   }
