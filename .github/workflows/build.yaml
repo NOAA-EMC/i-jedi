@@ -21,7 +21,7 @@ jobs:
         echo "vader=$(git ls-remote https://github.com/JCSDA/vader.git develop | cut -f1)" >> $GITHUB_OUTPUT
         echo "ioda=$(git ls-remote https://github.com/JCSDA/ioda.git develop | cut -f1)" >> $GITHUB_OUTPUT
         echo "ufo=$(git ls-remote https://github.com/JCSDA/ufo.git develop | cut -f1)" >> $GITHUB_OUTPUT
-        mkdir -p $GITHUB_WORKSPACE/Build/
+        mkdir -p $GITHUB_WORKSPACE/Build/lib
     - name: Cache OOPS
       id: cache-oops
       uses: actions/cache@v5
