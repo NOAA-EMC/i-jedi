@@ -98,11 +98,11 @@ jobs:
         cd $GITHUB_WORKSPACE/Build/ijedi
         make -j4
     - name: Verify what will be cached (end of job)
-    shell: bash
-    run: |
-      set -euxo pipefail
-      ls -l "${GITHUB_WORKSPACE}/Build/lib" || true
-      find "${GITHUB_WORKSPACE}/Build" -name "libufo.so" -print || true
+      shell: bash
+      run: |
+        set -euxo pipefail
+        ls -l "${GITHUB_WORKSPACE}/Build/lib" || true
+        find "${GITHUB_WORKSPACE}/Build" -name "libufo.so" -print || true
     - name: Show me more things
       shell: bash
       run: |
