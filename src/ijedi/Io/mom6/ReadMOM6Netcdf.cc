@@ -149,8 +149,6 @@ void readMOM6Netcdf(const std::string & filepath,
     }
 
     fs.scatter(gf, field);  // collective
-    // WEIRD: scatter overwrites metadata from the global field; restore interp_type
-    field.metadata().set("interp_type", "default");
   }
 
   if (isRoot) nc_close(ncid);
