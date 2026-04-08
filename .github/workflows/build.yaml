@@ -31,8 +31,6 @@ jobs:
           ${{ github.workspace }}/Build/lib/liboops.so
           ${{ github.workspace }}/i-jedi/bundle/oops
         key: ${{ runner.os }}-oops-${{ steps.dep-hashes.outputs.oops }}
-        restore-keys: |
-          ${{ runner.os }}-oops-${{ steps.dep-hashes.outputs.oops }}
     - name: Cache VADER
       id: cache-vader
       uses: actions/cache@v5
@@ -42,8 +40,6 @@ jobs:
           ${{ github.workspace }}/Build/lib/libvader.so
           ${{ github.workspace }}/i-jedi/bundle/vader
         key: ${{ runner.os }}-vader-${{ steps.dep-hashes.outputs.vader }}
-        restore-keys: |
-          ${{ runner.os }}-vader-${{ steps.dep-hashes.outputs.vader }}
     - name: Cache UFO
       id: cache-ufo
       uses: actions/cache@v5
@@ -53,8 +49,6 @@ jobs:
           ${{ github.workspace }}/Build/lib/libufo.so
           ${{ github.workspace }}/i-jedi/bundle/ufo
         key: ${{ runner.os }}-ufo-${{ steps.dep-hashes.outputs.ufo }}
-        restore-keys: |
-          ${{ runner.os }}-ufo-${{ steps.dep-hashes.outputs.ufo }}
     - name: Cache IODA
       id: cache-ioda
       uses: actions/cache@v5
@@ -64,8 +58,6 @@ jobs:
           ${{ github.workspace }}/Build/lib/libioda.so
           ${{ github.workspace }}/i-jedi/bundle/ioda
         key: ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
-        restore-keys: |
-          ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
     - name: Show me things
       shell: bash
       run: |
@@ -105,6 +97,23 @@ jobs:
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
         make -j4
+    - name: Verify what will be cached (end of job)
+    shell: bash
+    run: |
+      set -euxo pipefail
+      ls -l "${GITHUB_WORKSPACE}/Build/lib" || true
+      find "${GITHUB_WORKSPACE}/Build" -name "libufo.so" -print || true
+    - name: Show me more things
+      shell: bash
+      run: |
+        cd $GITHUB_WORKSPACE
+        pwd
+        ls -l
+        ls -l i-jedi
+        ls -l i-jedi/bundle
+        ls -l ../
+        ls -l Build
+        ls -l Build/*
     # - name: Run ctests
     #   shell: bash
     #   run: |
