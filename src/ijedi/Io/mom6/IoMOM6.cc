@@ -59,8 +59,9 @@ namespace ijedi
                          ? fileioscaling.getDouble(jediName) : 0.0);
     }
 
-    // Delegate to the NetCDF reader (all ranks read, then halo exchange)
-    readMOM6Netcdf(filepath, x, fileVarNames, scalings, geomMOM6.numLevels());
+    // Delegate to the NetCDF reader (root reads, scatter, halo exchange)
+    readMOM6Netcdf(filepath, x, fileVarNames, scalings, geomMOM6.numLevels(),
+                   geom_.getComm());
 
     oops::Log::trace() << classname() << " read state done" << std::endl;
   }
