@@ -224,7 +224,7 @@ namespace ijedi {
   fillGeometryFields(fortranGeom_, functionSpace, nVertLevels, fieldSet);
 
   // Set vertical metadata for both the factory outputs and internal storage
-  levelsAreTopDown   = true;
+  levelsAreTopDown   = false;
   numberLevels       = nVertLevels;
   levelsAreTopDown_  = levelsAreTopDown;
   levelsPerVariable_ = createLevelsPerVariable(numberLevels);
