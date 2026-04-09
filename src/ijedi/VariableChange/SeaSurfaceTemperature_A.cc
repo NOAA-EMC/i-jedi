@@ -69,21 +69,73 @@ void SeaSurfaceTemperature_A::executeNL(atlas::FieldSet & afieldset)
         << std::endl;
 
     // Get fields
-    atlas::Field temp = afieldset.field("sea_water_potential_temperature");
-    atlas::Field sst = afieldset.field("sea_surface_temperature");
+    atlas::Field temperature = afieldset.field("sea_water_potential_temperature");
+    atlas::Field surface_temperature = afieldset.field("sea_surface_temperature");
 
     util::for_each_column(
         [&](
-            const auto temp,
+            const auto t,
             auto sst) {
                 // For now, just use the first level of sea water potential temperature
                 // as sea surface temperature
-                sst(0) = temp(0);
+                sst(0) = t(0);
             },
-        temp,
-        sst);
+        temperature,
+        surface_temperature);
 
     oops::Log::trace() << "leaving SeaSurfaceTemperature_A::executeNL function" << std::endl;
+}
+
+// -------------------------------------------------------------------------------------------------
+
+void SeaSurfaceTemperature_A::executeTL(atlas::FieldSet & afieldsetTL,
+                                        const atlas::FieldSet & afieldsetTraj) {
+    oops::Log::trace() << "entering SeaSurfaceTemperature_A::executeTL function"
+        << std::endl;
+
+    // Get fields
+    atlas::Field temperature_tl = afieldsetTL.field("sea_water_potential_temperature");
+    atlas::Field sst_tl = afieldsetTL.field("sea_surface_temperature");
+
+    util::for_each_column(
+        [&](
+            const auto dt,
+            auto dsst) {
+                // For now, just use the first level of sea water potential temperature
+                // as sea surface temperature
+                dsst(0) = dt(0);
+            },
+        temperature_tl,
+        sst_tl);
+
+    oops::Log::trace() << "leaving SeaSurfaceTemperature_A::executeTL function" << std::endl;
+}
+
+// -------------------------------------------------------------------------------------------------
+
+
+void SeaSurfaceTemperature_A::executeAD(atlas::FieldSet & afieldsetAD,
+                                        const atlas::FieldSet & afieldsetTraj) {
+    oops::Log::trace() << "entering SeaSurfaceTemperature_A::executeAD function"
+        << std::endl;
+
+    // Get fields
+    atlas::Field temperature_ad = afieldsetAD.field("sea_water_potential_temperature");
+    atlas::Field sst_ad = afieldsetAD.field("sea_surface_temperature");
+
+    util::for_each_column(
+        [&](
+            auto dt,
+            auto dsst) {
+                // For now, just use the first level of sea water potential temperature
+                // as sea surface temperature
+                dt(0) += dsst(0);
+                dsst(0) = 0.;
+            },
+        temperature_ad,
+        sst_ad);
+
+    oops::Log::trace() << "leaving SeaSurfaceTemperature_A::executeAD function" << std::endl;
 }
 
 }  // namespace ijedi

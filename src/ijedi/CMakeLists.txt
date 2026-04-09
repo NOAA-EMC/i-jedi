@@ -50,6 +50,14 @@ list(APPEND ijedi_src_files
   VariableChange/VariableChange.cc
   VariableChange/VariableChange.h
 
+  # Linear variable change
+  LinearVariableChange/LinearVariableChange.cc
+  LinearVariableChange/LinearVariableChange.h
+
+  # Model and LinearModel (persistence and identity)
+  Model/Model.h
+  LinearModel/LinearModel.h
+
   # Utilities
   Utilities/Constants.cc
   Utilities/Constants.h
