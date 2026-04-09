@@ -6,6 +6,7 @@
 #include "oops/runs/Run.h"
 #include "oops/runs/HofX3D.h"
 #include "oops/runs/Variational.h"
+#include "oops/runs/ConvertState.h"
 
 #include "saber/oops/instantiateCovarFactory.h"
 
@@ -37,6 +38,10 @@ int runApp(int argc, char **argv, const std::string appName)
   {
     return std::make_unique<oops::Variational<ijedi::Traits, ufo::ObsTraits>>();
   };
+  apps["convertstate"] = []()
+  {
+    return std::make_unique<oops::ConvertState<ijedi::Traits>>();
+  };
 
   // Create application object and point to it
   auto it = apps.find(appName);
@@ -63,7 +68,7 @@ int main(int argc, char **argv)
   // Check that the application is recognized
   // ----------------------------------------
   const std::set<std::string> validApps = {
-      "hofx3d", "var"
+      "hofx3d", "var", "convertstate"
   };
   ASSERT_MSG(validApps.find(appName) != validApps.end(), "Application not recognized: " + appName);
 
