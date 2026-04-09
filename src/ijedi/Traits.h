@@ -49,12 +49,19 @@ namespace ijedi
     static std::string name() { return "atmosphere"; }
     static std::string nameCovar() { return "ijediError"; }
 
-    typedef ijedi::Geometry                Geometry;
-    typedef ijedi::State                   State;
-    typedef mist::base::ModelData          ModelData;
-    typedef ijedi::VariableChange          VariableChange;
-    typedef ijedi::Increment               Increment;
-    typedef oops::UnstructuredInterpolator LocalInterpolator;
+    typedef ijedi::Geometry                  Geometry;
+    typedef ijedi::State                     State;
+    typedef ijedi::Increment                 Increment;
+    typedef mist::base::ModelData            ModelData;
+    typedef ijedi::VariableChange            VariableChange;
+    typedef ijedi::LinearVariableChange      LinearVariableChange;
+    typedef ijedi::Model                     Model;
+    typedef ijedi::LinearModel               LinearModel;
+    typedef mist::base::ErrorCovariance      Covariance;
+    typedef mist::base::ModelAuxControl      ModelAuxControl;
+    typedef mist::base::ModelAuxIncrement    ModelAuxIncrement;
+    typedef mist::base::ModelAuxCovariance   ModelAuxCovariance;
+    typedef oops::UnstructuredInterpolator   LocalInterpolator;
   };
 
   struct TraitsOcn
@@ -62,12 +69,19 @@ namespace ijedi
     static std::string name() { return "ocean"; }
     static std::string nameCovar() { return "ijediError"; }
 
-    typedef ijedi::Geometry                Geometry;
-    typedef ijedi::State                   State;
-    typedef mist::base::ModelData          ModelData;
-    typedef ijedi::VariableChange          VariableChange;
-    typedef ijedi::Increment               Increment;
-    typedef oops::UnstructuredInterpolator LocalInterpolator;
+    typedef ijedi::Geometry                  Geometry;
+    typedef ijedi::State                     State;
+    typedef ijedi::Increment                 Increment;
+    typedef mist::base::ModelData            ModelData;
+    typedef ijedi::VariableChange            VariableChange;
+    typedef ijedi::LinearVariableChange      LinearVariableChange;
+    typedef ijedi::Model                     Model;
+    typedef ijedi::LinearModel               LinearModel;
+    typedef mist::base::ErrorCovariance      Covariance;
+    typedef mist::base::ModelAuxControl      ModelAuxControl;
+    typedef mist::base::ModelAuxIncrement    ModelAuxIncrement;
+    typedef mist::base::ModelAuxCovariance   ModelAuxCovariance;
+    typedef oops::UnstructuredInterpolator   LocalInterpolator;
   };
 
 }  // namespace ijedi

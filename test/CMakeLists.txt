@@ -24,6 +24,42 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 
+# Fetch MOM.res.nc from soca repo (sparse clone + LFS pull, skip if exists)
+set(_MOM_RES_NC "${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6/MOM.res.nc")
+if(NOT EXISTS "${_MOM_RES_NC}")
+  message(STATUS "Fetching MOM.res.nc from JCSDA/soca ...")
+  set(_SOCA_CLONE_DIR "${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6/_soca_sparse")
+  file(REMOVE_RECURSE "${_SOCA_CLONE_DIR}")
+  execute_process(
+    COMMAND git clone --depth 1 --filter=blob:none --sparse
+            https://github.com/JCSDA/soca.git "${_SOCA_CLONE_DIR}"
+    RESULT_VARIABLE _clone_rc
+    OUTPUT_QUIET)
+  if(NOT _clone_rc EQUAL 0)
+    message(FATAL_ERROR "Failed to sparse-clone JCSDA/soca")
+  endif()
+  execute_process(
+    COMMAND git -C "${_SOCA_CLONE_DIR}" sparse-checkout set --no-cone /test/Data/72x35x25/restarts/MOM.res.nc
+    RESULT_VARIABLE _sparse_rc
+    OUTPUT_QUIET)
+  if(NOT _sparse_rc EQUAL 0)
+    message(FATAL_ERROR "Failed to set sparse-checkout for MOM.res.nc")
+  endif()
+  execute_process(
+    COMMAND git -C "${_SOCA_CLONE_DIR}" lfs pull --include=test/Data/72x35x25/restarts/MOM.res.nc
+    RESULT_VARIABLE _lfs_rc
+    OUTPUT_QUIET)
+  if(NOT _lfs_rc EQUAL 0)
+    message(FATAL_ERROR "Failed to pull LFS file MOM.res.nc")
+  endif()
+  file(COPY "${_SOCA_CLONE_DIR}/test/Data/72x35x25/restarts/MOM.res.nc"
+       DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6")
+  file(REMOVE_RECURSE "${_SOCA_CLONE_DIR}")
+  message(STATUS "Fetched MOM.res.nc -> ${_MOM_RES_NC}")
+else()
+  message(STATUS "MOM.res.nc already exists, skipping fetch")
+endif()
+
 # Test data generation fixture
 add_test(NAME ijedi_setup_mom6_testdata
     COMMAND ${Python3_EXECUTABLE}
@@ -99,4 +135,3 @@ add_test(NAME ijedi_hofx3d_fv3
 add_test(NAME ijedi_3dvar_mom6
          COMMAND $<TARGET_FILE:ijedi.x> var
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml)
-
