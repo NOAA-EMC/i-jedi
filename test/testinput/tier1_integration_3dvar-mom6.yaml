@@ -1,8 +1,8 @@
 cost function:
   cost type: 3D-Var
   time window:
-    begin: 2020-12-14T21:00:00Z
-    length: PT6H
+    begin: 2020-12-13T00:00:00Z
+    length: P6D
   geometry: &geom
     geometry_type: mom6
     ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
@@ -18,16 +18,19 @@ cost function:
   - sea_water_potential_temperature
   - sea_water_salinity
   background:
-    date: 2020-12-15T00:00:00Z
+    date: 2020-12-16T00:00:00Z
     state variables:
-    - sea_ice_area_fraction
-    - sea_ice_thickness
-    - sea_ice_snow_thickness
     - sea_water_salinity
     - sea_water_potential_temperature
     - sea_surface_height_above_geoid
     io:
-      filetype: fv3 history # wrong! but the only one currently available, setting as placeholder
+      filetype: mom6
+      filename: data_generated/mom6/MOM.res.nc
+      field io names: &mom6_field_io_names
+        sea_water_potential_temperature: Temp
+        sea_water_salinity: Salt
+        sea_surface_height_above_geoid: ave_ssh
+
   background error:
     covariance model: SABER
     saber central block:
@@ -44,6 +47,7 @@ cost function:
       obs operator:
         name: Identity
         observation alias file: data/obs/obsop_name_map.yml
+
 variational:
   minimizer:
     algorithm: DRPCG
@@ -52,3 +56,16 @@ variational:
     ninner: 5
     gradient norm reduction: 1e-8
     test: on
+    online diagnostics:
+      write increment: true
+      increment:
+        state component:
+          io:
+            filetype: mom6
+            filename: mom6-3dvar-inc.nc
+            field io names: *mom6_field_io_names
+
+output:
+  io:
+    filetype: unstructured
+    filepath: mom6-3dvar-an-unstructured
