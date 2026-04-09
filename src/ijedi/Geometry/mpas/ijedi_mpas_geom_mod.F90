@@ -8,7 +8,9 @@ module ijedi_mpas_geom_mod
 use fckit_configuration_module, only: fckit_configuration
 use fckit_mpi_module, only: fckit_mpi_comm
 use iso_c_binding
+#ifdef MPAS_EXTERNAL_ESMF_LIB
 use ESMF
+#endif
 
 use kinds, only: kind_real
 
@@ -29,8 +31,6 @@ public :: ijedi_mpas_geom, &
 
 real(kind=kind_real), parameter :: RAD2DEG = 180.0_kind_real / real(pii, kind_real)
 real(kind=kind_real), parameter :: HALF_PI = real(pii, kind_real) / 2.0_kind_real
-
-logical, save :: esmf_initialized = .false.
 
 character(len=1024) :: message
 
@@ -86,11 +86,11 @@ subroutine geom_setup(self, f_conf, comm)
   nml_file = str
   call f_conf%get_or_die("streams_file", str)
   streams_file = str
+   
+  #ifdef MPAS_EXTERNAL_ESMF_LIB
+  call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN)
+  #endif
 
-  if (.not. esmf_initialized) then
-    call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN)
-    esmf_initialized = .true.
-  end if
 
   call mpas_init(self%corelist, self%domain, &
                  external_comm=self%comm%communicator(), &

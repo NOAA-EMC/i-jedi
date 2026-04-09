@@ -122,8 +122,8 @@ if(BUILD_MPAS)
     Geometry/mpas/GeometryMPAS.cc
     Geometry/mpas/GeometryMPAS.h
     Geometry/mpas/GeometryMPAS.interface.h
-    Geometry/mpas/ijedi_mpas_geom_interface_mod.f90
-    Geometry/mpas/ijedi_mpas_geom_mod.f90
+    Geometry/mpas/ijedi_mpas_geom_interface_mod.F90
+    Geometry/mpas/ijedi_mpas_geom_mod.F90
   )
 
   # Combine with main source files
