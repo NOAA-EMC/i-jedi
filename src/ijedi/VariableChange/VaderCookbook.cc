@@ -60,7 +60,7 @@ static std::map<std::string, std::vector<std::string>> cookbook() {
 
 namespace ijedi {
 
-std::map<std::string, std::vector<std::string>> vaderCookbook() {
+std::map<std::string, std::vector<std::string>> vaderDefaultCookbook() {
   return detail::cookbook();
 }
 
