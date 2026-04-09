@@ -1,10 +1,3 @@
-/*
- * (C) Copyright 2026 UCAR
- *
- * This software is licensed under the terms of the Apache Licence Version 2.0
- * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
- */
-
 #include "ijedi/State/State.h"
 
 #include <algorithm>
@@ -25,8 +18,9 @@
 
 #include "ijedi/Io/IoBase.h"
 
-namespace ijedi
-{
+namespace ijedi {
+
+  // -----------------------------------------------------------------------------------------------
 
   State::State(const Geometry &geom, const eckit::Configuration &config)
       : mist::base::State(geom, oops::Variables(config, "state variables"),
@@ -44,25 +38,39 @@ namespace ijedi
     }
   }
 
+  // -----------------------------------------------------------------------------------------------
+
   State::State(const Geometry &geom, const oops::Variables &vars, const util::DateTime &time,
                bool initToZero)
       : mist::base::State(geom, vars, time, initToZero), geom_(geom) {}
 
+  // -----------------------------------------------------------------------------------------------
+
   State::State(const Geometry &geom, const State &other)
       : mist::base::State(geom, other), geom_(geom) {}
+
+  // -----------------------------------------------------------------------------------------------
 
   State::State(const oops::Variables &vars, const State &other)
       : mist::base::State(vars, other), geom_(other.geom_) {}
 
+  // -----------------------------------------------------------------------------------------------
+
   State::State(const State &other) : mist::base::State(other), geom_(other.geom_) {}
 
+  // -----------------------------------------------------------------------------------------------
+
   State::~State() = default;
+
+  // -----------------------------------------------------------------------------------------------
 
   State &State::operator=(const State &rhs)
   {
     mist::base::State::operator=(rhs);
     return *this;
   }
+
+  // -----------------------------------------------------------------------------------------------
 
   void State::read(const eckit::Configuration &config)
   {
@@ -93,6 +101,8 @@ namespace ijedi
     oops::Log::trace() << "ijedi::State::read done" << std::endl;
   }
 
+  // -----------------------------------------------------------------------------------------------
+
   void State::write(const eckit::Configuration &config) const
   {
     oops::Log::trace() << "ijedi::State::write starting" << std::endl;
@@ -122,12 +132,16 @@ namespace ijedi
     oops::Log::trace() << "ijedi::State::write done" << std::endl;
   }
 
+  // -----------------------------------------------------------------------------------------------
+
   void State::analytic_init(const eckit::Configuration &config)
   {
     oops::Log::trace() << "ijedi::State::analytic_init starting" << std::endl;
     // TODO(someone): implement analytic init
     oops::Log::trace() << "ijedi::State::analytic_init done" << std::endl;
   }
+
+  // -----------------------------------------------------------------------------------------------
 
   void State::print(std::ostream &os) const
   {
@@ -146,5 +160,7 @@ namespace ijedi
          << ", Max=" << globalMax << ", RMS=" << rms;
     }
   }
+
+  // -----------------------------------------------------------------------------------------------
 
 }  // namespace ijedi

@@ -14,8 +14,6 @@ list(APPEND ijedi_src_files
   Geometry/Geometry.h
   Geometry/base/GeometryBase.cc
   Geometry/base/GeometryBase.h
-  Geometry/mpas/GeometryMPAS.cc
-  Geometry/mpas/GeometryMPAS.h
   Geometry/mom6/GeometryMOM6.cc
   Geometry/mom6/GeometryMOM6.h
 
@@ -124,8 +122,8 @@ if(BUILD_MPAS)
     Geometry/mpas/GeometryMPAS.cc
     Geometry/mpas/GeometryMPAS.h
     Geometry/mpas/GeometryMPAS.interface.h
-    Geometry/mpas/ijedi_mpas_geom_interface_mod.f90
-    Geometry/mpas/ijedi_mpas_geom_mod.f90
+    Geometry/mpas/ijedi_mpas_geom_interface_mod.F90
+    Geometry/mpas/ijedi_mpas_geom_mod.F90
     Io/mpas/IoMPAS.cc
     Io/mpas/IoMPAS.h
     Io/mpas/ReadMPASNetcdf.cc
@@ -162,13 +160,13 @@ target_link_libraries(${PROJECT_NAME} PUBLIC oops)
 # Mist
 target_link_libraries(${PROJECT_NAME} PUBLIC mist_base)
 target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
-
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
 if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
 endif()
 if(BUILD_MPAS)
   target_link_libraries(${PROJECT_NAME} PUBLIC MPAS::core::atmosphere)
+  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-cpp>)
 endif()
 
 if(OpenMP_CXX_FOUND)
