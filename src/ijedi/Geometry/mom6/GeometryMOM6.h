@@ -25,8 +25,8 @@ namespace ijedi
   {
    public:
     GeometryMOM6(const eckit::Configuration &, const eckit::mpi::Comm &,
-                 eckit::Configuration &, atlas::FunctionSpace &, atlas::FieldSet &,
-                 bool &, int &);
+                 eckit::LocalConfiguration &, atlas::FunctionSpace &,
+                 atlas::FieldSet &, bool &, int &);
     void print(std::ostream &) const override;
     std::vector<double> verticalCoord(std::string &) const override;
 
@@ -53,11 +53,6 @@ namespace ijedi
                        atlas::Field * jediField) const;
     void gatherFromJedi(const atlas::Field & jediField,
                         atlas::Field * mom6Field) const;
-
-    // Public accessors for effective grid size and levels
-    int niEff() const { return niEff_; }
-    int njEff() const { return njEff_; }
-    int numLevels() const { return numLevels_; }
 
    private:
     // Replicates FMS compute_extent() — integer-division domain partition

@@ -871,7 +871,7 @@ void GeometryMOM6::checkScatterMap()
 // ---------------------------------------------------------------------------
 GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
                            const eckit::mpi::Comm & comm,
-                           eckit::Configuration &geomVariables,
+                           eckit::LocalConfiguration &geomVariables,
                            atlas::FunctionSpace &functionSpace,
                            atlas::FieldSet &geomFields,
                            bool &levelsAreTopDown, int &numberLevels)
@@ -961,10 +961,9 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   geomFields    = fields_;
   numberLevels  = numLevels_;
 
-  auto & vars = dynamic_cast<eckit::LocalConfiguration &>(geomVariables);
-  vars.set("ni", niEff_);
-  vars.set("nj", njEff_);
-  vars.set("nz", numLevels_);
+  geomVariables.set("ni", niEff_);
+  geomVariables.set("nj", njEff_);
+  geomVariables.set("nz", numLevels_);
 
   oops::Log::trace() << "GeometryMOM6 constructor done" << std::endl;
 }

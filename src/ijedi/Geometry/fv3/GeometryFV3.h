@@ -22,8 +22,8 @@ namespace ijedi
   {
    public:
     GeometryFV3(const eckit::Configuration &, const eckit::mpi::Comm &,
-                eckit::Configuration &, atlas::FunctionSpace &, atlas::FieldSet &,
-                bool &, int &);
+                eckit::LocalConfiguration &, atlas::FunctionSpace &,
+                atlas::FieldSet &, bool &, int &);
     void print(std::ostream &) const override;
     std::vector<double> verticalCoord(std::string &) const override;
 
