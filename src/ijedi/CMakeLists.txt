@@ -154,13 +154,13 @@ target_link_libraries(${PROJECT_NAME} PUBLIC oops)
 # Mist
 target_link_libraries(${PROJECT_NAME} PUBLIC mist_base)
 target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
-
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
 if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
 endif()
 if(BUILD_MPAS)
   target_link_libraries(${PROJECT_NAME} PUBLIC MPAS::core::atmosphere)
+  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-cpp>)
 endif()
 
 if(OpenMP_CXX_FOUND)

@@ -33,6 +33,7 @@ load("parallelio/2.6.2")
 load("gsl-lite/0.37.0")
 load("nccmp/1.9.1.0")
 load("py-pycodestyle/2.11.0")
+load("py-netcdf4/1.7.1.post2")
 
 setenv("CC","mpiicx")
 setenv("CXX","mpiicpx")

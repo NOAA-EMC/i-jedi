@@ -87,9 +87,9 @@ subroutine geom_setup(self, f_conf, comm)
   call f_conf%get_or_die("streams_file", str)
   streams_file = str
    
-  #ifdef MPAS_EXTERNAL_ESMF_LIB
+#ifdef MPAS_EXTERNAL_ESMF_LIB
   call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN)
-  #endif
+#endif
 
 
   call mpas_init(self%corelist, self%domain, &
