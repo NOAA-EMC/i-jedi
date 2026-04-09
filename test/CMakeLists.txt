@@ -108,19 +108,6 @@ foreach(TIER RANGE 1 3)
     endforeach()
 endforeach()
 
-# MOM6 test data generation fixture
-set_tests_properties(ijedi_setup_mom6_testdata PROPERTIES
-    FIXTURES_SETUP mom6_testdata)
-
-set_tests_properties(ijedi_tier1_unit_geometry-mom6 PROPERTIES
-    FIXTURES_REQUIRED  mom6_testdata
-    WORKING_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR}
-    FIXTURES_SETUP     mom6_grid_output)
-
-set_tests_properties(ijedi_tier1_unit_state-mom6 PROPERTIES
-    FIXTURES_REQUIRED  mom6_testdata
-    WORKING_DIRECTORY  ${CMAKE_CURRENT_BINARY_DIR})
-
 # MOM6 structured-grid check against SOCA reference gridspec
 add_test(NAME ijedi_check_mom6_structured_grid
     COMMAND ${Python3_EXECUTABLE}
