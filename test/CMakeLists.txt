@@ -117,8 +117,7 @@ add_test(NAME ijedi_check_mom6_structured_grid
 
 # HofX3D tests
 add_test(NAME ijedi_hofx3d_mom6
-         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
-                 $<TARGET_FILE:ijedi.x> hofx3d
+         COMMAND $<TARGET_FILE:ijedi.x> hofx3d
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-mom6.yaml)
 
 add_test(NAME ijedi_hofx3d_fv3
@@ -131,3 +130,8 @@ add_test(NAME ijedi_hofx3d_fv3
 #         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
 #                 $<TARGET_FILE:ijedi_coupled.x> hofx3d
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml)
+
+# Variational tests
+add_test(NAME ijedi_3dvar_mom6
+         COMMAND $<TARGET_FILE:ijedi.x> var
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml)

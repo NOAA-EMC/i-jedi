@@ -22,7 +22,7 @@ int runApp(int argc, char **argv, const std::string appName)
   // Test application pointer
   std::unique_ptr<oops::Application> app;
 
-  // Intantiate ufo factories
+  // Intantiate factories
   ufo::instantiateObsFilterFactory();
 
   // Define a map from app names to lambda functions that create unique_ptr to Applications
