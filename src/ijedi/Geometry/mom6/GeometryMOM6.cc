@@ -961,6 +961,11 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   geomFields    = fields_;
   numberLevels  = numLevels_;
 
+  auto & vars = dynamic_cast<eckit::LocalConfiguration &>(geomVariables);
+  vars.set("ni", niEff_);
+  vars.set("nj", njEff_);
+  vars.set("nz", numLevels_);
+
   oops::Log::trace() << "GeometryMOM6 constructor done" << std::endl;
 }
 

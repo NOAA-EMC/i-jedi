@@ -22,10 +22,6 @@ namespace ijedi
     OOPS_CONCRETE_PARAMETERS(IoMOM6Parameters, IoParametersBase)
 
    public:
-    // Path prepended to all files
-    oops::Parameter<std::string> datapath{"datapath", "path to location of files to be read",
-                                          "./", this};
-
     // Single filename provided
     oops::OptionalParameter<std::string> filename{"filename",
                                       "name of the restart or history file to be read/written",
@@ -42,7 +38,7 @@ namespace ijedi
     typedef IoMOM6Parameters Parameters_;
 
     IoMOM6(const Geometry &, const Parameters_ &);
-    ~IoMOM6();
+    ~IoMOM6() = default;
     void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
               const eckit::LocalConfiguration &) const override;
     void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
@@ -52,7 +48,6 @@ namespace ijedi
     void print(std::ostream &) const override;
 
     const Geometry & geom_;
-    std::string datapath_;
     std::string filename_;
   };
 

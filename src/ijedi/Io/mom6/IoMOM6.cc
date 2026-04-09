@@ -6,7 +6,6 @@
 #include "oops/util/Timer.h"
 
 #include "ijedi/Geometry/Geometry.h"
-#include "ijedi/Geometry/mom6/GeometryMOM6.h"
 #include "ijedi/Io/mom6/IoMOM6.h"
 #include "ijedi/Io/mom6/ReadMOM6Netcdf.h"
 #include "ijedi/Io/mom6/WriteMOM6Netcdf.h"
@@ -19,20 +18,13 @@ namespace ijedi
   IoMOM6::IoMOM6(const Geometry &geom, const Parameters_ &params)
       : IoBase(geom, params.toConfiguration()),
         geom_(geom),
-        datapath_(params.datapath),
-        filename_(params.filename.value().value_or(""))
+        filename_(params.filename.value().value_or("MOM.res.nc"))
   {
     util::Timer timer(classname(), "IoMOM6");
     oops::Log::trace() << classname() << " constructor starting" << std::endl;
     oops::Log::trace() << classname() << " constructor done" << std::endl;
   }
-  // -------------------------------------------------------------------------------------------------
-  IoMOM6::~IoMOM6()
-  {
-    util::Timer timer(classname(), "~IoMOM6");
-    oops::Log::trace() << classname() << " destructor starting" << std::endl;
-    oops::Log::trace() << classname() << " destructor done" << std::endl;
-  }
+
   // -------------------------------------------------------------------------------------------------
   void IoMOM6::read(atlas::FieldSet &x, const eckit::LocalConfiguration &fileionames,
                     const eckit::LocalConfiguration &fileioscaling) const
@@ -40,13 +32,9 @@ namespace ijedi
     util::Timer timer(classname(), "read state");
     oops::Log::trace() << classname() << " read state starting" << std::endl;
 
-    // Build file path
-    const std::string filepath = (!filename_.empty() && filename_[0] == '/')
-        ? filename_
-        : datapath_ + "/" + filename_;
-
     // Get geometry info for level count check
-    const auto & geomMOM6 = dynamic_cast<const GeometryMOM6 &>(geom_.geometryImpl());
+    const auto modelData = geom_.modelData();
+    const int nz = modelData.getInt("nz");
 
     // Resolve variable names and scalings for all fields
     std::vector<std::string> fileVarNames;
@@ -60,7 +48,7 @@ namespace ijedi
     }
 
     // Delegate to the NetCDF reader (root reads, scatter, halo exchange)
-    readMOM6Netcdf(filepath, x, fileVarNames, scalings, geomMOM6.numLevels(),
+    readMOM6Netcdf(filename_, x, fileVarNames, scalings, nz,
                    geom_.getComm());
 
     oops::Log::trace() << classname() << " read state done" << std::endl;
@@ -72,16 +60,11 @@ namespace ijedi
     util::Timer timer(classname(), "write state");
     oops::Log::trace() << classname() << " write state starting" << std::endl;
 
-    // Build file path
-    const std::string filepath = (!filename_.empty() && filename_[0] == '/')
-        ? filename_
-        : datapath_ + "/" + filename_;
-
     // Get geometry info
-    const auto & geomMOM6 = dynamic_cast<const GeometryMOM6 &>(geom_.geometryImpl());
-    const int ni = geomMOM6.niEff();
-    const int nj = geomMOM6.njEff();
-    const int nz = geomMOM6.numLevels();
+    const auto modelData = geom_.modelData();
+    const int ni = modelData.getInt("ni");
+    const int nj = modelData.getInt("nj");
+    const int nz = modelData.getInt("nz");
 
     // Resolve variable names for all fields
     std::vector<std::string> fileVarNames;
@@ -92,7 +75,7 @@ namespace ijedi
     }
 
     // Delegate to the NetCDF writer (Atlas gather + root writes)
-    writeMOM6Netcdf(filepath, x, fileVarNames, ni, nj, nz, geom_.getComm());
+    writeMOM6Netcdf(filename_, x, fileVarNames, ni, nj, nz, geom_.getComm());
 
     oops::Log::trace() << classname() << " write state done" << std::endl;
   }

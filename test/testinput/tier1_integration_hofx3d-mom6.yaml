@@ -20,8 +20,7 @@ state:
   - sea_surface_height_above_geoid
   io:
     filetype: mom6
-    datapath: data_generated/mom6
-    filename: MOM.res.nc
+    filename: data_generated/mom6/MOM.res.nc
     field io names:
       sea_water_potential_temperature: Temp
       sea_water_salinity: Salt
@@ -38,7 +37,7 @@ observations:
       obsdataout:
         engine:
           type: H5File
-          obsfile: sst_out_ijedi.nc
+          obsfile: data_generated/obs/sst_out_ijedi.nc
       simulated variables: [seaSurfaceTemperature]
     obs operator:
       name: Identity
