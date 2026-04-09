@@ -135,3 +135,14 @@ add_test(NAME ijedi_hofx3d_fv3
 add_test(NAME ijedi_3dvar_mom6
          COMMAND $<TARGET_FILE:ijedi.x> var
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml)
+
+# Convert state tests
+add_test(NAME ijedi_convertstate-mom6_to_mom6
+	 COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+	         $<TARGET_FILE:ijedi.x> convertstate
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_mom6.yaml)
+add_test(NAME ijedi_convertstate-mom6_to_fv3
+	 COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+	         $<TARGET_FILE:ijedi.x> convertstate
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_fv3.yaml)
+
