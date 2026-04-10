@@ -73,9 +73,5 @@ variational:
 
 output:
   io:
-    filetype: mom6
-    filename: data_generated/mom6/MOM.res_an.nc
-    field io names:
-      sea_water_potential_temperature: Temp
-      sea_water_salinity: Salt
-      sea_surface_height_above_geoid: ave_ssh
+    filetype: gmsh
+    filename: data_generated/mom6/MOM.res_an.msh
