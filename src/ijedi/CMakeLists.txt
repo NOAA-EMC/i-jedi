@@ -126,10 +126,8 @@ if(BUILD_MPAS)
     Geometry/mpas/ijedi_mpas_geom_mod.F90
     Io/mpas/IoMPAS.cc
     Io/mpas/IoMPAS.h
-    Io/mpas/ReadMPASNetcdf.cc
-    Io/mpas/ReadMPASNetcdf.h
-    Io/mpas/WriteMPASNetcdf.cc
-    Io/mpas/WriteMPASNetcdf.h
+    Io/mpas/IoMPAS.interface.h
+    Io/mpas/ijedi_mpas_io_stream_mod.F90
   )
 
   # Combine with main source files

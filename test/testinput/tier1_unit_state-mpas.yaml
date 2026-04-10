@@ -16,6 +16,7 @@ state test:
       filetype: mpas
       datapath: Data/480km/bg
       filename: restart.2018-04-15_00.00.00.nc
+      stream name: restart
       field io names: &mpas_field_io_names
         air_temperature: theta
         water_vapor_mixing_ratio_wrt_moist_air: qv
@@ -32,6 +33,7 @@ state test:
         filetype: mpas
         datapath: Data/480km/bg
         filename: restart.write_test.2018-04-15_00.00.00.nc
+        stream name: da_state
         field io names: *mpas_field_io_names
     state read:
       date: *date
@@ -45,4 +47,5 @@ state test:
         filetype: mpas
         datapath: Data/480km/bg
         filename: restart.write_test.2018-04-15_00.00.00.nc
+        stream name: da_state
         field io names: *mpas_field_io_names

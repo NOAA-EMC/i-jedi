@@ -22,6 +22,9 @@ class IoMPASParameters : public IoParametersBase
   oops::OptionalParameter<std::string> filename{"filename",
                                                  "name of the file to read or write",
                                                  this};
+  oops::OptionalParameter<std::string> streamName{"stream name",
+                                                   "name of MPAS stream manager stream",
+                                                   this};
 };
 
 class IoMPAS : public IoBase, private util::ObjectCounter<IoMPAS>
@@ -45,6 +48,7 @@ class IoMPAS : public IoBase, private util::ObjectCounter<IoMPAS>
   const Geometry & geom_;
   std::string datapath_;
   std::string filename_;
+  std::string streamName_;
 };
 
 }  // namespace ijedi
