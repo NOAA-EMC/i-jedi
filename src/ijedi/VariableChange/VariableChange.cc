@@ -48,6 +48,10 @@ void VariableChange::changeVar(State & xx, const oops::Variables & vars) const {
   oops::Log::trace() << "ijedi::VariableChange::changeVar done" << std::endl;
 }
 
+void VariableChange::changeVarInverse(State & xx, const oops::Variables & vars) const {
+  throw eckit::NotImplemented("ijedi::VariableChange::changeVarInverse is not implemented", Here());
+}
+
 void VariableChange::print(std::ostream & os) const {}
 
 }  // namespace ijedi

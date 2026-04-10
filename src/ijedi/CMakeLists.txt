@@ -35,6 +35,8 @@ list(APPEND ijedi_src_files
   # IO
   Io/IoBase.cc
   Io/IoBase.h
+  Io/gmsh/IoGmsh.cc
+  Io/gmsh/IoGmsh.h
   Io/mom6/IoMOM6.cc
   Io/mom6/IoMOM6.h
   Io/mom6/ReadMOM6Netcdf.cc
@@ -79,8 +81,8 @@ if(FMS_FOUND)
     Geometry/fv3/GeometryFV3.h
     Geometry/fv3/GeometryFV3Parameters.h
     Geometry/fv3/GeometryFV3.interface.h
-    Io/fv3-history/IoFV3History.cc
-    Io/fv3-history/IoFV3History.h
+    Io/fv3/IoFV3.cc
+    Io/fv3/IoFV3.h
   )
   list(APPEND ijedi_fv3_fortran_src_files
     Geometry/fv3/ijedi_fv3_akbk_mod.f90

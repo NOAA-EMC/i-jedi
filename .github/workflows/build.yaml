@@ -25,7 +25,9 @@ jobs:
       id: cache-vader
       uses: actions/cache@v5
       with:
-        path: ${{ github.workspace }}/Build/vader
+        path: |
+          ${{ github.workspace }}/Build/vader
+          ${{ github.workspace }}/i-jedi/bundle/vader
         key: ${{ runner.os }}-vader-${{ steps.dep-hashes.outputs.vader }}
         restore-keys: |
           ${{ runner.os }}-vader-
@@ -33,7 +35,9 @@ jobs:
       id: cache-ufo
       uses: actions/cache@v5
       with:
-        path: ${{ github.workspace }}/Build/ufo
+        path: |
+          ${{ github.workspace }}/Build/ufo
+          ${{ github.workspace }}/i-jedi/bundle/ufo
         key: ${{ runner.os }}-ufo-${{ steps.dep-hashes.outputs.ufo }}
         restore-keys: |
           ${{ runner.os }}-ufo-
@@ -41,7 +45,9 @@ jobs:
       id: cache-ioda
       uses: actions/cache@v5
       with:
-        path: ${{ github.workspace }}/Build/ioda
+        path: |
+          ${{ github.workspace }}/Build/ioda
+          ${{ github.workspace }}/i-jedi/bundle/ioda
         key: ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
         restore-keys: |
           ${{ runner.os }}-ioda-
@@ -54,8 +60,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         mkdir -p Build
         cd Build
-        export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"
-        ecbuild ../i-jedi/bundle
+        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle
     - name: Run coding style checks
       shell: bash
       run: |

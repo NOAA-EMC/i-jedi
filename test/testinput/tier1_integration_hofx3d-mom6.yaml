@@ -6,6 +6,7 @@ geometry:
   ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
   ocean_topog: data_generated/mom6/ocean_topog.nc
   coarsen factor: 1
+  has northern fold: true
   MOM_input:
     NIGLOBAL: 72
     NJGLOBAL: 35

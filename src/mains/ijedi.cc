@@ -6,8 +6,10 @@
 #include "oops/runs/Run.h"
 #include "oops/runs/HofX3D.h"
 #include "oops/runs/Variational.h"
+#include "oops/runs/ConvertState.h"
 
 #include "saber/oops/instantiateCovarFactory.h"
+#include "saber/oops/ErrorCovarianceToolbox.h"
 
 #include "ufo/instantiateObsFilterFactory.h"
 #include "ufo/ObsTraits.h"
@@ -29,13 +31,17 @@ int runApp(int argc, char **argv, const std::string appName)
   // Define a map from app names to lambda functions that create unique_ptr to Applications
   std::map<std::string, std::function<std::unique_ptr<oops::Application>()>> apps;
 
-  apps["hofx3d"] = []()
-  {
+  apps["hofx3d"] = []() {
     return std::make_unique<oops::HofX3D<ijedi::Traits, ufo::ObsTraits>>();
   };
-  apps["var"] = []()
-  {
+  apps["var"] = []() {
     return std::make_unique<oops::Variational<ijedi::Traits, ufo::ObsTraits>>();
+  };
+  apps["convertstate"] = []() {
+    return std::make_unique<oops::ConvertState<ijedi::Traits>>();
+  };
+  apps["errortoolbox"] = []() {
+    return std::make_unique<saber::ErrorCovarianceToolbox<ijedi::Traits>>();
   };
 
   // Create application object and point to it
@@ -63,7 +69,7 @@ int main(int argc, char **argv)
   // Check that the application is recognized
   // ----------------------------------------
   const std::set<std::string> validApps = {
-      "hofx3d", "var"
+      "hofx3d", "var", "errortoolbox", "convertstate"
   };
   ASSERT_MSG(validApps.find(appName) != validApps.end(), "Application not recognized: " + appName);
 
