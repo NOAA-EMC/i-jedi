@@ -144,17 +144,22 @@ namespace ijedi {
 
   void Increment::print(std::ostream & os) const {
     os << std::endl
-       << "  Valid time: " << this->validTime() << std::endl
+       << "  Valid time: " << this->validTime()
        << ", nFields = " << this->variables().size();
 
     const auto & comm = geom_.comm();
     const auto & fs   = this->fieldSet();
+    size_t maxNameLen = 0;
+    for (const auto & var : this->variables()) {
+      maxNameLen = std::max(maxNameLen, var.name().size());
+    }
     for (const auto & var : this->variables()) {
       const atlas::Field & field            = fs.field(var.name());
       const auto[globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
       os << std::endl
-         << var.name() << " : " << std::scientific << std::setprecision(16) << "Min=" << globalMin
-         << ", Max=" << globalMax << ", RMS=" << rms;
+         << std::left << std::setw(maxNameLen) << var.name()
+         << " : " << std::scientific << std::setprecision(10)
+         << "Min=" << globalMin << ", Max=" << globalMax << ", RMS=" << rms;
     }
   }
 

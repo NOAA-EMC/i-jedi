@@ -25,8 +25,8 @@ namespace ijedi
   {
    public:
     GeometryMOM6(const eckit::Configuration &, const eckit::mpi::Comm &,
-                 eckit::Configuration &, atlas::FunctionSpace &, atlas::FieldSet &,
-                 bool &, int &);
+                 eckit::LocalConfiguration &, atlas::FunctionSpace &,
+                 atlas::FieldSet &, bool &, int &);
     void print(std::ostream &) const override;
     std::vector<double> verticalCoord(std::string &) const override;
 
@@ -138,6 +138,8 @@ namespace ijedi
                             const eckit::mpi::Comm & comm) const;
     void saveDebugMesh(const std::string & prefix,
                        const eckit::mpi::Comm & comm) const;
+    void saveGmsh(const std::string & filename,
+                  const eckit::mpi::Comm & comm) const;
 
     // Grid parameters (from YAML config)
     int niGlobal_  = 0;
@@ -149,6 +151,7 @@ namespace ijedi
     int coarsenFactor_ = 1;
     int niEff_         = 0;   // niGlobal_ / coarsenFactor_
     int njEff_         = 0;   // njGlobal_ / coarsenFactor_
+    bool hasFold_      = false;  // true for tripolar grids with a northern fold
 
     // Local MOM6 compute domain (1-based, inclusive)
     int iStart_ = 1, iCount_ = 0;

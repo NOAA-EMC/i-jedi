@@ -36,27 +36,34 @@ namespace ijedi {
       throw eckit::BadParameter("ijedi::State: config must have 'io' or 'analytic init'",
                                 Here());
     }
+    setAtlasFieldMetadata();
   }
 
   // -----------------------------------------------------------------------------------------------
 
   State::State(const Geometry &geom, const oops::Variables &vars, const util::DateTime &time,
                bool initToZero)
-      : mist::base::State(geom, vars, time, initToZero), geom_(geom) {}
+      : mist::base::State(geom, vars, time, initToZero), geom_(geom) {
+    setAtlasFieldMetadata();
+  }
 
   // -----------------------------------------------------------------------------------------------
 
   State::State(const Geometry &geom, const State &other)
-      : mist::base::State(geom, other), geom_(geom) {}
+      : mist::base::State(geom, other), geom_(geom) {
+    setAtlasFieldMetadata();
+  }
 
   // -----------------------------------------------------------------------------------------------
 
   State::State(const oops::Variables &vars, const State &other)
-      : mist::base::State(vars, other), geom_(other.geom_) {}
+      : mist::base::State(vars, other), geom_(other.geom_) {
+    setAtlasFieldMetadata();
+  }
 
-  // -----------------------------------------------------------------------------------------------
-
-  State::State(const State &other) : mist::base::State(other), geom_(other.geom_) {}
+  State::State(const State &other) : mist::base::State(other), geom_(other.geom_) {
+    setAtlasFieldMetadata();
+  }
 
   // -----------------------------------------------------------------------------------------------
 
@@ -141,23 +148,37 @@ namespace ijedi {
     oops::Log::trace() << "ijedi::State::analytic_init done" << std::endl;
   }
 
-  // -----------------------------------------------------------------------------------------------
+  void State::setAtlasFieldMetadata() {
+    for (auto & field : this->fieldSet()) {
+      field.metadata().set("interp_type", "default");
+      // A temporary hack for interpolation masks for MOM6.
+      // This should be replaced by using a proper mask field for different fields
+      // (probably coming from FieldsMetaData)
+      if (geom_.fields().has("mask2d")) {
+        field.metadata().set("mask", "mask2d");
+      }
+    }
+  }
 
   void State::print(std::ostream &os) const
   {
     os << std::endl
-       << "  Valid time: " << this->validTime() << std::endl
+       << "  Valid time: " << this->validTime()
        << ", nFields = " << this->variables().size();
 
-    const auto &comm = geom_.comm();
-    const auto &fs = this->fieldSet();
-    for (const auto &var : this->variables())
-    {
-      const atlas::Field &field = fs.field(var.name());
+    const auto & comm = geom_.comm();
+    const auto & fs   = this->fieldSet();
+    size_t maxNameLen = 0;
+    for (const auto & var : this->variables()) {
+      maxNameLen = std::max(maxNameLen, var.name().size());
+    }
+    for (const auto & var : this->variables()) {
+      const atlas::Field & field            = fs.field(var.name());
       const auto[globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
       os << std::endl
-         << var.name() << " : " << std::scientific << std::setprecision(16) << "Min=" << globalMin
-         << ", Max=" << globalMax << ", RMS=" << rms;
+         << std::left << std::setw(maxNameLen) << var.name()
+         << " : " << std::scientific << std::setprecision(10)
+         << "Min=" << globalMin << ", Max=" << globalMax << ", RMS=" << rms;
     }
   }
 

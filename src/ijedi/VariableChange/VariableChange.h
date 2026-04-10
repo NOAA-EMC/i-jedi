@@ -7,15 +7,38 @@
 
 #pragma once
 
-#include "mist/base/VariableChange.h"
+#include <memory>
+#include <ostream>
+
+#include "mist/utils/VariableChange.h"
+#include "oops/util/Printable.h"
+
+namespace eckit {
+class Configuration;
+}  // namespace eckit
+
+namespace oops {
+class Variables;
+}  // namespace oops
 
 namespace ijedi {
 
 class Geometry;
+class State;
 
-class VariableChange : public mist::base::VariableChange {
+class VariableChange : public util::Printable {
  public:
-  VariableChange(const eckit::Configuration &, const Geometry & geometry);
+  VariableChange(const eckit::Configuration &, const Geometry &);
+  ~VariableChange() = default;
+
+  // Perform transforms
+  void changeVar(State &, const oops::Variables &) const;
+  void changeVarInverse(State &, const oops::Variables &) const;
+
+ private:
+  void print(std::ostream &) const override;
+
+  std::unique_ptr<mist::utils::VariableChange> varchange_;
 };
 
 }  // namespace ijedi

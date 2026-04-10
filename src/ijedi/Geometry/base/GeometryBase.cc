@@ -64,7 +64,7 @@ namespace ijedi
 
   std::shared_ptr<GeometryBase> GeometryBase::create(const eckit::Configuration &geomConf,
                                                      const eckit::mpi::Comm &comm,
-                                                     eckit::Configuration &geomVars,
+                                                     eckit::LocalConfiguration &geomVars,
                                                      atlas::FunctionSpace &functionSpace,
                                                      atlas::FieldSet &fieldSet,
                                                      bool &levelsAreTopDown, int &numLevels)

@@ -24,7 +24,8 @@ namespace ijedi
   class GeometryMPAS : public GeometryBase
   {
    public:
-    GeometryMPAS(const eckit::Configuration &, const eckit::mpi::Comm &, eckit::Configuration &,
+    GeometryMPAS(const eckit::Configuration &, const eckit::mpi::Comm &,
+                 eckit::LocalConfiguration &,
                  atlas::FunctionSpace &, atlas::FieldSet &, bool &, int &);
     ~GeometryMPAS() override;
     void print(std::ostream &) const override;

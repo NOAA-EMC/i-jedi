@@ -1,0 +1,81 @@
+cost function:
+  cost type: 3D-Var
+  time window:
+    begin: 2020-12-14T21:00:00Z
+    length: PT6H
+  geometry: &geom
+    geometry_type: mom6
+    ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+    ocean_topog: data_generated/mom6/ocean_topog.nc
+    coarsen factor: 1
+    has northern fold: true
+    MOM_input:
+      NIGLOBAL: 72
+      NJGLOBAL: 35
+      NZ: 25
+      LAYOUT: [3, 2]
+      MINIMUM_DEPTH: 0.5
+  analysis variables:
+  - sea_water_potential_temperature
+  - sea_water_salinity
+  - sea_surface_height_above_geoid
+  background:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - sea_water_salinity
+    - sea_water_potential_temperature
+    - sea_surface_height_above_geoid
+    io:
+      filetype: mom6
+      filename: data_generated/mom6/MOM.res.nc
+      field io names:
+        sea_water_potential_temperature: Temp
+        sea_water_salinity: Salt
+        sea_surface_height_above_geoid: ave_ssh
+
+  background error:
+    covariance model: SABER
+    saber central block:
+      saber block name: diffusion
+      read:
+        groups:
+        - variables:
+          - sea_water_potential_temperature
+          - sea_surface_height_above_geoid
+          - sea_surface_height_above_geoid
+          multivariate strategy: univariate
+          horizontal:
+            filepath: diffusion_hz
+          vertical:
+            levels: 25
+            filepath: diffusion_vt
+
+  observations:
+    observers:
+    - obs space:
+        name: SST
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: data_generated/obs/sst.nc
+        simulated variables: [seaSurfaceTemperature]
+      obs operator:
+        name: Identity
+        observation alias file: data/obs/obsop_name_map.yml
+variational:
+  minimizer:
+    algorithm: DRPCG
+  iterations:
+  - geometry: *geom
+    ninner: 5
+    gradient norm reduction: 1e-8
+    test: on
+
+output:
+  io:
+    filetype: mom6
+    filename: data_generated/mom6/MOM.res_an.nc
+    field io names:
+      sea_water_potential_temperature: Temp
+      sea_water_salinity: Salt
+      sea_surface_height_above_geoid: ave_ssh

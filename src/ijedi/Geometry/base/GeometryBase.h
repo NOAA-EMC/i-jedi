@@ -26,7 +26,7 @@ namespace ijedi
 
     static std::shared_ptr<GeometryBase> create(const eckit::Configuration &,
                                                 const eckit::mpi::Comm &,
-                                                eckit::Configuration &,
+                                                eckit::LocalConfiguration &,
                                                 atlas::FunctionSpace &,
                                                 atlas::FieldSet &,
                                                 bool &, int &);

@@ -1,7 +1,4 @@
-time window:
-  begin: 2020-12-13T00:00:00Z
-  length: P6D
-geometry:
+geometry: &geom
   geometry_type: mom6
   ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
   ocean_topog: data_generated/mom6/ocean_topog.nc
@@ -13,7 +10,8 @@ geometry:
     NZ: 25
     LAYOUT: [3, 2]
     MINIMUM_DEPTH: 0.5
-state:
+
+background:
   date: 2020-12-16T00:00:00Z
   state variables:
   - sea_water_salinity
@@ -27,19 +25,22 @@ state:
       sea_water_salinity: Salt
       sea_surface_height_above_geoid: ave_ssh
 
-observations:
-  observers:
-  - obs space:
-      name: SST
-      obsdatain:
-        engine:
-          type: H5File
-          obsfile: data_generated/obs/sst.nc
-      obsdataout:
-        engine:
-          type: H5File
-          obsfile: data_generated/obs/sst_out_ijedi.nc
-      simulated variables: [seaSurfaceTemperature]
-    obs operator:
-      name: Identity
-      observation alias file: data/obs/obsop_name_map.yml
+background error:
+  covariance model: SABER
+  saber central block:
+    saber block name: diffusion
+    calibration:
+      normalization:
+        iterations: 1000
+      groups:
+      - horizontal:
+          fixed value: 500000.0    # 500 km Gaussian sigma
+          as gaussian: true
+        write:
+          filepath: diffusion_hz
+      - vertical:
+          fixed value: 2.0         # 2 levels Gaussian sigma
+          levels: 25
+          as gaussian: true
+        write:
+          filepath: diffusion_vt

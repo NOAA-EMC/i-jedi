@@ -1,0 +1,107 @@
+time window:
+  begin: 2020-12-14T21:00:00Z
+  length: PT6H
+geometry:
+  atmosphere:
+    geometry_type: fv3
+    fms initialization:
+      namelist filename: data/fv3/input_c12.nml
+      field table filename: data/fv3/field_table
+    npx: 13
+    npy: 13
+    npz: 127
+    ntiles: 6
+    akbk: gfs_127
+  ocean:
+    geometry_type: mom6
+    ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+    ocean_topog: data_generated/mom6//ocean_topog.nc
+    coarsen factor: 1
+    MOM_input:
+      NIGLOBAL: 72
+      NJGLOBAL: 35
+      NZ: 25
+      LAYOUT: [3, 2]
+      MINIMUM_DEPTH: 0.5
+  atmosphere include variables:
+  - eastward_wind
+  - northward_wind
+  - air_temperature
+  - air_pressure_thickness
+  - air_pressure
+  ocean include variables:
+  - sea_ice_area_fraction
+  - sea_ice_thickness
+  - sea_ice_snow_thickness
+  - sea_water_salinity
+  - sea_water_potential_temperature
+  - sea_surface_height_above_geoid
+  - sea_surface_temperature
+state:
+  atmosphere:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - eastward_wind
+    - northward_wind
+    - air_temperature
+    - air_pressure_thickness
+    io:
+      filetype: fv3
+      source: history
+      datapath: testrun/state-fv3/
+      atm_file: atmf006.nc
+      sfc_file: sfcf006.nc
+      field io names:
+        eastward_wind: ugrd
+        northward_wind: vgrd
+        air_temperature: tmp
+        air_pressure_thickness: dpres
+  ocean:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - sea_water_salinity
+    - sea_water_potential_temperature
+    - sea_surface_height_above_geoid
+    io:
+      filetype: mom6
+      filename: data_generated/mom6/MOM.res.nc
+      field io names:
+        sea_water_potential_temperature: Temp
+        sea_water_salinity: Salt
+        sea_surface_height_above_geoid: ave_ssh
+observations:
+  observers:
+  - obs space:
+      name: SST
+      obsdatain:
+        engine:
+          type: H5File
+          obsfile: data_generated/obs/sst.nc
+      obsdataout:
+        engine:
+          type: H5File
+          obsfile: sst_out_ijedi.nc
+      simulated variables: [seaSurfaceTemperature]
+    obs operator:
+      name: Identity
+      observation alias file: data/obs/obsop_name_map.yml
+  - obs space:
+      name: Aircraft
+      obsdatain:
+        engine:
+          type: H5File
+          obsfile: data_generated/obs/aircraft.nc
+      obsdataout:
+        engine:
+          type: H5File
+          obsfile: aircraft_out_ijedi.nc
+      simulated variables:
+      - windEastward
+      - windNorthward
+      - airTemperature
+    obs operator:
+      name: Identity #VertInterp  # switch to Identity until I/O is ready: VertInterp doesn't like uninit or zero values in vert coord
+      vertical coordinate: air_pressure
+      observation vertical coordinate: pressure
+      observation vertical coordinate group: MetaData
+      interpolation method: log-linear
