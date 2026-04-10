@@ -109,6 +109,7 @@ ecbuild_add_test( TARGET  ijedi_state_mom6
                   ARGS    state ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_state-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
 
+# H(x) tests
 ecbuild_add_test( TARGET  ijedi_hofx3d_mom6
                   MPI     6
                   OMP     1
@@ -123,17 +124,39 @@ ecbuild_add_test( TARGET  ijedi_hofx3d_fv3
                   ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-fv3.yaml
                   TEST_DEPENDS ijedi_setup_obs_testdata)
 
-#ecbuild_add_test( TARGET  ijedi_hofx3d_coupled
-#                  MPI     6
-#                  OMP     1
-#                  COMMAND $<TARGET_FILE:ijedi_coupled.x>
-#                  ARGS    state ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml
-#                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
-
-# Variational tests
-ecbuild_add_test( TARGET  ijedi_3dvar_mom6
+ecbuild_add_test( TARGET  ijedi_hofx3d_coupled
                   MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_coupled.x>
+                  ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
+
+# Variational tests (depends on diffusion operator being calibrated first)
+ecbuild_add_test( TARGET  ijedi_diffusion_mom6
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    errortoolbox ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_diffusion-mom6.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata)
+
+ecbuild_add_test( TARGET  ijedi_3dvar_mom6
+                  MPI     2
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml
-                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
+                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata ijedi_diffusion_mom6)
+
+# Convert state tests
+ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_mom6
+                  MPI     1
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_mom6.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata)
+
+ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_fv3
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_fv3.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_fv3_testdata)
