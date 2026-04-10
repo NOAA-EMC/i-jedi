@@ -19,7 +19,16 @@ state:
   - air_temperature
   - air_pressure_thickness
   io:
-    filetype: fv3 history
+    filetype: fv3
+    source: history
+    datapath: testrun/state-fv3/
+    atm_file: atmf006.nc
+    sfc_file: sfcf006.nc
+    field io names:
+      eastward_wind: ugrd
+      northward_wind: vgrd
+      air_temperature: tmp
+      air_pressure_thickness: dpres
 observations:
   observers:
   - obs space:
