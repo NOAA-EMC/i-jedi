@@ -24,10 +24,7 @@ option(ENABLE_LORENZ95_MODEL "Build Lorenz95 toy model" OFF)
 option(ENABLE_QG_MODEL "Build QG toy model" OFF)
 
 # Options to build JCSDA repositories
-option(BUILD_OOPS "Build OOPS" ON)
-option(BUILD_SABER "Build SABER" ON)
-option(BUILD_IODA "Build IODA" ON)
-option(BUILD_UFO "Build UFO" ON)
+option(BUILD_JEDI "Build JEDI" ON)
 
 ecbuild_bundle(PROJECT eckit GIT "https://github.com/ecmwf/eckit.git" TAG 1.16.0)
 ecbuild_bundle(PROJECT fckit GIT "https://github.com/ecmwf/fckit.git" TAG 0.9.2)
