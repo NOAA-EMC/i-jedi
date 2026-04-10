@@ -130,7 +130,8 @@ add_test(NAME ijedi_check_mom6_structured_grid
 
 # HofX3D tests
 add_test(NAME ijedi_hofx3d_mom6
-         COMMAND $<TARGET_FILE:ijedi.x> hofx3d
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi.x> hofx3d
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-mom6.yaml)
 
 add_test(NAME ijedi_hofx3d_fv3
@@ -143,7 +144,15 @@ add_test(NAME ijedi_hofx3d_coupled
                  $<TARGET_FILE:ijedi_coupled.x> hofx3d
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml)
 
-# Variational tests
-#add_test(NAME ijedi_3dvar_mom6
-#         COMMAND $<TARGET_FILE:ijedi.x> var
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml)
+# ErrorCovarianceToolbox tests
+add_test(NAME ijedi_diffusion_mom6
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi.x> errortoolbox
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_diffusion-mom6.yaml)
+
+# Variational tests (depends on diffusion operator being calibrated first)
+add_test(NAME ijedi_3dvar_mom6
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi.x> var
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml)
+set_tests_properties(ijedi_3dvar_mom6 PROPERTIES DEPENDS ijedi_diffusion_mom6)
