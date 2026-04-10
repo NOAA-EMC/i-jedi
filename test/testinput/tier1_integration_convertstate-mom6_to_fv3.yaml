@@ -45,7 +45,7 @@ states:
       filetype: fv3
       filename: data_generated/mom6_to_fv3_converted.nc
       source: history
-      datapath: testrun/state-fv3/
+      datapath: data_generated/fv3/
       atm_file: atmf006.nc
       sfc_file: sfcf006.nc
       field io names:

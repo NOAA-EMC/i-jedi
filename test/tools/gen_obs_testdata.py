@@ -21,21 +21,20 @@ def ncgen(cdl_path, nc_path):
         sys.exit(1)
 
 def main():
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <output_dir>")
+    if len(sys.argv) != 3:
+        print(f"Usage: {sys.argv[0]} <input_dir> <output_dir>")
         sys.exit(1)
 
-    outdir = sys.argv[1]
+    indir = sys.argv[1]
+    outdir = sys.argv[2]
     print("Generating observation test data in:", outdir)
     os.makedirs(outdir, exist_ok=True)
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # -------------------------------------------------------------------------
     # observations
     # -------------------------------------------------------------------------
     for name in ("sst", "aircraft"):
-        cdl = os.path.join(script_dir, f"{name}.cdl")
+        cdl = os.path.join(indir, f"{name}.cdl")
         nc  = os.path.join(outdir, f"{name}.nc")
         ncgen(cdl, nc)
         print(f"  {nc}")
