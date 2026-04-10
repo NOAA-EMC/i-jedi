@@ -1,6 +1,7 @@
 #include <cstdlib>
 
 #include "eckit/config/Configuration.h"
+#include "eckit/config/LocalConfiguration.h"
 
 #include "ijedi/Geometry/base/GeometryBase.h"
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
@@ -17,7 +18,7 @@ bool registerESMFAtExit() { std::atexit(mpasGeomESMFAtExit); return true; }
 
 extern "C" GeometryBase * ijedi_create_geometry_mpas(const eckit::Configuration & geomConf,
                                                        const eckit::mpi::Comm & comm,
-                                                       eckit::Configuration & geomVars,
+                                                       eckit::LocalConfiguration & geomVars,
                                                        atlas::FunctionSpace & functionSpace,
                                                        atlas::FieldSet & fieldSet,
                                                        bool & levelsAreTopDown,
