@@ -8,6 +8,7 @@ cost function:
     ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
     ocean_topog: data_generated/mom6/ocean_topog.nc
     coarsen factor: 1
+    has northern fold: true
     MOM_input:
       NIGLOBAL: 72
       NJGLOBAL: 35
@@ -17,21 +18,38 @@ cost function:
   analysis variables:
   - sea_water_potential_temperature
   - sea_water_salinity
+  - sea_surface_height_above_geoid
   background:
     date: 2020-12-15T00:00:00Z
     state variables:
-    - sea_ice_area_fraction
-    - sea_ice_thickness
-    - sea_ice_snow_thickness
     - sea_water_salinity
     - sea_water_potential_temperature
     - sea_surface_height_above_geoid
     io:
-      filetype: fv3 history # wrong! but the only one currently available, setting as placeholder
+      filetype: mom6
+      filename: data_generated/mom6/MOM.res.nc
+      field io names:
+        sea_water_potential_temperature: Temp
+        sea_water_salinity: Salt
+        sea_surface_height_above_geoid: ave_ssh
+
   background error:
     covariance model: SABER
     saber central block:
-      saber block name: ID
+      saber block name: diffusion
+      read:
+        groups:
+        - variables:
+          - sea_water_potential_temperature
+          - sea_surface_height_above_geoid
+          - sea_surface_height_above_geoid
+          multivariate strategy: univariate
+          horizontal:
+            filepath: diffusion_hz
+          vertical:
+            levels: 25
+            filepath: diffusion_vt
+
   observations:
     observers:
     - obs space:
@@ -52,3 +70,12 @@ variational:
     ninner: 5
     gradient norm reduction: 1e-8
     test: on
+
+output:
+  io:
+    filetype: mom6
+    filename: data_generated/mom6/MOM.res_an.nc
+    field io names:
+      sea_water_potential_temperature: Temp
+      sea_water_salinity: Salt
+      sea_surface_height_above_geoid: ave_ssh
