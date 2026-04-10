@@ -7,7 +7,7 @@ input geometry:
     NIGLOBAL: 72
     NJGLOBAL: 35
     NZ: 25
-    LAYOUT: [3, 2]
+    LAYOUT: [1, 1]
     MINIMUM_DEPTH: 0.5
 
 output geometry:
@@ -19,7 +19,7 @@ output geometry:
     NIGLOBAL: 72
     NJGLOBAL: 35
     NZ: 25
-    LAYOUT: [3, 2]
+    LAYOUT: [1, 1]
     MINIMUM_DEPTH: 0.5
 states:
 - input:
