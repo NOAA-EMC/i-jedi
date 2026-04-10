@@ -25,7 +25,8 @@ namespace ijedi
   // -----------------------------------------------------------------------------------------------
 
   GeometryFV3::GeometryFV3(const eckit::Configuration &geomConfig, const eckit::mpi::Comm &comm,
-                           eckit::Configuration &geomVariables, atlas::FunctionSpace &functionSpace,
+                           eckit::LocalConfiguration &geomVariables,
+                           atlas::FunctionSpace &functionSpace,
                            atlas::FieldSet &geomFields, bool &levelsAreTopDown, int &numberLevels)
   {
     oops::Log::trace() << "GeometryFV3 constructor starting" << std::endl;
@@ -238,6 +239,7 @@ namespace ijedi
     std::stringstream errorMsg;
     errorMsg << "GeometryFV3::verticalCoord is not implemented" << std::endl;
     ABORT(errorMsg.str());
+    return std::vector<double>();  // Never reached, but silences compiler warning
   }
 
   // -----------------------------------------------------------------------------------------------

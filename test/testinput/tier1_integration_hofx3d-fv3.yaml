@@ -42,7 +42,7 @@ observations:
       - windNorthward
       - airTemperature
     obs operator:
-      name: VertInterp
+      name: Identity #VertInterp   # switch to Identity until I/O is ready: VertInterp doesn't like uninit or zero values in vert coord
       vertical coordinate: air_pressure
       observation vertical coordinate: pressure
       observation vertical coordinate group: MetaData

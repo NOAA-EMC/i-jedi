@@ -23,6 +23,7 @@
 #include "atlas/mesh.h"
 #include "atlas/mesh/MeshBuilder.h"
 #include "atlas/mesh/actions/BuildHalo.h"
+#include "atlas/output/Gmsh.h"
 #include "atlas/util/Earth.h"
 #include "atlas/util/KDTree.h"
 #include "atlas/util/Metadata.h"
@@ -375,6 +376,35 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
         static_cast<atlas::gidx_t>(jG1 * niEff_ + iG1 + 1),
         static_cast<atlas::gidx_t>(jG1 * niEff_ + iG  + 1)});
     quadGidx.push_back(0);   // placeholder; filled after allGather below
+  }
+  // --- Step 4.6: fold quads along the tripolar northern seam ---
+  // For a tripolar grid the "virtual" row at j=njEff_ folds back onto the last
+  // real row via the reflection:  ghost(i, njEff_) = real(niEff_-1-i, njEff_-1)
+  // A fold quad centred at column iG on the last row has corners (all on jG):
+  //   SW=(iG, jG)  SE=(iG+1, jG)  NE=(niEff_-2-iG, jG)  NW=(niEff_-1-iG, jG)
+  // Only the left half (2*(iG+1) < niEff_) yields unique quads; the seam
+  // column where NE==SE is degenerate and deliberately skipped.
+  if (hasFold_) {
+    const int jG = njEff_ - 1;
+    for (int n = 0; n < ownedCount_; ++n) {
+      if (jediPoints_[n].second != jG) continue;        // only last row
+      const int iG    = jediPoints_[n].first;
+      if (2 * (iG + 1) >= niEff_) continue;             // skip seam + right half
+      const int iG1    = iG + 1;
+      const int foldNE = niEff_ - 2 - iG;              // NE: reflected SE
+      const int foldNW = niEff_ - 1 - iG;              // NW: reflected SW
+      if (foldNE < 0) continue;                         // guard for tiny grids
+      if (activeMap.find(jG * niEff_ + iG)    == activeMap.end()) continue;
+      if (activeMap.find(jG * niEff_ + iG1)   == activeMap.end()) continue;
+      if (activeMap.find(jG * niEff_ + foldNE) == activeMap.end()) continue;
+      if (activeMap.find(jG * niEff_ + foldNW) == activeMap.end()) continue;
+      quadNodes.push_back({
+          static_cast<atlas::gidx_t>(jG * niEff_ + iG     + 1),
+          static_cast<atlas::gidx_t>(jG * niEff_ + iG1    + 1),
+          static_cast<atlas::gidx_t>(jG * niEff_ + foldNE + 1),
+          static_cast<atlas::gidx_t>(jG * niEff_ + foldNW + 1)});
+      quadGidx.push_back(0);  // filled by allGather offset below
+    }
   }
   // Compute globally unique quad element indices via per-rank allGather offset
   {
@@ -871,7 +901,7 @@ void GeometryMOM6::checkScatterMap()
 // ---------------------------------------------------------------------------
 GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
                            const eckit::mpi::Comm & comm,
-                           eckit::Configuration &geomVariables,
+                           eckit::LocalConfiguration &geomVariables,
                            atlas::FunctionSpace &functionSpace,
                            atlas::FieldSet &geomFields,
                            bool &levelsAreTopDown, int &numberLevels)
@@ -896,8 +926,9 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
         + " does not divide NIGLOBAL=" + std::to_string(niGlobal_)
         + " x NJGLOBAL=" + std::to_string(njGlobal_)
         + " (need both divisible)", Here());
-  niEff_ = niGlobal_ / coarsenFactor_;
-  njEff_ = njGlobal_ / coarsenFactor_;
+  niEff_   = niGlobal_ / coarsenFactor_;
+  njEff_   = njGlobal_ / coarsenFactor_;
+  hasFold_ = conf.getBool("has northern fold", false);
 
   oops::Log::debug() << "GeometryMOM6: NI=" << niGlobal_ << " NJ=" << njGlobal_
                      << " NZ=" << numLevels_
@@ -955,11 +986,17 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
     saveStructuredGrid(conf.getString("save structured grid to"), comm);
   if (conf.has("save debug mesh to"))
     saveDebugMesh(conf.getString("save debug mesh to"), comm);
+  if (conf.has("save gmsh to"))
+    saveGmsh(conf.getString("save gmsh to"), comm);
 
   // 8. Populate output parameters
   functionSpace = functionSpace_;
   geomFields    = fields_;
   numberLevels  = numLevels_;
+
+  geomVariables.set("ni", niEff_);
+  geomVariables.set("nj", njEff_);
+  geomVariables.set("nz", numLevels_);
 
   oops::Log::trace() << "GeometryMOM6 constructor done" << std::endl;
 }
@@ -1161,6 +1198,22 @@ void GeometryMOM6::saveDebugMesh(const std::string & prefix,
     oops::Log::info() << "GeometryMOM6::saveDebugMesh: rank " << rank
                       << " -> " << ncFile << std::endl;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Write the Atlas mesh to a Gmsh file for visualisation.  Each rank writes
+// its own portion (owned + halo nodes/cells); ghost=true makes halos visible.
+void GeometryMOM6::saveGmsh(const std::string & filename,
+                             const eckit::mpi::Comm & comm) const
+{
+  const atlas::functionspace::NodeColumns fspace(functionSpace_);
+  eckit::LocalConfiguration gmshConf;
+  gmshConf.set("coordinates", "xyz");
+  gmshConf.set("ghost", true);
+  atlas::output::Gmsh gmsh(filename, gmshConf);
+  gmsh.write(fspace.mesh());
+  oops::Log::info() << "GeometryMOM6::saveGmsh: rank " << comm.rank()
+                    << " -> " << filename << std::endl;
 }
 
 // ---------------------------------------------------------------------------

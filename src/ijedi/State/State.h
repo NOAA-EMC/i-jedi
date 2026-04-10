@@ -89,6 +89,8 @@ namespace ijedi
     void read(const eckit::Configuration &);
     void write(const eckit::Configuration &) const;
 
+    void setAtlasFieldMetadata();
+
    private:
     void analytic_init(const eckit::Configuration &);
 
@@ -96,5 +98,7 @@ namespace ijedi
 
     const Geometry &geom_;
   };
+
+  // -----------------------------------------------------------------------------------------------
 
 }  // namespace ijedi

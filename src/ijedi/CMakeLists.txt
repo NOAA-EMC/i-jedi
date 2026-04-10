@@ -35,6 +35,12 @@ list(APPEND ijedi_src_files
   # IO
   Io/IoBase.cc
   Io/IoBase.h
+  Io/mom6/IoMOM6.cc
+  Io/mom6/IoMOM6.h
+  Io/mom6/ReadMOM6Netcdf.cc
+  Io/mom6/ReadMOM6Netcdf.h
+  Io/mom6/WriteMOM6Netcdf.cc
+  Io/mom6/WriteMOM6Netcdf.h
 
   # Variable change
   VariableChange/SeaSurfaceTemperature.h
@@ -43,6 +49,14 @@ list(APPEND ijedi_src_files
   VariableChange/VaderCookbook.h
   VariableChange/VariableChange.cc
   VariableChange/VariableChange.h
+
+  # Linear variable change
+  LinearVariableChange/LinearVariableChange.cc
+  LinearVariableChange/LinearVariableChange.h
+
+  # Model and LinearModel (persistence and identity)
+  Model/Model.h
+  LinearModel/LinearModel.h
 
   # Utilities
   Utilities/Constants.cc

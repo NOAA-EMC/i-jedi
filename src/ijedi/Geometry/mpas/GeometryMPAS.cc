@@ -17,7 +17,7 @@ namespace ijedi
 
   GeometryMPAS::GeometryMPAS(const eckit::Configuration &geomConfig,
                              const eckit::mpi::Comm &comm,
-                             eckit::Configuration &geomVariables,
+                             eckit::LocalConfiguration &geomVariables,
                              atlas::FunctionSpace &functionSpace,
                              atlas::FieldSet &fieldSet,
                              bool &levelsAreTopDown, int &numberLevels) {}

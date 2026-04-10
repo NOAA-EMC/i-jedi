@@ -5,6 +5,7 @@
 
 #include "oops/runs/Run.h"
 #include "oops/test/interface/Geometry.h"
+#include "oops/test/interface/Increment.h"
 #include "oops/test/interface/State.h"
 
 // -------------------------------------------------------------------------------------------------
@@ -27,6 +28,10 @@ int runApp(int argc, char **argv, const std::string testName)
   tests["state"] = []()
   {
     return std::make_unique<test::State<ijedi::Traits>>();
+  };
+  tests["increment"] = []()
+  {
+    return std::make_unique<test::Increment<ijedi::Traits>>();
   };
 
   // Create application object and point to it
@@ -56,6 +61,7 @@ int main(int argc, char **argv)
   const std::set<std::string> validtests = {
       "geometry",
       "state",
+      "increment",
   };
   ASSERT_MSG(validtests.find(testApp) != validtests.end(), "Test not recognized: " + testApp);
 
