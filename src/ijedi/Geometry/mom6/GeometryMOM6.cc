@@ -920,6 +920,14 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   layoutX_ = layout[0];
   layoutY_ = layout[1];
 
+  const int npes = static_cast<int>(comm.size());
+  if (npes != layoutX_ * layoutY_)
+    throw eckit::BadValue(
+        "MOM6 geometry: number of MPI tasks (" + std::to_string(npes) +
+        ") must equal LAYOUT[0]*LAYOUT[1] (" + std::to_string(layoutX_) +
+        "*" + std::to_string(layoutY_) + "=" +
+        std::to_string(layoutX_ * layoutY_) + ")", Here());
+
   coarsenFactor_ = conf.getInt("coarsen factor", 1);
   if (niGlobal_ % coarsenFactor_ != 0 || njGlobal_ % coarsenFactor_ != 0)
     throw eckit::BadValue("coarsen_factor=" + std::to_string(coarsenFactor_)
@@ -928,11 +936,12 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
         + " (need both divisible)", Here());
   niEff_   = niGlobal_ / coarsenFactor_;
   njEff_   = njGlobal_ / coarsenFactor_;
-  hasFold_ = conf.getBool("has northern fold", false);
+  hasFold_ = conf.getBool("has northern fold", true);
 
   oops::Log::debug() << "GeometryMOM6: NI=" << niGlobal_ << " NJ=" << njGlobal_
                      << " NZ=" << numLevels_
                      << " layout=(" << layoutX_ << "," << layoutY_ << ")"
+                     << " northern_fold=" << std::boolalpha << hasFold_
                      << " coarsen_factor=" << coarsenFactor_ << std::endl;
 
   // 2. Compute local MOM6 domain extent for this rank
@@ -1232,6 +1241,7 @@ void GeometryMOM6::print(std::ostream & os) const
                                 ? "  [coarsen_factor="
                                   + std::to_string(coarsenFactor_) + "]"
                                 : "") << "\n"
+     << "  |  Tripolar fold: " << (hasFold_ ? "yes" : "no") << "\n"
      << "  |  MOM6 layout : " << layoutX_ << " x " << layoutY_
                               << "  (" << npes << " MPI tasks)\n"
      << "  |  Min depth   : " << minimumDepth_ << " m\n"
