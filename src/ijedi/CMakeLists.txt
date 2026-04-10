@@ -14,6 +14,7 @@ list(APPEND ijedi_src_files
   Geometry/Geometry.h
   Geometry/base/GeometryBase.cc
   Geometry/base/GeometryBase.h
+  Geometry/mpas/GeometryMPASLoader.cc
   Geometry/mom6/GeometryMOM6.cc
   Geometry/mom6/GeometryMOM6.h
 
