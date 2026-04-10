@@ -12,45 +12,6 @@ jobs:
       with:
         path: i-jedi
         submodules: recursive
-    - name: Get dependency commit hashes
-      id: dep-hashes
-      shell: bash
-      run: |
-        set -e
-        echo "oops=$(git ls-remote https://github.com/NOAA-EMC/oops.git feature/mist | cut -f1)" >> $GITHUB_OUTPUT
-        echo "vader=$(git ls-remote https://github.com/JCSDA/vader.git develop | cut -f1)" >> $GITHUB_OUTPUT
-        echo "ioda=$(git ls-remote https://github.com/JCSDA/ioda.git develop | cut -f1)" >> $GITHUB_OUTPUT
-        echo "ufo=$(git ls-remote https://github.com/JCSDA/ufo.git develop | cut -f1)" >> $GITHUB_OUTPUT
-    - name: Cache VADER
-      id: cache-vader
-      uses: actions/cache@v5
-      with:
-        path: |
-          ${{ github.workspace }}/Build/vader
-          ${{ github.workspace }}/i-jedi/bundle/vader
-        key: ${{ runner.os }}-vader-${{ steps.dep-hashes.outputs.vader }}
-        restore-keys: |
-          ${{ runner.os }}-vader-
-    - name: Cache UFO
-      id: cache-ufo
-      uses: actions/cache@v5
-      with:
-        path: |
-          ${{ github.workspace }}/Build/ufo
-          ${{ github.workspace }}/i-jedi/bundle/ufo
-        key: ${{ runner.os }}-ufo-${{ steps.dep-hashes.outputs.ufo }}
-        restore-keys: |
-          ${{ runner.os }}-ufo-
-    - name: Cache IODA
-      id: cache-ioda
-      uses: actions/cache@v5
-      with:
-        path: |
-          ${{ github.workspace }}/Build/ioda
-          ${{ github.workspace }}/i-jedi/bundle/ioda
-        key: ${{ runner.os }}-ioda-${{ steps.dep-hashes.outputs.ioda }}
-        restore-keys: |
-          ${{ runner.os }}-ioda-
     - name: Run ecbuild
       shell: bash
       run: |
@@ -61,6 +22,13 @@ jobs:
         mkdir -p Build
         cd Build
         ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle
+    - name: Cache install of JEDI libraries
+      id: cache-jedi
+      uses: actions/cache@v5
+      with:
+        path: |
+          ${{ github.workspace }}/install
+        key: ${{ runner.os }}-jedi
     - name: Run coding style checks
       shell: bash
       run: |
@@ -69,13 +37,33 @@ jobs:
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure        
-    - name: Compile the code
+    - name: Compile the code without any cache
+      if: steps.cache-jedi.outputs.cache-hit != 'true'
       shell: bash
       run: |
         su - nonroot
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE/Build/ijedi
+        cd $GITHUB_WORKSPACE
+        rm -rf Build
+        mkdir -p Build
+        cd Build
+        ecbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
+        cd ijedi
+        make -j4
+    - name: Compile the code with cache
+      if: steps.cache-jedi.outputs.cache-hit == 'true'
+      shell: bash
+      run: |
+        su - nonroot
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE
+        rm -rf Build
+        mkdir -p Build
+        cd Build
+        ecbuild -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
+        cd ijedi
         make -j4
     - name: Run ctests
       shell: bash
