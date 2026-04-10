@@ -4,9 +4,20 @@ add_subdirectory(mains)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
-# Test Data Setup
-# ---------------
-# Link the directory 'data' to the test directory of the build.
+# Automatically discover and add tests organized by tier
+# -------------------------------------------------------
+# All tests are built; use ctest -R tier<N> to run specific tiers
+# Note: CONFIGURE_DEPENDS tells CMake to recheck for new/removed test files
+# `export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"` to allow MPI oversubscription (useful for CI/local testing)
+set(IJEDI_MPI_ARGS $ENV{IJEDI_MPI_ARGS})
+
+if(IJEDI_MPI_ARGS)
+    separate_arguments(IJEDI_MPI_ARGS)
+endif()
+
+# Link the directory 'data' to the test directory of the build
+# ------------------------------------------------------------
+
 file(CREATE_LINK
     "${CMAKE_CURRENT_SOURCE_DIR}/data"
     "${CMAKE_CURRENT_BINARY_DIR}/data"
@@ -108,11 +119,6 @@ foreach(TIER RANGE 1 3)
         # Get the filename without directory and extension
         get_filename_component(TEST_NAME ${YAML_FILE} NAME_WE)
 
-        # Skip this here since we have a special test that downloads the mpas test data and we do not want to double register 
-        if(TEST_NAME STREQUAL "tier1_unit_geometry-mpas")
-            continue()
-        endif()
-
         # Extract components: tier<N>_<type>_<name>
         string(REPLACE "_" ";" NAME_PARTS ${TEST_NAME})
         list(LENGTH NAME_PARTS NUM_PARTS)
@@ -143,15 +149,6 @@ add_test(NAME ijedi_check_mom6_structured_grid
         ${CMAKE_CURRENT_SOURCE_DIR}/data/mom6/check_mom6_structured_grid.py
         ${CMAKE_CURRENT_BINARY_DIR}/mom6_structured_grid.nc
         ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6/soca_gridspec.72x35x25.nc)
-
-# MPAS geometry test
-add_test(NAME ijedi_tier1_unit_geometry-mpas
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
-    $<TARGET_FILE:ijedi_test.x> ${MPAS_GEOMETRY_EXECUTABLE} ${MPAS_GEOMETRY_YAML})
-set_tests_properties(ijedi_tier1_unit_geometry-mpas PROPERTIES
-    WORKING_DIRECTORY  ${MPAS_TEST_WORKDIR}
-    FIXTURES_SETUP     mpas_grid_output
-    ENVIRONMENT        "OMP_NUM_THREADS=1")
 
 # HofX3D tests
 add_test(NAME ijedi_hofx3d_mom6
