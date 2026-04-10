@@ -71,6 +71,19 @@ add_test(NAME ijedi_setup_obs_testdata
         ${CMAKE_CURRENT_SOURCE_DIR}/data/obs/gen_obs_testdata.py
         ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 
+# FV3 test data generation fixture
+# ----------------------------------
+# Runs gen_fv3_testdata.py once; produces atmf006.nc and sfcf006.nc inside the test's
+# own working directory, referenced by tier1_unit_state-fv3.yaml
+# as input_dir: .
+set(FV3_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/state-fv3)
+file(MAKE_DIRECTORY ${FV3_TEST_WORKDIR})
+
+add_test(NAME ijedi_setup_fv3_testdata
+    COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_fv3_testdata.py
+        ${FV3_TEST_WORKDIR})
+
 # Unit tests
 foreach(TIER RANGE 1 3)
     # Find all YAML files for this tier
@@ -117,7 +130,8 @@ add_test(NAME ijedi_check_mom6_structured_grid
 
 # HofX3D tests
 add_test(NAME ijedi_hofx3d_mom6
-         COMMAND $<TARGET_FILE:ijedi.x> hofx3d
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi.x> hofx3d
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-mom6.yaml)
 
 add_test(NAME ijedi_hofx3d_fv3
@@ -125,13 +139,29 @@ add_test(NAME ijedi_hofx3d_fv3
                  $<TARGET_FILE:ijedi.x> hofx3d
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-fv3.yaml)
 
-# Comment out until https://github.com/JCSDA-internal/oops/pull/3255 is merged
-#add_test(NAME ijedi_hofx3d_coupled
-#         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
-#                 $<TARGET_FILE:ijedi_coupled.x> hofx3d
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml)
+add_test(NAME ijedi_hofx3d_coupled
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi_coupled.x> hofx3d
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml)
 
-# Variational tests
+# ErrorCovarianceToolbox tests
+add_test(NAME ijedi_diffusion_mom6
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi.x> errortoolbox
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_diffusion-mom6.yaml)
+
+# Variational tests (depends on diffusion operator being calibrated first)
 add_test(NAME ijedi_3dvar_mom6
-         COMMAND $<TARGET_FILE:ijedi.x> var
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi.x> var
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml)
+
+# Convert state tests
+add_test(NAME ijedi_convertstate-mom6_to_mom6
+	 COMMAND $<TARGET_FILE:ijedi.x> convertstate
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_mom6.yaml)
+add_test(NAME ijedi_convertstate-mom6_to_fv3
+	 COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+	         $<TARGET_FILE:ijedi.x> convertstate
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_fv3.yaml)
+set_tests_properties(ijedi_3dvar_mom6 PROPERTIES DEPENDS ijedi_diffusion_mom6)

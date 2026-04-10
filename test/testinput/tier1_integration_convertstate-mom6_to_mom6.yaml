@@ -1,0 +1,63 @@
+input geometry:
+  geometry_type: mom6
+  ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+  ocean_topog: data_generated/mom6/ocean_topog.nc
+  coarsen factor: 1
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [1, 1]
+    MINIMUM_DEPTH: 0.5
+
+output geometry:
+  geometry_type: mom6
+  ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+  ocean_topog: data_generated/mom6/ocean_topog.nc
+  coarsen factor: 1
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [1, 1]
+    MINIMUM_DEPTH: 0.5
+states:
+- input:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - sea_ice_area_fraction
+    - sea_ice_thickness
+    - sea_ice_snow_thickness
+    - sea_water_salinity
+    - sea_water_potential_temperature
+    - sea_surface_height_above_geoid
+    io:
+      filetype: mom6
+      filename: data_generated/mom6/MOM.res.nc
+      field io names:
+        sea_ice_area_fraction: frazil
+        sea_ice_thickness: hisnow
+        sea_ice_snow_thickness: snow_hisnow
+        sea_water_salinity: Salt
+        sea_water_potential_temperature: Temp
+        sea_surface_height_above_geoid: ave_ssh
+  output:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - sea_ice_area_fraction
+    - sea_ice_thickness
+    - sea_ice_snow_thickness
+    - sea_water_salinity
+    - sea_water_potential_temperature
+    - sea_surface_height_above_geoid
+    io:
+      filetype: mom6
+      filename: data_generated/mom6/convertstate_output.nc
+      field io names:
+        sea_ice_area_fraction: frazil
+        sea_ice_thickness: hisnow
+        sea_ice_snow_thickness: snow_hisnow
+        sea_water_salinity: Salt
+        sea_water_potential_temperature: Temp
+        sea_surface_height_above_geoid: ave_ssh
+
