@@ -139,11 +139,10 @@ add_test(NAME ijedi_hofx3d_fv3
                  $<TARGET_FILE:ijedi.x> hofx3d
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-fv3.yaml)
 
-# Comment out until https://github.com/JCSDA-internal/oops/pull/3255 is merged
-#add_test(NAME ijedi_hofx3d_coupled
-#         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
-#                 $<TARGET_FILE:ijedi_coupled.x> hofx3d
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml)
+add_test(NAME ijedi_hofx3d_coupled
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi_coupled.x> hofx3d
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml)
 
 # ErrorCovarianceToolbox tests
 add_test(NAME ijedi_diffusion_mom6
@@ -156,4 +155,13 @@ add_test(NAME ijedi_3dvar_mom6
          COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
                  $<TARGET_FILE:ijedi.x> var
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml)
+
+# Convert state tests
+add_test(NAME ijedi_convertstate-mom6_to_mom6
+	 COMMAND $<TARGET_FILE:ijedi.x> convertstate
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_mom6.yaml)
+add_test(NAME ijedi_convertstate-mom6_to_fv3
+	 COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+	         $<TARGET_FILE:ijedi.x> convertstate
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_fv3.yaml)
 set_tests_properties(ijedi_3dvar_mom6 PROPERTIES DEPENDS ijedi_diffusion_mom6)
