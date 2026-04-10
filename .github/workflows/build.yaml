@@ -48,7 +48,7 @@ jobs:
         rm -rf Build
         mkdir -p Build
         cd Build
-        ecbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
+        ecbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle 
         cd ijedi
         make -j4
     - name: Compile the code with cache
@@ -62,7 +62,7 @@ jobs:
         rm -rf Build
         mkdir -p Build
         cd Build
-        ecbuild -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
+        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
         cd ijedi
         make -j4
     - name: Run ctests
