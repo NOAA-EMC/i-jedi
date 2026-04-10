@@ -35,6 +35,8 @@ list(APPEND ijedi_src_files
   # IO
   Io/IoBase.cc
   Io/IoBase.h
+  Io/gmsh/IoGmsh.cc
+  Io/gmsh/IoGmsh.h
   Io/mom6/IoMOM6.cc
   Io/mom6/IoMOM6.h
   Io/mom6/ReadMOM6Netcdf.cc
