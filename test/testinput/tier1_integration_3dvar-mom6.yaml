@@ -28,14 +28,7 @@ cost function:
     io:
       filetype: mom6
       filename: data_generated/mom6/MOM.res.nc
-<<<<<<< HEAD
       field io names: &mom6_field_io_names
-=======
-      field io names:
->>>>>>> develop
-        sea_water_potential_temperature: Temp
-        sea_water_salinity: Salt
-        sea_surface_height_above_geoid: ave_ssh
 
   background error:
     covariance model: SABER
