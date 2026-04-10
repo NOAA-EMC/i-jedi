@@ -138,11 +138,10 @@ add_test(NAME ijedi_hofx3d_fv3
                  $<TARGET_FILE:ijedi.x> hofx3d
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-fv3.yaml)
 
-# Comment out until https://github.com/JCSDA-internal/oops/pull/3255 is merged
-#add_test(NAME ijedi_hofx3d_coupled
-#         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
-#                 $<TARGET_FILE:ijedi_coupled.x> hofx3d
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml)
+add_test(NAME ijedi_hofx3d_coupled
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+                 $<TARGET_FILE:ijedi_coupled.x> hofx3d
+                 ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml)
 
 # Variational tests
 #add_test(NAME ijedi_3dvar_mom6

@@ -46,18 +46,29 @@ state:
     - air_temperature
     - air_pressure_thickness
     io:
-      filetype: fv3 history
+      filetype: fv3
+      source: history
+      datapath: testrun/state-fv3/
+      atm_file: atmf006.nc
+      sfc_file: sfcf006.nc
+      field io names:
+        eastward_wind: ugrd
+        northward_wind: vgrd
+        air_temperature: tmp
+        air_pressure_thickness: dpres
   ocean:
     date: 2020-12-15T00:00:00Z
     state variables:
-    - sea_ice_area_fraction
-    - sea_ice_thickness
-    - sea_ice_snow_thickness
     - sea_water_salinity
     - sea_water_potential_temperature
     - sea_surface_height_above_geoid
     io:
-      filetype: fv3 history # wrong, but the only one supported right now
+      filetype: mom6
+      filename: data_generated/mom6/MOM.res.nc
+      field io names:
+        sea_water_potential_temperature: Temp
+        sea_water_salinity: Salt
+        sea_surface_height_above_geoid: ave_ssh
 observations:
   observers:
   - obs space:
@@ -66,6 +77,10 @@ observations:
         engine:
           type: H5File
           obsfile: data_generated/obs/sst.nc
+      obsdataout:
+        engine:
+          type: H5File
+          obsfile: sst_out_ijedi.nc
       simulated variables: [seaSurfaceTemperature]
     obs operator:
       name: Identity
@@ -76,6 +91,10 @@ observations:
         engine:
           type: H5File
           obsfile: data_generated/obs/aircraft.nc
+      obsdataout:
+        engine:
+          type: H5File
+          obsfile: aircraft_out_ijedi.nc
       simulated variables:
       - windEastward
       - windNorthward
