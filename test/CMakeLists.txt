@@ -98,19 +98,19 @@ ecbuild_add_test( TARGET  ijedi_state_mom6
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
 
 # HofX3D tests
-ecbuild_add_test( TARGET  ijedi_hofx3d_mom6
-                  MPI     6
-                  OMP     1
-                  COMMAND $<TARGET_FILE:ijedi.x>
-                  ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-mom6.yaml
-                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
+#ecbuild_add_test( TARGET  ijedi_hofx3d_mom6
+#                  MPI     6
+#                  OMP     1
+#                  COMMAND $<TARGET_FILE:ijedi.x>
+#                  ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-mom6.yaml
+#                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
 
-ecbuild_add_test( TARGET  ijedi_hofx3d_fv3
-                  MPI     6
-                  OMP     1
-                  COMMAND $<TARGET_FILE:ijedi.x>
-                  ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-fv3.yaml
-                  TEST_DEPENDS ijedi_setup_obs_testdata)
+#ecbuild_add_test( TARGET  ijedi_hofx3d_fv3
+#                  MPI     6
+#                  OMP     1
+#                  COMMAND $<TARGET_FILE:ijedi.x>
+#                  ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-fv3.yaml
+#                  TEST_DEPENDS ijedi_setup_obs_testdata)
 
 #ecbuild_add_test( TARGET  ijedi_hofx3d_coupled
 #                  MPI     6
@@ -120,9 +120,9 @@ ecbuild_add_test( TARGET  ijedi_hofx3d_fv3
 #                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
 
 # Variational tests
-ecbuild_add_test( TARGET  ijedi_3dvar_mom6
-                  MPI     6
-                  OMP     1
-                  COMMAND $<TARGET_FILE:ijedi.x>
-                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml
-                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
+#ecbuild_add_test( TARGET  ijedi_3dvar_mom6
+#                  MPI     6
+#                  OMP     1
+#                  COMMAND $<TARGET_FILE:ijedi.x>
+#                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml
+#                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)

@@ -54,8 +54,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         mkdir -p Build
         cd Build
-        export IJEDI_MPI_ARGS="--map-by :OVERSUBSCRIBE"
-        ecbuild ../i-jedi/bundle
+        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle
     - name: Run coding style checks
       shell: bash
       run: |
