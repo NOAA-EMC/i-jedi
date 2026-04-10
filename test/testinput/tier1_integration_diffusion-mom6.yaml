@@ -34,7 +34,7 @@ background error:
         iterations: 1000
       groups:
       - horizontal:
-          fixed value: 2000000.0    # 500 km Gaussian sigma
+          fixed value: 500000.0    # 500 km Gaussian sigma
           as gaussian: true
         write:
           filepath: diffusion_hz
