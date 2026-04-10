@@ -43,10 +43,7 @@ void VariableChange::changeVar(State & xx, const oops::Variables & vars) const {
 }
 
 void VariableChange::changeVarInverse(State & xx, const oops::Variables & vars) const {
-  oops::Log::trace() << "ijedi::VariableChange::changeVarInverse starting" << std::endl;
-  varchange_->changeVarInverse(xx, vars);  // Delegate to mist::utils::VariableChange
-  xx.setAtlasFieldMetadata();
-  oops::Log::trace() << "ijedi::VariableChange::changeVarInverse done" << std::endl;
+  throw eckit::NotImplemented("ijedi::VariableChange::changeVarInverse is not implemented", Here());
 }
 
 void VariableChange::print(std::ostream & os) const {}
