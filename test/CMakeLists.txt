@@ -152,7 +152,7 @@ add_test(NAME ijedi_diffusion_mom6
 
 # Variational tests (depends on diffusion operator being calibrated first)
 add_test(NAME ijedi_3dvar_mom6
-         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 6 ${IJEDI_MPI_ARGS}
+         COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 2 ${IJEDI_MPI_ARGS}
                  $<TARGET_FILE:ijedi.x> var
                  ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml)
 

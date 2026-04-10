@@ -1,5 +1,6 @@
 cost function:
   cost type: 3D-Var
+  jb evaluation: false
   time window:
     begin: 2020-12-14T21:00:00Z
     length: PT6H
@@ -13,7 +14,7 @@ cost function:
       NIGLOBAL: 72
       NJGLOBAL: 35
       NZ: 25
-      LAYOUT: [3, 2]
+      LAYOUT: [2, 1]
       MINIMUM_DEPTH: 0.5
   analysis variables:
   - sea_water_potential_temperature
@@ -67,7 +68,7 @@ variational:
     algorithm: DRPCG
   iterations:
   - geometry: *geom
-    ninner: 5
+    ninner: 3
     gradient norm reduction: 1e-8
     test: on
 
@@ -75,3 +76,5 @@ output:
   io:
     filetype: gmsh
     filename: data_generated/mom6/MOM.res_an.msh
+
+final j evaluation: false
