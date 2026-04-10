@@ -21,7 +21,7 @@ state:
   io:
     filetype: fv3
     source: history
-    datapath: testrun/state-fv3/
+    datapath: data_generated/fv3/
     atm_file: atmf006.nc
     sfc_file: sfcf006.nc
     field io names:
