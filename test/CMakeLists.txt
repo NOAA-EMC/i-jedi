@@ -2,6 +2,8 @@
 # -------------------------
 add_subdirectory(mains)
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 # Automatically discover and add tests organized by tier
 # -------------------------------------------------------
 # All tests are built; use ctest -R tier<N> to run specific tiers
@@ -15,14 +17,34 @@ endif()
 
 # Link the directory 'data' to the test directory of the build
 # ------------------------------------------------------------
+
 file(CREATE_LINK
     "${CMAKE_CURRENT_SOURCE_DIR}/data"
     "${CMAKE_CURRENT_BINARY_DIR}/data"
     SYMBOLIC
 )
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
+
+set(MPAS_TEST_WORKDIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/geometry-mpas)
+set(MPAS_DATA_CLONE_DIR ${CMAKE_CURRENT_BINARY_DIR}/testrun/mpas-jedi-data)
+set(MPAS_GEOMETRY_YAML ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mpas.yaml)
+set(MPAS_GEOMETRY_EXECUTABLE geometry)
+
+# Fetch MPAS test data at configure time.
+execute_process(
+    COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_SOURCE_DIR}/../util/fetch_mpas_testdata.py
+        --clone-dir ${MPAS_DATA_CLONE_DIR}
+        --dest-dir ${MPAS_TEST_WORKDIR}
+        --data-link-source ${CMAKE_CURRENT_BINARY_DIR}/data
+    RESULT_VARIABLE MPAS_FETCH_RC
+)
+if(NOT MPAS_FETCH_RC EQUAL 0)
+    message(FATAL_ERROR "Failed to fetch MPAS test data at configure time (rc=${MPAS_FETCH_RC})")
+endif()
 
 # Fetch MOM.res.nc from soca repo (sparse clone + LFS pull, skip if exists)
 set(_MOM_RES_NC "${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6/MOM.res.nc")

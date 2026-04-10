@@ -14,8 +14,6 @@ list(APPEND ijedi_src_files
   Geometry/Geometry.h
   Geometry/base/GeometryBase.cc
   Geometry/base/GeometryBase.h
-  Geometry/mpas/GeometryMPAS.cc
-  Geometry/mpas/GeometryMPAS.h
   Geometry/mom6/GeometryMOM6.cc
   Geometry/mom6/GeometryMOM6.h
 
@@ -130,6 +128,22 @@ if(FMS_FOUND)
 endif()
 
 # ###############################################################################
+# MPAS specific project source files and setup
+# ###############################################################################
+if(BUILD_MPAS)
+
+  list(APPEND ijedi_mpas_src_files
+    Geometry/mpas/GeometryMPASPlugin.cc
+    Geometry/mpas/GeometryMPAS.cc
+    Geometry/mpas/GeometryMPAS.h
+    Geometry/mpas/GeometryMPAS.interface.h
+    Geometry/mpas/ijedi_mpas_geom_interface_mod.F90
+    Geometry/mpas/ijedi_mpas_geom_mod.F90
+  )
+
+endif()
+
+# ###############################################################################
 # Model specific project source files
 # ###############################################################################
 ecbuild_add_library(TARGET ${PROJECT_NAME}
@@ -148,14 +162,28 @@ target_link_libraries(${PROJECT_NAME} PUBLIC eckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC fckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC atlas atlas_f)
 target_link_libraries(${PROJECT_NAME} PUBLIC oops)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS})
 
 # Mist
 target_link_libraries(${PROJECT_NAME} PUBLIC mist_base)
 target_link_libraries(${PROJECT_NAME} PUBLIC mist_utils)
-
 # target_link_libraries( ${PROJECT_NAME} PUBLIC ufo )
 if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
+endif()
+if(BUILD_MPAS)
+  ecbuild_add_library(TARGET ${PROJECT_NAME}_mpas
+    SOURCES ${ijedi_mpas_src_files}
+    INSTALL_HEADERS LISTED
+    LINKER_LANGUAGE CXX
+  )
+
+  target_include_directories(${PROJECT_NAME}_mpas PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+
+  target_link_libraries(${PROJECT_NAME}_mpas PUBLIC ${PROJECT_NAME})
+  target_link_libraries(${PROJECT_NAME}_mpas PUBLIC MPAS::core::atmosphere)
+  target_compile_options(${PROJECT_NAME}_mpas PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-cpp>)
 endif()
 
 if(OpenMP_CXX_FOUND)
