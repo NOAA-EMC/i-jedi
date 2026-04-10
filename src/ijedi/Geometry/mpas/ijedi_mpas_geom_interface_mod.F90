@@ -30,8 +30,8 @@ subroutine c_ijedi_mpas_geom_setup(c_geom, c_conf, c_comm) &
   call geom_setup(geom, conf, comm)
   c_geom = c_loc(geom)
 
-  call conf%final()
-  call comm%final()
+!  call conf%final()
+!  call comm%final()
 
 end subroutine c_ijedi_mpas_geom_setup
 
@@ -215,4 +215,19 @@ subroutine c_ijedi_mpas_geom_get_area(c_geom, n, area) &
   area(1:n) = real(geom%areaCell(1:n), c_double)
 
 end subroutine c_ijedi_mpas_geom_get_area
+
+! ------------------------------------------------------------------------------
+! Called from C++ std::atexit to finalize ESMF once at process exit.
+
+subroutine c_ijedi_mpas_esmf_shutdown() &
+    bind(c, name='ijedi_mpas_esmf_shutdown_f90')
+
+  use ijedi_mpas_geom_mod
+  implicit none
+
+#ifdef MPAS_EXTERNAL_ESMF_LIB
+  call mpas_geom_esmf_shutdown()
+#endif
+
+end subroutine c_ijedi_mpas_esmf_shutdown
 

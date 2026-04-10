@@ -37,6 +37,7 @@ namespace ijedi
                                        int & nCellsSolve);
         void ijedi_mpas_geom_get_global_cell_count_f90(const void * geom, int & nCellsGlobal);
         void ijedi_mpas_geom_get_area_f90(const void * geom, const int & n, double * area);
+        void ijedi_mpas_esmf_shutdown_f90();
     }  // extern "C"
 
 }  // namespace ijedi

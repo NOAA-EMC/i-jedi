@@ -119,15 +119,13 @@ endif()
 if(BUILD_MPAS)
 
   list(APPEND ijedi_mpas_src_files
+    Geometry/mpas/GeometryMPASPlugin.cc
     Geometry/mpas/GeometryMPAS.cc
     Geometry/mpas/GeometryMPAS.h
     Geometry/mpas/GeometryMPAS.interface.h
     Geometry/mpas/ijedi_mpas_geom_interface_mod.F90
     Geometry/mpas/ijedi_mpas_geom_mod.F90
   )
-
-  # Combine with main source files
-  list(APPEND ijedi_src_files ${ijedi_mpas_src_files})
 
 endif()
 
@@ -150,6 +148,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC eckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC fckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC atlas atlas_f)
 target_link_libraries(${PROJECT_NAME} PUBLIC oops)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_DL_LIBS})
 
 # Mist
 target_link_libraries(${PROJECT_NAME} PUBLIC mist_base)
@@ -159,8 +158,18 @@ if(FMS_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC fms)
 endif()
 if(BUILD_MPAS)
-  target_link_libraries(${PROJECT_NAME} PUBLIC MPAS::core::atmosphere)
-  target_compile_options(${PROJECT_NAME} PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-cpp>)
+  ecbuild_add_library(TARGET ${PROJECT_NAME}_mpas
+    SOURCES ${ijedi_mpas_src_files}
+    INSTALL_HEADERS LISTED
+    LINKER_LANGUAGE CXX
+  )
+
+  target_include_directories(${PROJECT_NAME}_mpas PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+
+  target_link_libraries(${PROJECT_NAME}_mpas PUBLIC ${PROJECT_NAME})
+  target_link_libraries(${PROJECT_NAME}_mpas PUBLIC MPAS::core::atmosphere)
+  target_compile_options(${PROJECT_NAME}_mpas PRIVATE $<$<COMPILE_LANGUAGE:Fortran>:-cpp>)
 endif()
 
 if(OpenMP_CXX_FOUND)

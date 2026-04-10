@@ -27,12 +27,23 @@ implicit none
 private
 
 public :: ijedi_mpas_geom, &
-          geom_setup, geom_clone, geom_delete
+          geom_setup, geom_clone, geom_delete, &
+          mpas_geom_esmf_shutdown
 
 real(kind=kind_real), parameter :: RAD2DEG = 180.0_kind_real / real(pii, kind_real)
 real(kind=kind_real), parameter :: HALF_PI = real(pii, kind_real) / 2.0_kind_real
 
 character(len=1024) :: message
+
+! ESMF and MPAS are both process-level singletons: initialized once, finalized
+! at process exit via mpas_geom_esmf_shutdown().
+#ifdef MPAS_EXTERNAL_ESMF_LIB
+logical, save :: esmf_finalized = .false.
+type(domain_type), pointer, save :: mpas_domain_singleton   => null()
+type(core_type),   pointer, save :: mpas_corelist_singleton => null()
+character(len=512), save :: singleton_nml_file     = ''
+character(len=512), save :: singleton_streams_file = ''
+#endif
 
 type :: ijedi_mpas_geom
   integer :: nCellsGlobal
@@ -64,6 +75,43 @@ end type ijedi_mpas_geom
 
 contains
 
+#ifdef MPAS_EXTERNAL_ESMF_LIB
+subroutine ensure_esmf_initialized()
+  use ESMF
+  implicit none
+  logical :: already_initialized
+  integer :: rc
+
+  already_initialized = ESMF_IsInitialized()
+  if (.not. already_initialized) then
+    rc = ESMF_SUCCESS
+    call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN, rc=rc)
+    if (rc /= ESMF_SUCCESS) then
+      write(message,*) 'ESMF_Initialize failed, rc=', rc
+      call abor1_ftn(message)
+    end if
+  end if
+end subroutine ensure_esmf_initialized
+
+! Called once at process exit via std::atexit in GeometryMPASPlugin.cc.
+subroutine mpas_geom_esmf_shutdown()
+  use ESMF
+  implicit none
+  logical :: still_initialized
+  integer :: rc
+
+  still_initialized = ESMF_IsInitialized()
+  if (still_initialized .and. (.not. esmf_finalized)) then
+    rc = ESMF_SUCCESS
+    call ESMF_Finalize(endflag=ESMF_END_KEEPMPI, rc=rc)
+    if (rc /= ESMF_SUCCESS) then
+      write(message,*) 'ESMF_Finalize failed, rc=', rc
+    end if
+    esmf_finalized = .true.
+  end if
+end subroutine mpas_geom_esmf_shutdown
+#endif
+
 ! ------------------------------------------------------------------------------
 
 subroutine geom_setup(self, f_conf, comm)
@@ -88,15 +136,42 @@ subroutine geom_setup(self, f_conf, comm)
   streams_file = str
    
 #ifdef MPAS_EXTERNAL_ESMF_LIB
-  call ESMF_Initialize(defaultCalKind=ESMF_CALKIND_GREGORIAN)
+  call ensure_esmf_initialized()
 #endif
 
-
-  call mpas_init(self%corelist, self%domain, &
-                 external_comm=self%comm%communicator(), &
-                 namelistFileParam=trim(nml_file), &
-                 streamsFileParam=trim(streams_file))
-  self%owns_mpas = .true.
+#ifdef MPAS_EXTERNAL_ESMF_LIB
+  if (associated(mpas_domain_singleton)) then
+    if (trim(nml_file)     /= trim(singleton_nml_file) .or. &
+        trim(streams_file) /= trim(singleton_streams_file)) then
+      write(message, '(A,/,A,A,/,A,A,/,A,A,/,A,A)') &
+        'GeometryMPAS: attempt to create a second MPAS geometry with a different', &
+        '  config than the one already initialized in this process.', &
+        '  The MPAS framework is not reentrant (module-level save state is not', &
+        '  reset by mpas_finalize), so only one unique MPAS mesh per process', &
+        '  is supported.', &
+        '  Already initialized with nml_file  = ', trim(singleton_nml_file), &
+        '  Already initialized with str_file  = ', trim(singleton_streams_file), &
+        '  Requested nml_file                 = ', trim(nml_file), &
+        '  Requested streams_file             = ', trim(streams_file)
+      call abor1_ftn(message)
+    end if
+    self%domain   => mpas_domain_singleton
+    self%corelist => mpas_corelist_singleton
+    self%owns_mpas = .false.
+  else
+#endif
+    call mpas_init(self%corelist, self%domain, &
+                   external_comm=self%comm%communicator(), &
+                   namelistFileParam=trim(nml_file), &
+                   streamsFileParam=trim(streams_file))
+    self%owns_mpas = .true.
+#ifdef MPAS_EXTERNAL_ESMF_LIB
+    mpas_domain_singleton     => self%domain
+    mpas_corelist_singleton   => self%corelist
+    singleton_nml_file        = nml_file
+    singleton_streams_file    = streams_file
+  end if
+#endif
 
   block_ptr => self%domain%blocklist
   call mpas_pool_get_subpool(block_ptr%structs, 'mesh', meshPool)
@@ -208,7 +283,7 @@ subroutine geom_delete(self)
   if (allocated(self%bdyMaskVertex)) deallocate(self%bdyMaskVertex)
 
   if (self%owns_mpas .and. associated(self%corelist) .and. associated(self%domain)) then
-    call mpas_finalize(self%corelist, self%domain)
+    ! MPAS and ESMF are finalized at process exit; see mpas_geom_esmf_shutdown().
   end if
 
   self%owns_mpas = .false.
