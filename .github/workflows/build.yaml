@@ -60,6 +60,8 @@ jobs:
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE
+        ls -l install/
+        ls -l install/*
         rm -rf Build
         mkdir -p Build
         cd Build
