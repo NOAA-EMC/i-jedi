@@ -62,6 +62,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         ls -l install/
         ls -l install/*
+        ls -l install/lib/cmake/*
         rm -rf Build
         mkdir -p Build
         cd Build
