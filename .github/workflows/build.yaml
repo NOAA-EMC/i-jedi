@@ -51,6 +51,7 @@ jobs:
         ecbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle 
         cd ijedi
         make -j4
+        make install
     - name: Compile the code with cache
       if: steps.cache-jedi.outputs.cache-hit == 'true'
       shell: bash
