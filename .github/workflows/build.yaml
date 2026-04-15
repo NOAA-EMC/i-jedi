@@ -38,28 +38,17 @@ jobs:
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
-    - name: Debug cmake config files
+    - name: Debug - find mist headers
       run: |
-          echo "========== oops-config.cmake =========="
-          cat -n /__w/i-jedi/i-jedi/install/lib/cmake/oops/oops-config.cmake
+          echo "========== find mist headers =========="
+          find ${{ github.workspace }}/install -path "*/mist/base/Geometry.h" 2>/dev/null || echo "not found in install"
           echo ""
-          echo "========== vader-config.cmake =========="
-          cat -n /__w/i-jedi/i-jedi/install/lib/cmake/vader/vader-config.cmake
+          echo "========== find any mist headers =========="
+          find ${{ github.workspace }}/install -path "*/mist/*" -name "*.h" 2>/dev/null | head -20 || echo "no mist headers found"
           echo ""
-          echo "========== oops cmake dir listing =========="
-          ls -la /__w/i-jedi/i-jedi/install/lib/cmake/oops/
-          echo ""
-          echo "========== vader cmake dir listing =========="
-          ls -la /__w/i-jedi/i-jedi/install/lib/cmake/vader/
-          echo ""
-          echo "========== first 30 lines of oops-targets.cmake =========="
-          head -30 /__w/i-jedi/i-jedi/install/lib/cmake/oops/oops-targets.cmake 2>/dev/null || echo "not found"
-          echo ""
-          echo "========== grep vader in oops-targets* =========="
-          grep -n 'vader' /__w/i-jedi/i-jedi/install/lib/cmake/oops/oops-targets*.cmake 2>/dev/null || echo "no vader refs"
-          echo ""
-          echo "========== grep oops in vader-targets* =========="
-          grep -n 'oops' /__w/i-jedi/i-jedi/install/lib/cmake/vader/vader-targets*.cmake 2>/dev/null || echo "no oops refs"
+          echo "========== oops include dir =========="
+          ls ${{ github.workspace }}/install/include/ 2>/dev/null | head -20
+          ls ${{ github.workspace }}/install/include/oops/ 2>/dev/null | head -20
     - name: Compile the code without any cache
       if: steps.cache-jedi.outputs.cache-hit != 'true'
       shell: bash
@@ -82,9 +71,6 @@ jobs:
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE
-        ls -l install/
-        ls -l install/*
-        ls -l install/lib/cmake/*
         rm -rf Build
         chmod +x $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh
         $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh $GITHUB_WORKSPACE/install
