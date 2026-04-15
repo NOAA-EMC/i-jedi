@@ -10,12 +10,16 @@ the netCDF files at test time.  Grid parameters (NIGLOBAL, NJGLOBAL, etc.)
 are specified directly in the geometry YAML config — no MOM_input file is
 generated or needed.
 
-Usage: python3 gen_mom6_testdata.py <output_dir>
+Usage: python3 gen_mom6_testdata.py <input_dir> <output_dir>
 """
 
 import os
 import sys
 import subprocess
+
+import numpy as np
+import netCDF4
+
 
 def ncgen(cdl_path, nc_path):
     result = subprocess.run(
@@ -24,6 +28,152 @@ def ncgen(cdl_path, nc_path):
     if result.returncode != 0:
         print(f"ncgen failed for {cdl_path}:\n{result.stderr}", file=sys.stderr)
         sys.exit(1)
+
+
+def gen_mom6_restart(outdir):
+    """Generate MOM.res.nc with analytically defined fields.
+
+    Mimics a MOM6 z-coordinate restart for the 72x35x25 test grid.
+    Only the variables needed for JEDI state I/O are written:
+    h, Temp, Salt, u, v, ave_ssh.
+
+    Coordinates and mask are read from soca_gridspec.72x35x25.nc (tripolar).
+    """
+    # ---- grid dimensions -----------------------------------------------------
+    nz = 25
+    nj = 35   # lath / latq size
+    ni = 72   # lonh / lonq size
+
+    # ---- read tripolar grid from soca_gridspec -------------------------------
+    gridspec_nc = os.path.join(outdir, "soca_gridspec.72x35x25.nc")
+    with netCDF4.Dataset(gridspec_nc) as gs:
+        lonh  = gs["lonh"][0].data          # (ni,)  nominal T-cell lon axis
+        lath  = gs["lath"][0].data          # (nj,)  nominal T-cell lat axis
+        lonq  = gs["lonq"][0].data          # (ni,)  nominal B-grid lon axis
+        latq  = gs["latq"][0].data          # (nj,)  nominal B-grid lat axis
+        lat2d = gs["lat"][0].data           # (nj, ni) actual 2-D latitude
+        mask  = gs["mask2d"][0].data        # (nj, ni) 1=ocean 0=land
+
+    # ---- z-level midpoint depths (72x35x25 MOM6 configuration) -------------
+    layer_z = np.array([
+        2.5, 7.5, 12.505, 17.545, 22.705, 28.170, 34.285, 41.610, 50.990,
+        63.630, 81.165, 105.755, 140.170, 187.880, 253.155, 341.170, 458.115,
+        611.290, 809.230, 1061.82, 1380.41, 1777.955, 2269.125, 2870.44,
+        4429.32233,
+    ])
+
+    # Derive interface depths from layer midpoints: zi[0]=0, zi[k+1]=2*z[k]-zi[k]
+    zi = np.zeros(nz + 1)
+    for k in range(nz):
+        zi[k + 1] = 2.0 * layer_z[k] - zi[k]
+    dz = np.diff(zi)   # target layer thicknesses, shape (nz,)
+
+    # ---- depth from ocean_topog.nc (consistent with geometry setup) ----------
+    topog_nc = os.path.join(outdir, "ocean_topog.nc")
+    with netCDF4.Dataset(topog_nc) as ds_topo:
+        depth = ds_topo["depth"][:].data   # (nj, ni), land = 0
+
+    # ---- h: z-coordinate layer thicknesses (vectorised) ---------------------
+    # Broadcast shapes: dz (nz,1,1), depth (1,nj,ni), zi (nz+1,) → slices
+    zi_lo = zi[:-1, np.newaxis, np.newaxis]   # (nz, 1, 1) upper interface
+    zi_hi = zi[1:,  np.newaxis, np.newaxis]   # (nz, 1, 1) lower interface
+    dz_b  = dz[:,   np.newaxis, np.newaxis]   # (nz, 1, 1)
+    dep   = depth[np.newaxis, :, :]           # ( 1, nj, ni)
+
+    h = np.where(
+        dep <= 0.0,             # land: massless
+        1e-10,
+        np.where(
+            zi_lo >= dep,       # layer below ocean bottom: massless
+            1e-10,
+            np.where(
+                zi_hi <= dep,   # layer fully inside ocean: full target thickness
+                dz_b,
+                np.maximum(dep - zi_lo, 1e-10),  # partial bottom layer
+            ),
+        ),
+    )   # shape: (nz, nj, ni)
+
+    # ---- Temp: warm tropics, cold poles; exponential decay with depth --------
+    # Use actual 2-D latitude (tripolar grid distorts near the poles)
+    t_surf = np.clip(28.0 * np.cos(np.deg2rad(lat2d)) - 1.8, -1.8, 30.0)
+    Temp = np.where(
+        h > 1e-5,
+        (t_surf[np.newaxis, :, :]
+         * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 500.0)
+         + 2.0),
+        0.0,
+    )   # shape: (nz, nj, ni)
+
+    # ---- Salt: subtropical maximum at surface, nearly uniform with depth -----
+    s_surf = 35.0 - 2.0 * np.sin(np.deg2rad(lat2d)) ** 2
+    Salt = np.where(
+        h > 1e-5,
+        (s_surf[np.newaxis, :, :]
+         * (1.0 - 0.02 * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 2000.0))),
+        0.0,
+    )   # shape: (nz, nj, ni)
+
+    # ---- u: surface-trapped zonal flow; grid (Layer, lath, lonq) same shape -
+    u_surf = 0.1 * np.cos(np.deg2rad(lat2d))
+    u = np.where(
+        h > 1e-5,
+        (u_surf[np.newaxis, :, :]
+         * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 200.0)),
+        0.0,
+    )   # shape: (nz, nj, ni)
+
+    # ---- v: weak gyre-like meridional flow with depth decay -----------------
+    lon2d = np.tile(lonh[np.newaxis, :], (nj, 1))
+    v_surf = (0.06
+              * np.sin(2.0 * np.deg2rad(lon2d))
+              * np.cos(np.deg2rad(lat2d))
+              * np.exp(-(lat2d / 65.0) ** 2))
+    v = np.where(
+        h > 1e-5,
+        (v_surf[np.newaxis, :, :]
+         * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 250.0)),
+        0.0,
+    )   # shape: (nz, nj, ni); grid (Layer, latq, lonh)
+
+    # ---- ave_ssh: small sinusoidal SSH with zero on land --------------------
+    ave_ssh = np.where(
+        mask > 0.5,
+        0.1 * np.sin(np.deg2rad(lat2d)),
+        0.0,
+    )   # shape: (nj, ni)
+
+    # ---- write NetCDF --------------------------------------------------------
+    out_nc = os.path.join(outdir, "MOM.res.nc")
+    with netCDF4.Dataset(out_nc, "w", format="NETCDF4") as ds:
+        ds.createDimension("Time",      1)
+        ds.createDimension("Layer",     nz)
+        ds.createDimension("Interface", nz + 1)
+        ds.createDimension("lath",      nj)
+        ds.createDimension("lonh",      ni)
+        ds.createDimension("latq",      nj)
+        ds.createDimension("lonq",      ni)
+
+        def defvar(name, dims, units, data):
+            v = ds.createVariable(name, "f8", dims)
+            v.units = units
+            v[:] = data
+
+        defvar("Time",      ("Time",),                        "days",          [0.0])
+        defvar("Layer",     ("Layer",),                       "meter",         layer_z)
+        defvar("Interface", ("Interface",),                   "meter",         zi)
+        defvar("lonh",      ("lonh",),                        "degrees_east",  lonh)
+        defvar("lath",      ("lath",),                        "degrees_north", lath)
+        defvar("lonq",      ("lonq",),                        "degrees_east",  lonq)
+        defvar("latq",      ("latq",),                        "degrees_north", latq)
+        defvar("h",       ("Time", "Layer", "lath", "lonh"), "m",     h[np.newaxis])
+        defvar("Temp",    ("Time", "Layer", "lath", "lonh"), "degC",  Temp[np.newaxis])
+        defvar("Salt",    ("Time", "Layer", "lath", "lonh"), "PPT",   Salt[np.newaxis])
+        defvar("u",       ("Time", "Layer", "lath", "lonq"), "m s-1", u[np.newaxis])
+        defvar("v",       ("Time", "Layer", "latq", "lonh"), "m s-1", v[np.newaxis])
+        defvar("ave_ssh", ("Time", "lath", "lonh"),          "meter", ave_ssh[np.newaxis])
+
+    print(f"  {out_nc}")
 
 
 def main():
@@ -51,6 +201,11 @@ def main():
     soca_nc  = os.path.join(outdir, "soca_gridspec.72x35x25.nc")
     ncgen(soca_cdl, soca_nc)
     print(f"  {soca_nc}")
+
+    # -------------------------------------------------------------------------
+    # MOM.res.nc — analytical restart (h, Temp, Salt, u, v, ave_ssh)
+    # -------------------------------------------------------------------------
+    gen_mom6_restart(outdir)
 
     print(f"MOM6 test data written to: {outdir}")
 

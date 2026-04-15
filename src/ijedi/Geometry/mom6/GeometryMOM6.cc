@@ -1221,6 +1221,9 @@ void GeometryMOM6::saveGmsh(const std::string & filename,
   gmshConf.set("ghost", true);
   atlas::output::Gmsh gmsh(filename, gmshConf);
   gmsh.write(fspace.mesh());
+  atlas::FieldSet toWrite;
+  toWrite.add(fields_.field("mask2d"));
+  gmsh.write(toWrite, functionSpace_);
   oops::Log::info() << "GeometryMOM6::saveGmsh: rank " << comm.rank()
                     << " -> " << filename << std::endl;
 }
