@@ -18,17 +18,23 @@
 
 namespace ijedi {
 
-VariableChange::VariableChange(const eckit::Configuration &, const Geometry & geometry) {
+VariableChange::VariableChange(const eckit::Configuration & varchangeConfig,
+                               const Geometry & geometry) {
   oops::Log::trace() << "ijedi::VariableChange::VariableChange starting" << std::endl;
   eckit::LocalConfiguration configCookbook{};
-  const auto cb = ijedi::vaderCookbook();
-  for (const auto & [key, val] : cb) {
-    configCookbook.set(key, val);
+  // If config has "vader cookbook" then use that, else use default
+  if (varchangeConfig.has("vader cookbook")) {
+    configCookbook = varchangeConfig.getSubConfiguration("vader cookbook");
+  } else {
+    const auto cb = ijedi::vaderDefaultCookbook();
+    for (const auto & [key, val] : cb) {
+      configCookbook.set(key, val);
+    }
   }
-
-  auto configModelData = mist::base::ModelData(geometry).modelData();
   eckit::LocalConfiguration config{};
   config.set(vader::configCookbookKey, configCookbook);
+  // Set up model data for cookbook
+  auto configModelData = mist::base::ModelData(geometry).modelData();
   config.set(vader::configModelVarsKey, configModelData);
 
   varchange_ = std::make_unique<mist::utils::VariableChange>(config);

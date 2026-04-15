@@ -13,6 +13,6 @@
 
 namespace ijedi {
 
-std::map<std::string, std::vector<std::string>> vaderCookbook();
+std::map<std::string, std::vector<std::string>> vaderDefaultCookbook();
 
 }  // namespace ijedi
