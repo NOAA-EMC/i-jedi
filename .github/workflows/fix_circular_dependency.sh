@@ -1,17 +1,16 @@
 #!/bin/bash
 # fix_circular_dependency.sh
 #
-# Patches the INSTALLED oops and vader cmake config files to break
-# the circular dependency between oops and vader.
+# Breaks the oops <-> vader circular dependency in installed cmake files.
 #
-# The problem: oops-targets.cmake references the vader target, and
-# vader-targets.cmake references the oops target. Neither can load
-# without the other's targets already defined.
+# Problem: oops-targets.cmake references "vader" target, and
+# vader-targets.cmake references "oops" target. Each validates that
+# referenced targets exist at include-time, so neither can load first.
 #
-# The fix: Before each *-config.cmake loads its own targets file,
-# we directly include the OTHER package's targets file (if it exists
-# and hasn't been loaded yet). This avoids the full find_package
-# re-entry that triggers the cycle.
+# Solution: Patch both *-config.cmake files to directly include the
+# OTHER package's targets file right before including their own.
+# The targets files have multiple-inclusion guards ("_cmake_targets_defined"),
+# so including them twice is safe.
 #
 # Usage:
 #   ./fix_circular_dependency.sh <install_prefix>
@@ -20,76 +19,93 @@ set -euo pipefail
 
 INSTALL_DIR="${1:?Usage: $0 <install_prefix>}"
 
-OOPS_CONFIG="${INSTALL_DIR}/lib/cmake/oops/oops-config.cmake"
-VADER_CONFIG="${INSTALL_DIR}/lib/cmake/vader/vader-config.cmake"
+OOPS_CMAKE_DIR="${INSTALL_DIR}/lib/cmake/oops"
+VADER_CMAKE_DIR="${INSTALL_DIR}/lib/cmake/vader"
+OOPS_CONFIG="${OOPS_CMAKE_DIR}/oops-config.cmake"
+VADER_CONFIG="${VADER_CMAKE_DIR}/vader-config.cmake"
+OOPS_TARGETS="${OOPS_CMAKE_DIR}/oops-targets.cmake"
+VADER_TARGETS="${VADER_CMAKE_DIR}/vader-targets.cmake"
 
-# --- Validate files exist ---
-for f in "$OOPS_CONFIG" "$VADER_CONFIG"; do
+# --- Validate all files exist ---
+for f in "$OOPS_CONFIG" "$VADER_CONFIG" "$OOPS_TARGETS" "$VADER_TARGETS"; do
   if [[ ! -f "$f" ]]; then
     echo "ERROR: File not found: $f" >&2
     exit 1
   fi
 done
 
-# --- Find the actual targets files ---
-OOPS_TARGETS=$(find "${INSTALL_DIR}/lib/cmake/oops" -name "oops-targets.cmake" -type f | head -1)
-VADER_TARGETS=$(find "${INSTALL_DIR}/lib/cmake/vader" -name "vader-targets.cmake" -type f | head -1)
+# --- Remove the cross-package target validation from both targets files ---
+# oops-targets.cmake has a block like:
+#   foreach(_target "vader" )
+#     if(NOT TARGET "${_target}")
+#       ...error...
+# We comment out those blocks so they don't fail on missing targets.
 
-if [[ -z "$OOPS_TARGETS" ]]; then
-  echo "ERROR: Could not find oops-targets.cmake under ${INSTALL_DIR}/lib/cmake/oops/" >&2
-  exit 1
-fi
-if [[ -z "$VADER_TARGETS" ]]; then
-  echo "ERROR: Could not find vader-targets.cmake under ${INSTALL_DIR}/lib/cmake/vader/" >&2
-  exit 1
-fi
+echo "Patching $OOPS_TARGETS: removing cross-package target check for vader..."
+sed -i '/foreach(_target "vader"/,/endforeach/s/^/#PATCHED /' "$OOPS_TARGETS"
 
-echo "Found targets files:"
-echo "  oops: $OOPS_TARGETS"
-echo "  vader: $VADER_TARGETS"
+echo "Patching $VADER_TARGETS: removing cross-package target check for oops..."
+sed -i '/foreach(_target "oops"/,/endforeach/s/^/#PATCHED /' "$VADER_TARGETS"
 
-# --- Patch oops-config.cmake ---
-# Inject: include vader's targets file directly before oops loads its own
-# targets file. This ensures the "vader" imported target exists before
-# oops-targets.cmake tries to reference it.
-if ! grep -q 'vader-targets.cmake' "$OOPS_CONFIG"; then
+# --- Patch oops-config.cmake: find vader before loading oops targets ---
+# Insert find_package(vader) right before the targets file is loaded.
+# We use find_package (not find_dependency) and QUIET so it doesn't fail.
+# We also need a re-entrance guard so oops doesn't infinitely recurse.
+
+if ! grep -q '_oops_config_guard' "$OOPS_CONFIG"; then
   echo "Patching $OOPS_CONFIG..."
-  sed -i "/find_file.*oops.*TARGETS_FILE/i\\
-# --- Circular dependency fix: pre-load vader targets ---\\
-if(NOT TARGET vader)\\
-    set(_vader_targets_file \"${VADER_TARGETS}\")\\
-    if(EXISTS \"\${_vader_targets_file}\")\\
-        include(\"\${_vader_targets_file}\")\\
-    endif()\\
-    unset(_vader_targets_file)\\
-endif()\\
-# --- End circular dependency fix ---" "$OOPS_CONFIG"
+
+  # Add guard at the very top
+  sed -i '1i\
+# Re-entrance guard for circular dependency\
+if(_oops_config_guard)\
+  return()\
+endif()\
+set(_oops_config_guard TRUE)' "$OOPS_CONFIG"
+
+  # Add find_package(vader) before the targets file inclusion block
+  sed -i '/### insert definitions for IMPORTED targets/i\
+# --- Circular dependency fix: ensure vader is loaded before oops targets ---\
+if(NOT TARGET vader)\
+  find_package(vader QUIET CONFIG)\
+endif()\
+# --- End circular dependency fix ---\
+' "$OOPS_CONFIG"
 else
-  echo "Skipping $OOPS_CONFIG: vader-targets patch already present."
+  echo "Skipping $OOPS_CONFIG: already patched."
 fi
 
-# --- Patch vader-config.cmake ---
-# Same thing in reverse: include oops's targets file before vader loads its own.
-if ! grep -q 'oops-targets.cmake' "$VADER_CONFIG"; then
+# --- Patch vader-config.cmake: find oops before loading vader targets ---
+if ! grep -q '_vader_config_guard' "$VADER_CONFIG"; then
   echo "Patching $VADER_CONFIG..."
-  sed -i "/find_file.*vader.*TARGETS_FILE/i\\
-# --- Circular dependency fix: pre-load oops targets ---\\
-if(NOT TARGET oops)\\
-    set(_oops_targets_file \"${OOPS_TARGETS}\")\\
-    if(EXISTS \"\${_oops_targets_file}\")\\
-        include(\"\${_oops_targets_file}\")\\
-    endif()\\
-    unset(_oops_targets_file)\\
-endif()\\
-# --- End circular dependency fix ---" "$VADER_CONFIG"
+
+  # Add guard at the very top
+  sed -i '1i\
+# Re-entrance guard for circular dependency\
+if(_vader_config_guard)\
+  return()\
+endif()\
+set(_vader_config_guard TRUE)' "$VADER_CONFIG"
+
+  # Add find_package(oops) before the targets file inclusion block
+  sed -i '/### insert definitions for IMPORTED targets/i\
+# --- Circular dependency fix: ensure oops is loaded before vader targets ---\
+if(NOT TARGET oops)\
+  find_package(oops QUIET CONFIG)\
+endif()\
+# --- End circular dependency fix ---\
+' "$VADER_CONFIG"
 else
-  echo "Skipping $VADER_CONFIG: oops-targets patch already present."
+  echo "Skipping $VADER_CONFIG: already patched."
 fi
 
 echo ""
-echo "Done. Patches applied to:"
+echo "Done. Patched files:"
 echo "  $OOPS_CONFIG"
 echo "  $VADER_CONFIG"
+echo "  $OOPS_TARGETS"
+echo "  $VADER_TARGETS"
 echo ""
-echo "You can verify with:"
-echo "  grep -n 'Circular dependency' $OOPS_CONFIG $VADER_CONFIG"
+echo "Verification:"
+grep -n 'PATCHED\|_config_guard\|Circular dependency' \
+  "$OOPS_CONFIG" "$VADER_CONFIG" "$OOPS_TARGETS" "$VADER_TARGETS"
