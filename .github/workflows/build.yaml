@@ -38,17 +38,20 @@ jobs:
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
-    - name: Debug - find mist headers
+    - name: Debug - find mist source and install issues
       run: |
-          echo "========== find mist headers =========="
-          find ${{ github.workspace }}/install -path "*/mist/base/Geometry.h" 2>/dev/null || echo "not found in install"
+          echo "========== is install/include empty? =========="
+          find ${{ github.workspace }}/install/include -type f 2>/dev/null | head -20 || echo "include dir empty or missing"
           echo ""
-          echo "========== find any mist headers =========="
-          find ${{ github.workspace }}/install -path "*/mist/*" -name "*.h" 2>/dev/null | head -20 || echo "no mist headers found"
+          echo "========== find mist source files anywhere =========="
+          find ${{ github.workspace }} -path "*/mist/base/Geometry.h" 2>/dev/null || echo "no mist/base/Geometry.h found"
+          find ${{ github.workspace }} -path "*/mist*" -name "CMakeLists.txt" 2>/dev/null || echo "no mist CMakeLists.txt found"
           echo ""
-          echo "========== oops include dir =========="
-          ls ${{ github.workspace }}/install/include/ 2>/dev/null | head -20
-          ls ${{ github.workspace }}/install/include/oops/ 2>/dev/null | head -20
+          echo "========== check oops build for mist =========="
+          find ${{ github.workspace }} -name "mist_base*" -o -name "mist_api*" 2>/dev/null | head -20 || echo "no mist build artifacts"
+          echo ""
+          echo "========== what oops targets were built? =========="
+          grep 'cmake_expected_target' ${{ github.workspace }}/install/lib/cmake/oops/oops-targets.cmake
     - name: Compile the code without any cache
       if: steps.cache-jedi.outputs.cache-hit != 'true'
       shell: bash
