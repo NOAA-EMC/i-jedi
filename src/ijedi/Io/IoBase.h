@@ -7,6 +7,8 @@
 
 #include <boost/noncopyable.hpp>
 
+#include "atlas/field.h"
+
 #include "oops/base/Variables.h"
 #include "oops/util/AssociativeContainers.h"
 #include "oops/util/parameters/OptionalParameter.h"
