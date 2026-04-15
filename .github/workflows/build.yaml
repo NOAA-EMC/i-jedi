@@ -38,20 +38,19 @@ jobs:
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
-    - name: Debug - find mist source and install issues
+    - name: Debug - check oops install
       run: |
-          echo "========== is install/include empty? =========="
-          find ${{ github.workspace }}/install/include -type f 2>/dev/null | head -20 || echo "include dir empty or missing"
+          echo "========== did install/include get populated? =========="
+          find /__w/i-jedi/i-jedi/install/include -type f 2>/dev/null | head -20 || echo "empty or missing"
           echo ""
-          echo "========== find mist source files anywhere =========="
-          find ${{ github.workspace }} -path "*/mist/base/Geometry.h" 2>/dev/null || echo "no mist/base/Geometry.h found"
-          find ${{ github.workspace }} -path "*/mist*" -name "CMakeLists.txt" 2>/dev/null || echo "no mist CMakeLists.txt found"
+          echo "========== find mist source in the build tree =========="
+          find /__w/i-jedi/i-jedi -path "*/mist/base/Geometry.h" 2>/dev/null || echo "no mist source found"
           echo ""
-          echo "========== check oops build for mist =========="
-          find ${{ github.workspace }} -name "mist_base*" -o -name "mist_api*" 2>/dev/null | head -20 || echo "no mist build artifacts"
+          echo "========== find mist CMakeLists =========="
+          find /__w/i-jedi/i-jedi -name "CMakeLists.txt" -exec grep -l "mist" {} \; 2>/dev/null || echo "no CMakeLists mention mist"
           echo ""
-          echo "========== what oops targets were built? =========="
-          grep 'cmake_expected_target' ${{ github.workspace }}/install/lib/cmake/oops/oops-targets.cmake
+          echo "========== check if oops install ran =========="
+          find /__w/i-jedi/i-jedi/install -name "liboops*" 2>/dev/null || echo "no liboops found in install"
     - name: Compile the code without any cache
       if: steps.cache-jedi.outputs.cache-hit != 'true'
       shell: bash
