@@ -41,25 +41,25 @@ jobs:
     - name: Debug cmake config files
       run: |
           echo "========== oops-config.cmake =========="
-          cat -n ${{ github.workspace }}/install/lib/cmake/oops/oops-config.cmake
+          cat -n /__w/i-jedi/i-jedi/install/lib/cmake/oops/oops-config.cmake.
           echo ""
           echo "========== vader-config.cmake =========="
-          cat -n ${{ github.workspace }}/install/lib/cmake/vader/vader-config.cmake
+          cat -n /__w/i-jedi/i-jedi/install/lib/cmake/vader/vader-config.cmake
           echo ""
           echo "========== oops cmake dir listing =========="
-          ls -la ${{ github.workspace }}/install/lib/cmake/oops/
+          ls -la /__w/i-jedi/i-jedi/install/lib/cmake/oops/
           echo ""
           echo "========== vader cmake dir listing =========="
-          ls -la ${{ github.workspace }}/install/lib/cmake/vader/
+          ls -la /__w/i-jedi/i-jedi/install/lib/cmake/vader/
           echo ""
           echo "========== first 30 lines of oops-targets.cmake =========="
-          head -30 ${{ github.workspace }}/install/lib/cmake/oops/oops-targets.cmake 2>/dev/null || echo "not found"
+          head -30 /__w/i-jedi/i-jedi/install/lib/cmake/oops/oops-targets.cmake 2>/dev/null || echo "not found"
           echo ""
           echo "========== grep vader in oops-targets* =========="
-          grep -n 'vader' ${{ github.workspace }}/install/lib/cmake/oops/oops-targets*.cmake 2>/dev/null || echo "no vader refs"
+          grep -n 'vader' /__w/i-jedi/i-jedi/install/lib/cmake/oops/oops-targets*.cmake 2>/dev/null || echo "no vader refs"
           echo ""
           echo "========== grep oops in vader-targets* =========="
-          grep -n 'oops' ${{ github.workspace }}/install/lib/cmake/vader/vader-targets*.cmake 2>/dev/null || echo "no oops refs"
+          grep -n 'oops' /__w/i-jedi/i-jedi/install/lib/cmake/vader/vader-targets*.cmake 2>/dev/null || echo "no oops refs"
     - name: Compile the code without any cache
       if: steps.cache-jedi.outputs.cache-hit != 'true'
       shell: bash
