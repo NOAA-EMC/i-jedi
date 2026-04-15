@@ -75,7 +75,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         rm -rf Build
         chmod +x $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh
-        $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh $GITHUB_WORKSPACE/install
+        $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh $GITHUB_WORKSPACE/install $GITHUB_WORKSPACE/i-jedi/bundle/oops
         mkdir -p Build
         cd Build
         ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
