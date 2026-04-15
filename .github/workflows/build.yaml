@@ -37,7 +37,29 @@ jobs:
         export jedi_cmake_ROOT=/opt/view
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
-        ctest -R coding_norms --output-on-failure        
+        ctest -R coding_norms --output-on-failure
+    - name: Debug cmake config files
+      run: |
+          echo "========== oops-config.cmake =========="
+          cat -n ${{ github.workspace }}/install/lib/cmake/oops/oops-config.cmake
+          echo ""
+          echo "========== vader-config.cmake =========="
+          cat -n ${{ github.workspace }}/install/lib/cmake/vader/vader-config.cmake
+          echo ""
+          echo "========== oops cmake dir listing =========="
+          ls -la ${{ github.workspace }}/install/lib/cmake/oops/
+          echo ""
+          echo "========== vader cmake dir listing =========="
+          ls -la ${{ github.workspace }}/install/lib/cmake/vader/
+          echo ""
+          echo "========== first 30 lines of oops-targets.cmake =========="
+          head -30 ${{ github.workspace }}/install/lib/cmake/oops/oops-targets.cmake 2>/dev/null || echo "not found"
+          echo ""
+          echo "========== grep vader in oops-targets* =========="
+          grep -n 'vader' ${{ github.workspace }}/install/lib/cmake/oops/oops-targets*.cmake 2>/dev/null || echo "no vader refs"
+          echo ""
+          echo "========== grep oops in vader-targets* =========="
+          grep -n 'oops' ${{ github.workspace }}/install/lib/cmake/vader/vader-targets*.cmake 2>/dev/null || echo "no oops refs"
     - name: Compile the code without any cache
       if: steps.cache-jedi.outputs.cache-hit != 'true'
       shell: bash
