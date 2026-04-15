@@ -2,7 +2,7 @@
 # fix_circular_dependency.sh
 #
 # Breaks the oops <-> vader circular dependency in installed cmake files,
-# and fixes missing mist headers by patching the oops include paths.
+# and fixes missing headers by copying them from source trees.
 #
 # Usage:
 #   ./fix_circular_dependency.sh <install_prefix> [oops_source_dir]
@@ -33,14 +33,12 @@ done
 
 echo "=== Part 1: Fixing oops <-> vader circular dependency ==="
 
-# --- Remove the cross-package target validation from both targets files ---
 echo "Patching $OOPS_TARGETS: removing cross-package target check for vader..."
 sed -i '/foreach(_target "vader"/,/endforeach/s/^/#PATCHED /' "$OOPS_TARGETS"
 
 echo "Patching $VADER_TARGETS: removing cross-package target check for oops..."
 sed -i '/foreach(_target "oops"/,/endforeach/s/^/#PATCHED /' "$VADER_TARGETS"
 
-# --- Patch oops-config.cmake ---
 if ! grep -q '_oops_config_guard' "$OOPS_CONFIG"; then
   echo "Patching $OOPS_CONFIG..."
   sed -i '1i\
@@ -61,7 +59,6 @@ else
   echo "Skipping $OOPS_CONFIG: already patched."
 fi
 
-# --- Patch vader-config.cmake ---
 if ! grep -q '_vader_config_guard' "$VADER_CONFIG"; then
   echo "Patching $VADER_CONFIG..."
   sed -i '1i\
@@ -83,36 +80,69 @@ else
 fi
 
 # =====================================================================
-# PART 2: Fix missing mist headers
+# PART 2: Fix missing oops/mist headers
 # =====================================================================
 
 echo ""
-echo "=== Part 2: Fixing missing mist headers ==="
+echo "=== Part 2: Fixing missing headers ==="
 
 if [[ -n "$OOPS_SOURCE_DIR" ]]; then
+
+  # --- Copy ALL oops headers from src/ into install/include/ ---
+  OOPS_SRC="${OOPS_SOURCE_DIR}/src"
+  if [[ -d "$OOPS_SRC" ]]; then
+    echo "Installing all oops headers from $OOPS_SRC ..."
+    cd "$OOPS_SRC"
+    find oops -name "*.h" -o -name "*.H" -o -name "*.hpp" | while read -r header; do
+      dest="${INSTALL_DIR}/include/${header}"
+      mkdir -p "$(dirname "$dest")"
+      cp "$header" "$dest"
+    done
+    COUNT=$(find oops -name "*.h" -o -name "*.H" -o -name "*.hpp" | wc -l)
+    echo "  Installed $COUNT oops headers."
+    cd - > /dev/null
+  else
+    echo "WARNING: oops src dir not found at $OOPS_SRC"
+  fi
+
+  # --- Copy ALL mist headers into install/include/ ---
   MIST_DIR="${OOPS_SOURCE_DIR}/mist"
   if [[ -d "$MIST_DIR" ]]; then
-    # Copy mist headers into the install include directory
-    # mist expects to be found as "mist/base/Geometry.h" etc.
-    echo "Installing mist headers from $MIST_DIR to ${INSTALL_DIR}/include/..."
-    mkdir -p "${INSTALL_DIR}/include/mist"
-    # Copy all header files preserving directory structure
+    echo "Installing all mist headers from $MIST_DIR ..."
     cd "$OOPS_SOURCE_DIR"
     find mist -name "*.h" -o -name "*.H" -o -name "*.hpp" | while read -r header; do
       dest="${INSTALL_DIR}/include/${header}"
       mkdir -p "$(dirname "$dest")"
       cp "$header" "$dest"
-      echo "  Installed: $header"
     done
+    COUNT=$(find mist -name "*.h" -o -name "*.H" -o -name "*.hpp" | wc -l)
+    echo "  Installed $COUNT mist headers."
     cd - > /dev/null
-    echo "mist headers installed."
   else
-    echo "WARNING: mist directory not found at $MIST_DIR"
-    echo "  mist headers were NOT installed. Build may fail."
+    echo "WARNING: mist directory not found at $MIST_DIR. Skipping."
   fi
+
+  # --- Copy coupled test/interface headers if they exist ---
+  # Some headers in subdirs like coupled/ may also be missing
+  for subdir in coupled l95 qg; do
+    SUBDIR_PATH="${OOPS_SOURCE_DIR}/${subdir}"
+    if [[ -d "$SUBDIR_PATH" ]]; then
+      echo "Installing headers from ${subdir}/ ..."
+      cd "$OOPS_SOURCE_DIR"
+      find "$subdir" -name "*.h" -o -name "*.H" -o -name "*.hpp" | while read -r header; do
+        dest="${INSTALL_DIR}/include/oops/${header}"
+        mkdir -p "$(dirname "$dest")"
+        cp "$header" "$dest"
+      done
+      COUNT=$(find "$subdir" -name "*.h" -o -name "*.H" -o -name "*.hpp" | wc -l)
+      echo "  Installed $COUNT ${subdir} headers."
+      cd - > /dev/null
+    fi
+  done
+
 else
-  echo "No oops source dir provided. Skipping mist header installation."
-  echo "  To install mist headers, run:"
+  echo "No oops source dir provided. Skipping header installation."
+  echo "  To install headers, run:"
   echo "    $0 <install_prefix> <oops_source_dir>"
 fi
 
