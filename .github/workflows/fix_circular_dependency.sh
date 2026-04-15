@@ -1,93 +1,95 @@
 #!/bin/bash
 # fix_circular_dependency.sh
 #
-# Patches the INSTALLED oops and vader cmake config files to add
-# re-entrance guards that break the oops <-> vader circular dependency.
+# Patches the INSTALLED oops and vader cmake config files to break
+# the circular dependency between oops and vader.
+#
+# The problem: oops-targets.cmake references the vader target, and
+# vader-targets.cmake references the oops target. Neither can load
+# without the other's targets already defined.
+#
+# The fix: Before each *-config.cmake loads its own targets file,
+# we directly include the OTHER package's targets file (if it exists
+# and hasn't been loaded yet). This avoids the full find_package
+# re-entry that triggers the cycle.
 #
 # Usage:
 #   ./fix_circular_dependency.sh <install_prefix>
-#
-# Example:
-#   ./fix_circular_dependency.sh ./install
 
 set -euo pipefail
 
 INSTALL_DIR="${1:?Usage: $0 <install_prefix>}"
 
-OOPS_IMPORT="${INSTALL_DIR}/lib/cmake/oops/oops-import.cmake"
 OOPS_CONFIG="${INSTALL_DIR}/lib/cmake/oops/oops-config.cmake"
-VADER_IMPORT="${INSTALL_DIR}/lib/cmake/vader/vader-import.cmake"
+VADER_CONFIG="${INSTALL_DIR}/lib/cmake/vader/vader-config.cmake"
 
 # --- Validate files exist ---
-for f in "$OOPS_IMPORT" "$VADER_IMPORT" "$OOPS_CONFIG"; do
+for f in "$OOPS_CONFIG" "$VADER_CONFIG"; do
   if [[ ! -f "$f" ]]; then
     echo "ERROR: File not found: $f" >&2
     exit 1
   fi
 done
 
-# --- Patch vader-import.cmake: add re-entrance guard ---
-if ! grep -q '_vader_import_guard' "$VADER_IMPORT"; then
-  echo "Patching $VADER_IMPORT: adding re-entrance guard..."
-  sed -i '1i\
-# Re-entrance guard to break circular dependency with oops\
-if(_vader_import_guard)\
-    return()\
-endif()\
-set(_vader_import_guard TRUE)\
-' "$VADER_IMPORT"
-else
-  echo "Skipping $VADER_IMPORT: guard already present."
+# --- Find the actual targets files ---
+OOPS_TARGETS=$(find "${INSTALL_DIR}/lib/cmake/oops" -name "oops-targets.cmake" -type f | head -1)
+VADER_TARGETS=$(find "${INSTALL_DIR}/lib/cmake/vader" -name "vader-targets.cmake" -type f | head -1)
+
+if [[ -z "$OOPS_TARGETS" ]]; then
+  echo "ERROR: Could not find oops-targets.cmake under ${INSTALL_DIR}/lib/cmake/oops/" >&2
+  exit 1
+fi
+if [[ -z "$VADER_TARGETS" ]]; then
+  echo "ERROR: Could not find vader-targets.cmake under ${INSTALL_DIR}/lib/cmake/vader/" >&2
+  exit 1
 fi
 
-# --- Patch oops-import.cmake: add re-entrance guard ---
-if ! grep -q '_oops_import_guard' "$OOPS_IMPORT"; then
-  echo "Patching $OOPS_IMPORT: adding re-entrance guard..."
-  sed -i '1i\
-# Re-entrance guard to break circular dependency with vader\
-if(_oops_import_guard)\
-    return()\
-endif()\
-set(_oops_import_guard TRUE)\
-' "$OOPS_IMPORT"
+echo "Found targets files:"
+echo "  oops: $OOPS_TARGETS"
+echo "  vader: $VADER_TARGETS"
+
+# --- Patch oops-config.cmake ---
+# Inject: include vader's targets file directly before oops loads its own
+# targets file. This ensures the "vader" imported target exists before
+# oops-targets.cmake tries to reference it.
+if ! grep -q 'vader-targets.cmake' "$OOPS_CONFIG"; then
+  echo "Patching $OOPS_CONFIG..."
+  sed -i "/find_file.*oops.*TARGETS_FILE/i\\
+# --- Circular dependency fix: pre-load vader targets ---\\
+if(NOT TARGET vader)\\
+    set(_vader_targets_file \"${VADER_TARGETS}\")\\
+    if(EXISTS \"\${_vader_targets_file}\")\\
+        include(\"\${_vader_targets_file}\")\\
+    endif()\\
+    unset(_vader_targets_file)\\
+endif()\\
+# --- End circular dependency fix ---" "$OOPS_CONFIG"
 else
-  echo "Skipping $OOPS_IMPORT: guard already present."
+  echo "Skipping $OOPS_CONFIG: vader-targets patch already present."
 fi
 
-# --- Patch oops-import.cmake: add find_dependency(vader) ---
-if ! grep -q 'find_dependency(vader)' "$OOPS_IMPORT"; then
-  echo "Patching $OOPS_IMPORT: adding find_dependency(vader)..."
-  # Insert before the Fortran compiler version export block
-  sed -i '/#Export Fortran compiler version/i\
-# vader is needed because oops exported targets reference it\
-if(NOT vader_FOUND)\
-    find_dependency(vader)\
-endif()\
-' "$OOPS_IMPORT"
+# --- Patch vader-config.cmake ---
+# Same thing in reverse: include oops's targets file before vader loads its own.
+if ! grep -q 'oops-targets.cmake' "$VADER_CONFIG"; then
+  echo "Patching $VADER_CONFIG..."
+  sed -i "/find_file.*vader.*TARGETS_FILE/i\\
+# --- Circular dependency fix: pre-load oops targets ---\\
+if(NOT TARGET oops)\\
+    set(_oops_targets_file \"${OOPS_TARGETS}\")\\
+    if(EXISTS \"\${_oops_targets_file}\")\\
+        include(\"\${_oops_targets_file}\")\\
+    endif()\\
+    unset(_oops_targets_file)\\
+endif()\\
+# --- End circular dependency fix ---" "$VADER_CONFIG"
 else
-  echo "Skipping $OOPS_IMPORT: find_dependency(vader) already present."
+  echo "Skipping $VADER_CONFIG: oops-targets patch already present."
 fi
 
-# --- Patch oops-config.cmake: load import file BEFORE targets file ---
-# The default ecbuild config loads import, then targets. The problem is
-# that oops-targets.cmake references the vader target, and CMake validates
-# imported target dependencies when loading the targets file.
-# We need vader to be found (via oops-import.cmake) before the targets
-# file is included.
-#
-# Check if the targets file is loaded AFTER the import file (this is the
-# default ecbuild layout and should already be correct). If so, our
-# find_dependency(vader) in oops-import.cmake will run first.
 echo ""
-echo "Verifying oops-config.cmake load order..."
-IMPORT_LINE=$(grep -n 'IMPORT_FILE\|import' "$OOPS_CONFIG" | head -5)
-TARGETS_LINE=$(grep -n 'TARGETS_FILE\|targets' "$OOPS_CONFIG" | head -5)
-echo "  Import references:  $IMPORT_LINE"
-echo "  Targets references: $TARGETS_LINE"
-
+echo "Done. Patches applied to:"
+echo "  $OOPS_CONFIG"
+echo "  $VADER_CONFIG"
 echo ""
-echo "Done. Circular dependency guards applied to installed cmake files."
-echo ""
-echo "Patched files:"
-echo "  $OOPS_IMPORT"
-echo "  $VADER_IMPORT"
+echo "You can verify with:"
+echo "  grep -n 'Circular dependency' $OOPS_CONFIG $VADER_CONFIG"
