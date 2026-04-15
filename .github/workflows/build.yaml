@@ -41,7 +41,7 @@ jobs:
     - name: Debug cmake config files
       run: |
           echo "========== oops-config.cmake =========="
-          cat -n /__w/i-jedi/i-jedi/install/lib/cmake/oops/oops-config.cmake.
+          cat -n /__w/i-jedi/i-jedi/install/lib/cmake/oops/oops-config.cmake
           echo ""
           echo "========== vader-config.cmake =========="
           cat -n /__w/i-jedi/i-jedi/install/lib/cmake/vader/vader-config.cmake
