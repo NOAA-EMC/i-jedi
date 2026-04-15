@@ -64,8 +64,8 @@ jobs:
         ls -l install/*
         ls -l install/lib/cmake/*
         rm -rf Build
-        chmod +x ../.github/workflows/fix_circular_dependency.sh
-        ../.github/workflows/fix_circular_dependency.sh $GITHUB_WORKSPACE/install
+        chmod +x ../i-jedi/.github/workflows/fix_circular_dependency.sh
+        ../i-jedi/.github/workflows/fix_circular_dependency.sh $GITHUB_WORKSPACE/install
         mkdir -p Build
         cd Build
         ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
