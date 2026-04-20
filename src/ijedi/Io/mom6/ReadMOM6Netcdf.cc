@@ -16,6 +16,33 @@
 
 namespace ijedi {
 
+namespace {
+
+std::string findDimName(int ncid,
+                        const std::string & role,
+                        const std::vector<std::string> & candidates,
+                        size_t * len) {
+  int dimid;
+  for (const auto & name : candidates) {
+    if (nc_inq_dimid(ncid, name.c_str(), &dimid) == NC_NOERR) {
+      nc_inq_dimlen(ncid, dimid, len);
+      return name;
+    }
+  }
+
+  std::string tried;
+  for (const auto & name : candidates) {
+    if (!tried.empty()) tried += ", ";
+    tried += name;
+  }
+  throw eckit::Exception(
+      "readMOM6Netcdf: cannot find " + role +
+          " dimension. Tried: " + tried,
+      Here());
+}
+
+}  // namespace
+
 // ---------------------------------------------------------------------------
 void readMOM6Netcdf(const std::string & filepath,
                     atlas::FieldSet & x,
@@ -43,6 +70,9 @@ void readMOM6Netcdf(const std::string & filepath,
       | atlas::option::global());
   fs.gather(gidxField, globalGidxField);  // collective
 
+  auto gIdx = atlas::array::make_view<double, 2>(globalGidxField);
+  const int nGlobal = static_cast<int>(globalGidxField.shape(0));
+
   // --- 2. Root opens NetCDF and reads file dimensions. ---
   int ncid = -1;
   int file_ni = 0, file_nj = 0, file_nz = 0;
@@ -50,31 +80,47 @@ void readMOM6Netcdf(const std::string & filepath,
     ASSERT_MSG(nc_open(filepath.c_str(), NC_NOWRITE, &ncid) == NC_NOERR,
                "readMOM6Netcdf: cannot open " + filepath);
 
-    int dimid;
-    size_t dim_ni, dim_nj, dim_nz;
-    ASSERT_MSG(nc_inq_dimid(ncid, "lonh",  &dimid) == NC_NOERR,
-               "readMOM6Netcdf: missing dimension 'lonh' in " + filepath);
-    nc_inq_dimlen(ncid, dimid, &dim_ni);
-    ASSERT_MSG(nc_inq_dimid(ncid, "lath",  &dimid) == NC_NOERR,
-               "readMOM6Netcdf: missing dimension 'lath' in " + filepath);
-    nc_inq_dimlen(ncid, dimid, &dim_nj);
-    ASSERT_MSG(nc_inq_dimid(ncid, "Layer", &dimid) == NC_NOERR,
-               "readMOM6Netcdf: missing dimension 'Layer' in " + filepath);
-    nc_inq_dimlen(ncid, dimid, &dim_nz);
+    size_t dimNi = 0, dimNj = 0, dimNz = 0;
+    const std::string dimX =
+      findDimName(ncid, "x (longitude)", {"lonh", "xh", "xaxis_1", "nx"}, &dimNi);
+    const std::string dimY =
+      findDimName(ncid, "y (latitude)", {"lath", "yh", "yaxis_1", "ny"}, &dimNj);
+    const std::string dimZ =
+      findDimName(ncid, "z (layer)", {"Layer", "z_l", "zaxis_1"}, &dimNz);
 
-    file_ni = static_cast<int>(dim_ni);
-    file_nj = static_cast<int>(dim_nj);
-    file_nz = static_cast<int>(dim_nz);
+    file_ni = static_cast<int>(dimNi);
+    file_nj = static_cast<int>(dimNj);
+    file_nz = static_cast<int>(dimNz);
 
-    ASSERT_MSG(file_nz == numLevelsGeom,
-               "readMOM6Netcdf: file has " + std::to_string(file_nz)
-               + " layers but geometry has " + std::to_string(numLevelsGeom));
+    if (file_nz != numLevelsGeom) {
+      nc_close(ncid);
+      throw eckit::BadValue(
+        "readMOM6Netcdf: file dimensions in " + filepath +
+          " are " + dimX + "=" + std::to_string(file_ni) +
+          ", " + dimY + "=" + std::to_string(file_nj) +
+          ", " + dimZ + "=" + std::to_string(file_nz) +
+          " but geometry expects z=" + std::to_string(numLevelsGeom),
+        Here());
+    }
+
+    const int nStructured = file_ni * file_nj;
+    for (int n = 0; n < nGlobal; ++n) {
+      const int flatIdx = static_cast<int>(gIdx(n, 0)) - 1;
+      if (flatIdx < 0 || flatIdx >= nStructured) {
+        nc_close(ncid);
+        throw eckit::BadValue(
+            "readMOM6Netcdf: global index " + std::to_string(flatIdx + 1) +
+                " is out of bounds for file horizontal dimensions " +
+                dimX + "=" + std::to_string(file_ni) +
+                ", " + dimY + "=" + std::to_string(file_nj) +
+                " in " + filepath,
+            Here());
+      }
+    }
   }
 
   // --- 3. For each field: root reads structured data into a global field,
   //        then scatter distributes to all ranks (collective). ---
-  auto gIdx = atlas::array::make_view<double, 2>(globalGidxField);
-  const int nGlobal = static_cast<int>(globalGidxField.shape(0));
 
   int fi = 0;
   for (auto & field : x) {

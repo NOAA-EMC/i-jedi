@@ -8,6 +8,7 @@ cost function:
     geometry_type: mom6
     ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
     ocean_topog: data_generated/mom6/ocean_topog.nc
+    vertical geometry from: data_generated/mom6/MOM.res.nc
     coarsen factor: 1
     has northern fold: true
     MOM_input:
@@ -75,7 +76,23 @@ variational:
 
 output:
   io:
-    filetype: unstructured
-    filepath: mom6-3dvar-an-unstructured
+    filetype: mom6
+    filename: data_generated/mom6/mom6-3dvar-an-structured.nc
+    field io names:
+      sea_water_salinity: Salt
+      sea_water_potential_temperature: Temp
+      sea_surface_height_above_geoid: ave_ssh
+
+final:
+  increment:
+    output:
+      state component:
+        io:
+          filetype: mom6
+          filename: data_generated/mom6/mom6-3dvar-incr-structured.nc
+          field io names:
+            sea_water_potential_temperature: Temp
+
+    geometry: *geom
 
 final j evaluation: false

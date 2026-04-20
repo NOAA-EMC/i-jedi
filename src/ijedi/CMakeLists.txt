@@ -18,6 +18,8 @@ list(APPEND ijedi_src_files
   Geometry/mpas/GeometryMPAS.h
   Geometry/mom6/GeometryMOM6.cc
   Geometry/mom6/GeometryMOM6.h
+  Geometry/mom6/GeometryMOM6Utils.cc
+  Geometry/mom6/GeometryMOM6Utils.h
 
   # Fields
   FieldMetadata/FieldsMetadata.cc
