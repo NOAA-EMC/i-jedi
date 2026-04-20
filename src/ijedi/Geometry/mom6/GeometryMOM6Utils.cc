@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "eckit/exception/Exceptions.h"
