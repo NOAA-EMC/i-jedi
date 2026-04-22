@@ -5,7 +5,8 @@ jobs:
   run_all_tests:
     runs-on: ubuntu-latest
     name: Full CI (style and tests)
-    container: jcsda/docker-gnu-openmpi-dev:1.9
+    container:
+      image: ghcr.io/noaa-emc/gdasapp:latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -23,13 +24,29 @@ jobs:
         cd Build
         ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle
         cd ../i-jedi/bundle
-    - name: Cache install of JEDI libraries
-      id: cache-jedi
-      uses: actions/cache@v5
-      with:
-        path: |
-          ${{ github.workspace }}/install
-        key: ${{ runner.os }}-jedi
+    # - name: Run coding style checks
+    #   shell: bash
+    #   run: |
+    #     su - nonroot
+    #     export jedi_cmake_ROOT=/opt/view
+    #     source /opt/spack-environment/activate.sh
+    #     cd $GITHUB_WORKSPACE/Build/ijedi
+    #     ctest -R coding_norms --output-on-failure
+    - name: Compile the code
+      shell: bash
+      run: |
+        su - nonroot
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE
+        rm -rf Build
+        mkdir -p Build
+        cd Build
+        export LIBRARY_PATH=/opt/jedi/lib:/opt/views/view/lib:$LIBRARY_PATH
+        export LD_LIBRARY_PATH=/opt/jedi/lib:/opt/views/view/lib:$LD_LIBRARY_PATH
+        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE"  -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DCMAKE_PREFIX_PATH="/opt/views/view;/opt/jedi"   -DNetCDF_ROOT=/opt/views/view   -Dsp_DIR=/opt/views/view/lib/cmake/sp   -DSP_DIR=/opt/views/view/lib/cmake/sp   -DCMAKE_INSTALL_PREFIX="~/install"   -DBUILD_JEDI="OFF" ../i-jedi/bundle
+        make -j4
+        make install
     - name: Run coding style checks
       shell: bash
       run: |
@@ -38,36 +55,6 @@ jobs:
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
-    - name: Compile the code without any cache
-      if: steps.cache-jedi.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE
-        rm -rf Build
-        mkdir -p Build
-        cd Build
-        ecbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle 
-        make -j4
-        make install
-    - name: Compile the code with cache
-      if: steps.cache-jedi.outputs.cache-hit == 'true'
-      shell: bash
-      run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE
-        rm -rf Build
-        chmod +x $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh
-        $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh $GITHUB_WORKSPACE/install $GITHUB_WORKSPACE/i-jedi/bundle/oops
-        mkdir -p Build
-        cd Build
-        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
-        cd ijedi
-        make -j4
     - name: Run ctests
       shell: bash
       run: |
