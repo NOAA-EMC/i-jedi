@@ -44,7 +44,15 @@ jobs:
         cd Build
         export LIBRARY_PATH=/opt/jedi/lib:/opt/views/view/lib:$LIBRARY_PATH
         export LD_LIBRARY_PATH=/opt/jedi/lib:/opt/views/view/lib:$LD_LIBRARY_PATH
-        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE"  -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DCMAKE_PREFIX_PATH="/opt/views/view;/opt/jedi"   -DNetCDF_ROOT=/opt/views/view   -Dsp_DIR=/opt/views/view/lib/cmake/sp   -DSP_DIR=/opt/views/view/lib/cmake/sp   -DCMAKE_INSTALL_PREFIX="~/install"   -DBUILD_JEDI="OFF" ../i-jedi/bundle
+        ecbuild \
+          -DMPI_ARGS="--map-by :OVERSUBSCRIBE" \
+          -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install \
+          -DCMAKE_PREFIX_PATH="/opt/views/view;/opt/jedi" \
+          -DNetCDF_ROOT=/opt/views/view \
+          -Dsp_DIR=/opt/views/view/lib/cmake/sp \
+          -DCMAKE_INSTALL_PREFIX="~/install" \
+          -DBUILD_JEDI="OFF" \
+          ../i-jedi/bundle
         make -j4
         make install
     - name: Run coding style checks
