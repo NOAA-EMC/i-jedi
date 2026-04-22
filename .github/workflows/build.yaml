@@ -13,17 +13,17 @@ jobs:
       with:
         path: i-jedi
         submodules: recursive
-    - name: Run ecbuild
-      shell: bash
-      run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE
-        mkdir -p Build
-        cd Build
-        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle
-        cd ../i-jedi/bundle
+    # - name: Run ecbuild
+    #   shell: bash
+    #   run: |
+    #     su - nonroot
+    #     export jedi_cmake_ROOT=/opt/view
+    #     source /opt/spack-environment/activate.sh
+    #     cd $GITHUB_WORKSPACE
+    #     mkdir -p Build
+    #     cd Build
+    #     ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle
+    #     cd ../i-jedi/bundle
     # - name: Run coding style checks
     #   shell: bash
     #   run: |

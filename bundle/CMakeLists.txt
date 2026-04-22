@@ -35,6 +35,10 @@ ecbuild_bundle(PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.0
 
 # ===============================================================================
 ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git"   UPDATE BRANCH develop RECURSIVE )
+if(NOT BUILD_JEDI)
+  find_package(NetCDF COMPONENTS C CXX Fortran REQUIRED)
+  find_package(sp REQUIRED)
+endif()
 if (BUILD_JEDI)
   ecbuild_bundle( PROJECT oops      GIT    "https://github.com/NOAA-EMC/oops.git"    UPDATE BRANCH feature/mist )
   ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"      UPDATE BRANCH develop)
