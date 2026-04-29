@@ -200,6 +200,14 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
   // active-list index → position in ghostIdxVec
   std::unordered_map<int, int> ghostSeen;
 
+  auto addGhostActiveIndex = [&](int candidateK) {
+    if (candidateK < 0 || candidateK >= nActiveGlobal_) return;
+    if (partOf[candidateK] == rank) return;
+    const int gpos = static_cast<int>(ghostIdxVec.size());
+    if (ghostSeen.emplace(candidateK, gpos).second)
+      ghostIdxVec.push_back(candidateK);
+  };
+
   for (int k = 0; k < nActiveGlobal_; ++k) {
     if (partOf[k] != rank) continue;
     const int iG = active[k].iG;
@@ -215,11 +223,26 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
       if (nbJ[d] < 0 || nbJ[d] >= njEff_) continue;
       auto it = activeMap.find(nbJ[d] * niEff_ + nbI[d]);
       if (it == activeMap.end()) continue;
-      const int neighborK = it->second;
-      if (partOf[neighborK] == rank) continue;
-      const int gpos = static_cast<int>(ghostIdxVec.size());
-      if (ghostSeen.emplace(neighborK, gpos).second)
-        ghostIdxVec.push_back(neighborK);
+      addGhostActiveIndex(it->second);
+    }
+
+    // Tripolar fold connectivity: northern seam quads connect to reflected
+    // points on the same row that are not geometric neighbours in (i, j).
+    if (hasFold_ && jG == njEff_ - 1) {
+      const int iG1 = iG + 1;
+      if (2 * (iG + 1) < niEff_) {
+        const int foldNE = niEff_ - 2 - iG;
+        const int foldNW = niEff_ - 1 - iG;
+        auto itNE = activeMap.find(jG * niEff_ + foldNE);
+        if (itNE != activeMap.end()) addGhostActiveIndex(itNE->second);
+        auto itNW = activeMap.find(jG * niEff_ + foldNW);
+        if (itNW != activeMap.end()) addGhostActiveIndex(itNW->second);
+      }
+      if (iG1 < niEff_ && 2 * iG1 < niEff_) {
+        const int foldOfI1 = niEff_ - 1 - iG1;
+        auto itFold = activeMap.find(jG * niEff_ + foldOfI1);
+        if (itFold != activeMap.end()) addGhostActiveIndex(itFold->second);
+      }
     }
   }
 
