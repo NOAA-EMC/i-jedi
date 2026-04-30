@@ -65,7 +65,8 @@ state:
     - sea_surface_height_above_geoid
     io:
       filetype: mom6
-      filename: data_generated/mom6/MOM.res.nc
+      datapath: data_generated/mom6
+      ocn_file: MOM.res.nc
       field io names:
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt

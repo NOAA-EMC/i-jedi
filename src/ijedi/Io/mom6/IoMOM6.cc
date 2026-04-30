@@ -24,27 +24,14 @@ namespace ijedi
 
     const std::string datapath = params.datapath.value();
 
-    // Build the ordered list of files to read from named parameters
+    writeFilepath_ = datapath + "/" + params.ocn_file.value();
+    readFilepaths_.push_back(writeFilepath_);
+
     const auto addFile = [&](const boost::optional<std::string> & opt) {
       if (opt) readFilepaths_.push_back(datapath + "/" + *opt);
     };
-    addFile(params.ocn_file.value());
     addFile(params.ice_file.value());
     addFile(params.fix_file.value());
-
-    // Determine the file to write to (ocean file, or legacy filename)
-    if (params.ocn_file.value()) {
-      writeFilepath_ = datapath + "/" + *params.ocn_file.value();
-    } else if (params.filename.value()) {
-      writeFilepath_ = *params.filename.value();
-    } else {
-      writeFilepath_ = "MOM.res.nc";
-    }
-
-    // Backward compatibility: if no named files provided, fall back to filename parameter
-    if (readFilepaths_.empty()) {
-      readFilepaths_.push_back(writeFilepath_);
-    }
 
     oops::Log::trace() << classname() << " constructor done" << std::endl;
   }

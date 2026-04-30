@@ -29,7 +29,8 @@ cost function:
     - sea_surface_height_above_geoid
     io:
       filetype: mom6
-      filename: data_generated/mom6/MOM.res.nc
+      datapath: data_generated/mom6
+      ocn_file: MOM.res.nc
       field io names:
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt
@@ -77,7 +78,8 @@ variational:
 output:
   io:
     filetype: mom6
-    filename: data_generated/mom6/mom6-3dvar-an-structured.nc
+    datapath: data_generated/mom6
+    ocn_file: mom6-3dvar-an-structured.nc
     field io names:
       sea_water_salinity: Salt
       sea_water_potential_temperature: Temp
@@ -89,7 +91,8 @@ final:
       state component:
         io:
           filetype: mom6
-          filename: data_generated/mom6/mom6-3dvar-incr-structured.nc
+          datapath: data_generated/mom6
+          ocn_file: mom6-3dvar-incr-structured.nc
           field io names:
             sea_water_potential_temperature: Temp
 

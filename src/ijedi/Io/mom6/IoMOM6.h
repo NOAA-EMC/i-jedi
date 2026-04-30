@@ -29,7 +29,7 @@ namespace ijedi
                                           "./", this};
 
     // Ocean background file
-    oops::OptionalParameter<std::string> ocn_file{"ocn_file",
+    oops::RequiredParameter<std::string> ocn_file{"ocn_file",
                                                   "ocean background file name",
                                                   this};
 
@@ -41,11 +41,6 @@ namespace ijedi
     // Fix file (decorrelation length scales, distance from coast, etc.)
     oops::OptionalParameter<std::string> fix_file{"fix_file",
                                                   "fix fields file name",
-                                                  this};
-
-    // Legacy single filename (kept for backward compatibility)
-    oops::OptionalParameter<std::string> filename{"filename",
-                                                  "name of the restart or history file (use ocn_file instead)",
                                                   this};
   };
 
