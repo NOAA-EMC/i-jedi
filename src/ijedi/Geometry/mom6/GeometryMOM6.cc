@@ -1,6 +1,7 @@
 #include <netcdf.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cmath>
 #include <cstdint>
@@ -424,8 +425,8 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lonGlobal,
   atlas::Field fDxT   = addField("dxT");
   atlas::Field fDyT   = addField("dyT");
   atlas::Field fAreaT = addField("areaT");
-  atlas::Field fLayerThickness = addField("layer_thickness", numLevels_);
-  atlas::Field fLayerCenterDepth = addField("layer_center_depth", numLevels_);
+  atlas::Field fLayerThickness = addField("sea_water_cell_thickness", numLevels_);
+  atlas::Field fLayerCenterDepth = addField("sea_water_depth", numLevels_);
   atlas::Field fMask3d = addField("mask3d", numLevels_);
   atlas::Field fLonU  = addField("lonu");
   atlas::Field fLatU  = addField("latu");
@@ -488,7 +489,8 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
                                 const std::vector<double> & lonUGlobal,
                                 const std::vector<double> & latUGlobal,
                                 const std::vector<double> & lonVGlobal,
-                                const std::vector<double> & latVGlobal)
+                                const std::vector<double> & latVGlobal,
+                                bool buildVerticalGeometry)
 {
   const int npts = static_cast<int>(jediPoints_.size());  // owned + ghost
   fields_ = atlas::FieldSet();
@@ -515,14 +517,20 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
   atlas::Field fDxT   = addField("dxT");
   atlas::Field fDyT   = addField("dyT");
   atlas::Field fArea  = addField("area");   // called "area" for SABER diffusion
-  atlas::Field fLayerThickness = addField("layer_thickness", numLevels_);
-  atlas::Field fLayerCenterDepth = addField("layer_center_depth", numLevels_);
-  atlas::Field fMask3d = addField("mask3d", numLevels_);
   atlas::Field fLonU  = addField("lonu");
   atlas::Field fLatU  = addField("latu");
   atlas::Field fLonV  = addField("lonv");
   atlas::Field fLatV  = addField("latv");
   atlas::Field fAreaT = addField("areaT");  // MOM6-native alias for area
+
+  atlas::Field fLayerThickness;
+  atlas::Field fLayerCenterDepth;
+  atlas::Field fMask3d;
+  if (buildVerticalGeometry) {
+    fLayerThickness = addField("sea_water_cell_thickness", numLevels_);
+    fLayerCenterDepth = addField("sea_water_depth", numLevels_);
+    fMask3d = addField("mask3d", numLevels_);
+  }
 
   auto vLon   = atlas::array::make_view<double, 2>(fLon);
   auto vLat   = atlas::array::make_view<double, 2>(fLat);
@@ -531,40 +539,62 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
   auto vDxT   = atlas::array::make_view<double, 2>(fDxT);
   auto vDyT   = atlas::array::make_view<double, 2>(fDyT);
   auto vArea  = atlas::array::make_view<double, 2>(fArea);
-  auto vLayerThickness = atlas::array::make_view<double, 2>(fLayerThickness);
-  auto vLayerCenterDepth = atlas::array::make_view<double, 2>(fLayerCenterDepth);
-  auto vMask3d = atlas::array::make_view<double, 2>(fMask3d);
   auto vLonU  = atlas::array::make_view<double, 2>(fLonU);
   auto vLatU  = atlas::array::make_view<double, 2>(fLatU);
   auto vLonV  = atlas::array::make_view<double, 2>(fLonV);
   auto vLatV  = atlas::array::make_view<double, 2>(fLatV);
   auto vAreaT = atlas::array::make_view<double, 2>(fAreaT);
 
-  for (int n = 0; n < npts; ++n) {
-    const int iG   = jediPoints_[n].first;
-    const int jG   = jediPoints_[n].second;
-    const int gIdx = jG * niEff_ + iG;
-    vLon(n, 0)   = lonGlobal[gIdx];
-    vLat(n, 0)   = latGlobal[gIdx];
-    vDepth(n, 0) = depthGlobal[gIdx];
-    vMask(n, 0)  = wetGlobal[gIdx];
-    vDxT(n, 0)   = dxTGlobal[gIdx];
-    vDyT(n, 0)   = dyTGlobal[gIdx];
-    vArea(n, 0)  = areaTGlobal[gIdx];
-    for (int k = 0; k < numLevels_; ++k) {
-      const size_t idx3D = static_cast<size_t>(k) * nHoriz + gIdx;
-      vLayerThickness(n, k) = layerThicknessGlobal[idx3D];
-      vLayerCenterDepth(n, k) = layerCenterDepthGlobal[idx3D];
-      vMask3d(n, k) = mask3dGlobal[idx3D];
+  if (buildVerticalGeometry) {
+    auto vLayerThickness = atlas::array::make_view<double, 2>(fLayerThickness);
+    auto vLayerCenterDepth = atlas::array::make_view<double, 2>(fLayerCenterDepth);
+    auto vMask3d = atlas::array::make_view<double, 2>(fMask3d);
+    for (int n = 0; n < npts; ++n) {
+      const int iG   = jediPoints_[n].first;
+      const int jG   = jediPoints_[n].second;
+      const int gIdx = jG * niEff_ + iG;
+      vLon(n, 0)   = lonGlobal[gIdx];
+      vLat(n, 0)   = latGlobal[gIdx];
+      vDepth(n, 0) = depthGlobal[gIdx];
+      vMask(n, 0)  = wetGlobal[gIdx];
+      vDxT(n, 0)   = dxTGlobal[gIdx];
+      vDyT(n, 0)   = dyTGlobal[gIdx];
+      vArea(n, 0)  = areaTGlobal[gIdx];
+      for (int k = 0; k < numLevels_; ++k) {
+        const size_t idx3D = static_cast<size_t>(k) * nHoriz + gIdx;
+        vLayerThickness(n, k) = layerThicknessGlobal[idx3D];
+        vLayerCenterDepth(n, k) = layerCenterDepthGlobal[idx3D];
+        vMask3d(n, k) = mask3dGlobal[idx3D];
+      }
+      vAreaT(n, 0) = areaTGlobal[gIdx];
+      vLonU(n, 0)  = lonUGlobal[gIdx];
+      vLatU(n, 0)  = latUGlobal[gIdx];
+      vLonV(n, 0)  = lonVGlobal[gIdx];
+      vLatV(n, 0)  = latVGlobal[gIdx];
     }
-    vAreaT(n, 0) = areaTGlobal[gIdx];
-    vLonU(n, 0)  = lonUGlobal[gIdx];
-    vLatU(n, 0)  = latUGlobal[gIdx];
-    vLonV(n, 0)  = lonVGlobal[gIdx];
-    vLatV(n, 0)  = latVGlobal[gIdx];
+  } else {
+    for (int n = 0; n < npts; ++n) {
+      const int iG   = jediPoints_[n].first;
+      const int jG   = jediPoints_[n].second;
+      const int gIdx = jG * niEff_ + iG;
+      vLon(n, 0)   = lonGlobal[gIdx];
+      vLat(n, 0)   = latGlobal[gIdx];
+      vDepth(n, 0) = depthGlobal[gIdx];
+      vMask(n, 0)  = wetGlobal[gIdx];
+      vDxT(n, 0)   = dxTGlobal[gIdx];
+      vDyT(n, 0)   = dyTGlobal[gIdx];
+      vArea(n, 0)  = areaTGlobal[gIdx];
+      vAreaT(n, 0) = areaTGlobal[gIdx];
+      vLonU(n, 0)  = lonUGlobal[gIdx];
+      vLatU(n, 0)  = latUGlobal[gIdx];
+      vLonV(n, 0)  = lonVGlobal[gIdx];
+      vLatV(n, 0)  = latVGlobal[gIdx];
+    }
   }
 
-  buildDistFromCoast(lonGlobal, latGlobal, wetGlobal, mask3dGlobal);
+  if (buildVerticalGeometry) {
+    buildDistFromCoast(lonGlobal, latGlobal, wetGlobal, mask3dGlobal);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -888,6 +918,24 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   oops::Log::trace() << "GeometryMOM6 constructor starting" << std::endl;
   levelsAreTopDown = true;
 
+  // Instrumentation setup for constructor stage timing traces.
+  using Clock = std::chrono::steady_clock;
+  const auto ctorStart = Clock::now();
+  auto lastStamp = ctorStart;
+  const int rank = static_cast<int>(comm.rank());
+  auto traceStep = [&](const std::string & step) {
+    const auto now = Clock::now();
+    const auto stepMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now - lastStamp).count();
+    const auto totalMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now - ctorStart).count();
+    oops::Log::info() << "GeometryMOM6 ctor rank " << rank
+                      << " step='" << step << "'"
+                      << " dt_ms=" << stepMs
+                      << " total_ms=" << totalMs << std::endl;
+    lastStamp = now;
+  };
+
   // 1. Read grid parameters from the MOM_input sub-configuration
   const eckit::LocalConfiguration momConf(conf, "MOM_input");
   niGlobal_     = momConf.getInt("NIGLOBAL");
@@ -920,6 +968,8 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
                           std::to_string(fringeWidth_), Here());
   hasFold_ = conf.getBool("has northern fold", true);
 
+  traceStep("read MOM_input and validate layout/coarsen");
+
   oops::Log::debug() << "GeometryMOM6: NI=" << niGlobal_ << " NJ=" << njGlobal_
                      << " NZ=" << numLevels_
                      << " layout=(" << layoutX_ << "," << layoutY_ << ")"
@@ -929,7 +979,6 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
 
   // 2. Compute local MOM6 domain extent for this rank
   //    MOM6 convention: rank = piX * layoutY_ + piY
-  const int rank = static_cast<int>(comm.rank());
   const int piX  = rank / layoutY_;
   const int piY  = rank % layoutY_;
 
@@ -945,27 +994,24 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
                      << ": iStart=" << iStart_ << " iCount=" << iCount_
                      << " jStart=" << jStart_
                      << " jCount=" << jCount_ << std::endl;
+  traceStep("compute local MOM6 domain extent");
 
   // 3. Read global grid arrays (all ranks read identically)
   const std::string hgridPath = conf.getString("ocean_hgrid");
   const std::string topogPath = conf.getString("ocean_topog");
-  const std::string verticalGeomPath = conf.getString("vertical geometry from");
+  const bool buildVerticalGeometry = conf.has("vertical geometry from");
 
   std::vector<double> lon, lat, dxT, dyT, areaT, lonU, latU, lonV, latV;
   mom6::readHgrid(hgridPath,
                   niGlobal_, njGlobal_, niEff_, njEff_, coarsenFactor_,
                   &lon, &lat, &dxT, &dyT, &areaT, &lonU, &latU, &lonV, &latV);
+  traceStep("readHgrid");
 
   std::vector<double> depth, wet;
   mom6::readTopog(topogPath,
                   niGlobal_, njGlobal_, niEff_, njEff_, coarsenFactor_, minimumDepth_,
                   &depth, &wet);
-
-  std::vector<double> layerThickness, layerCenterDepth;
-  mom6::readVerticalGeometry(verticalGeomPath,
-                             niGlobal_, njGlobal_, niEff_, njEff_, numLevels_,
-                             coarsenFactor_,
-                             &layerThickness, &layerCenterDepth);
+  traceStep("readTopog");
 
   if (conf.has("minimum layer thickness")) {
     minimumThickness_ = conf.getDouble("minimum layer thickness");
@@ -974,46 +1020,112 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
     minimumThickness_ = conf.getDouble("minimum_layer_thickness", 1e-6);
   }
 
+  const size_t nHoriz3d = static_cast<size_t>(njEff_) * niEff_;
+  std::vector<double> layerThickness(static_cast<size_t>(numLevels_) * nHoriz3d,
+                                     minimumThickness_);
+  std::vector<double> layerCenterDepth(static_cast<size_t>(numLevels_) * nHoriz3d, 0.0);
+  if (buildVerticalGeometry) {
+    const std::string verticalGeomPath = conf.getString("vertical geometry from");
+    mom6::readVerticalGeometry(verticalGeomPath,
+                               niGlobal_, njGlobal_, niEff_, njEff_, numLevels_,
+                               coarsenFactor_,
+                               &layerThickness, &layerCenterDepth);
+    traceStep("readVerticalGeometry");
+  } else {
+    oops::Log::info() << "GeometryMOM6: skipping vertical geometry read"
+                      << " (vertical geometry from not provided)" << std::endl;
+  }
+
   // Build 3D mask: ocean (1.0) where surface is wet and layer thickness
   // is >= minimumThickness_. Once a thin layer is encountered top-down,
   // all deeper layers are also masked (sealed = land).
-  const size_t nHoriz3d = static_cast<size_t>(njEff_) * niEff_;
   std::vector<double> mask3d(static_cast<size_t>(numLevels_) * nHoriz3d, 0.0);
-  for (size_t n = 0; n < nHoriz3d; ++n) {
-    if (wet[n] < 0.5) continue;  // surface land → all layers stay 0
-    bool sealed = false;
-    for (int k = 0; k < numLevels_; ++k) {
-      const size_t idx = static_cast<size_t>(k) * nHoriz3d + n;
-      if (!sealed && layerThickness[idx] < minimumThickness_) sealed = true;
-      mask3d[idx] = sealed ? 0.0 : 1.0;
+  if (buildVerticalGeometry) {
+    for (size_t n = 0; n < nHoriz3d; ++n) {
+      if (wet[n] < 0.5) continue;  // surface land → all layers stay 0
+      bool sealed = false;
+      for (int k = 0; k < numLevels_; ++k) {
+        const size_t idx = static_cast<size_t>(k) * nHoriz3d + n;
+        if (!sealed && layerThickness[idx] < minimumThickness_) sealed = true;
+        mask3d[idx] = sealed ? 0.0 : 1.0;
+      }
+    }
+  } else {
+    for (size_t n = 0; n < nHoriz3d; ++n) {
+      if (wet[n] < 0.5) continue;
+      for (int k = 0; k < numLevels_; ++k) {
+        const size_t idx = static_cast<size_t>(k) * nHoriz3d + n;
+        mask3d[idx] = 1.0;
+      }
     }
   }
+  traceStep("build mask3d");
 
   // 4. MOM6 structured function space and fields (local compute domain)
   buildMom6FunctionSpace(comm, lon, lat);
+  traceStep("buildMom6FunctionSpace");
   buildMom6Fields(lon, lat, depth, wet, layerThickness, layerCenterDepth,
                   mask3d, dxT, dyT, areaT,
                   lonU, latU, lonV, latV);
+  traceStep("buildMom6Fields");
 
   // 5. JEDI unstructured function space and fields (ocean + retained fringe)
   buildJediFunctionSpace(comm, wet, lon, lat);
+  traceStep("buildJediFunctionSpace");
   buildFields(lon, lat, depth, wet, layerThickness, layerCenterDepth,
-              mask3d, dxT, dyT, areaT, lonU, latU, lonV, latV);
+              mask3d, dxT, dyT, areaT, lonU, latU, lonV, latV,
+              buildVerticalGeometry);
+  traceStep("buildFields");
+
+  // Release temporary global arrays now that local fieldsets are built.
+  auto release = [](std::vector<double> & v) {
+    std::vector<double>().swap(v);
+  };
+  release(lon);
+  release(lat);
+  release(dxT);
+  release(dyT);
+  release(areaT);
+  release(lonU);
+  release(latU);
+  release(lonV);
+  release(latV);
+  release(depth);
+  release(wet);
+  release(layerThickness);
+  release(layerCenterDepth);
+  release(mask3d);
+
+  traceStep("release temporary global arrays");
 
   // 6. Scatter/gather map and exchange plan: JEDI ↔ MOM6
-  buildScatterMap();
-  buildExchangePlan();
-  if (conf.getBool("check scatter map", false)) checkScatterMap();
+  const bool buildScatterExchange =
+      conf.getBool("JEDI/MOM6 scatter/gather exchange plan", true);
+  if (buildScatterExchange) {
+    buildScatterMap();
+    traceStep("buildScatterMap");
+    buildExchangePlan();
+    traceStep("buildExchangePlan");
+    if (conf.getBool("check scatter map", false)) {
+      checkScatterMap();
+      traceStep("checkScatterMap");
+    }
+  } else {
+    oops::Log::info() << "GeometryMOM6: skipping scatter/gather map and exchange plan"
+                      << " (JEDI/MOM6 scatter/gather exchange plan=false)"
+                      << std::endl;
+  }
 
   // 7. Optionally save grids to NetCDF / debug files
   if (conf.has("save unstructured grid to"))
-    saveGrid(conf.getString("save unstructured grid to"), comm);
+    { saveGrid(conf.getString("save unstructured grid to"), comm); traceStep("saveGrid"); }
   if (conf.has("save structured grid to"))
-    saveStructuredGrid(conf.getString("save structured grid to"), comm);
+    { saveStructuredGrid(conf.getString("save structured grid to"), comm);
+      traceStep("saveStructuredGrid"); }
   if (conf.has("save debug mesh to"))
-    saveDebugMesh(conf.getString("save debug mesh to"), comm);
+    { saveDebugMesh(conf.getString("save debug mesh to"), comm); traceStep("saveDebugMesh"); }
   if (conf.has("save gmsh to"))
-    saveGmsh(conf.getString("save gmsh to"), comm);
+    { saveGmsh(conf.getString("save gmsh to"), comm); traceStep("saveGmsh"); }
 
   // 8. Populate output parameters
   functionSpace = functionSpace_;
@@ -1023,6 +1135,8 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   geomVariables.set("ni", niEff_);
   geomVariables.set("nj", njEff_);
   geomVariables.set("nz", numLevels_);
+
+  traceStep("set outputs");
 
   oops::Log::trace() << "GeometryMOM6 constructor done" << std::endl;
 }
@@ -1146,7 +1260,7 @@ void GeometryMOM6::saveGrid(const std::string & filename,
   atlas::FieldSet toWrite;
   for (const char * name : {"depth", "mask2d", "dxT", "dyT", "areaT",
                             "lonu", "latu", "lonv", "latv",
-                            "layer_thickness", "layer_center_depth",
+                            "sea_water_cell_thickness", "sea_water_depth",
                             "mask3d",
                             "dist_from_coast", "dist_from_coast3d"})
     toWrite.add(fields_.field(name));
@@ -1243,7 +1357,7 @@ void GeometryMOM6::saveGmsh(const std::string & filename,
   gmsh.write(fspace.mesh());
   atlas::FieldSet toWrite;
   for (const char * name : {"mask2d", "depth", "dist_from_coast",
-                            "layer_thickness", "layer_center_depth",
+                            "sea_water_cell_thickness", "sea_water_depth",
                             "mask3d", "dist_from_coast3d"}) {
     if (fields_.has(name))
       toWrite.add(fields_.field(name));
@@ -1258,7 +1372,7 @@ void GeometryMOM6::saveGmsh(const std::string & filename,
     rewriteFile += ".p" + std::to_string(comm.rank());
   }
   mom6::rewriteLeveledNodeDataAsTime(rewriteFile,
-                     {"layer_thickness", "layer_center_depth",
+                     {"sea_water_cell_thickness", "sea_water_depth",
                     "mask3d", "dist_from_coast3d"});
 
   comm.barrier();

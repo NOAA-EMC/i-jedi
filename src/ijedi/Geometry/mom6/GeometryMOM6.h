@@ -103,7 +103,8 @@ namespace ijedi
                      const std::vector<double> & lonUGlobal,
                      const std::vector<double> & latUGlobal,
                      const std::vector<double> & lonVGlobal,
-                     const std::vector<double> & latVGlobal);
+                     const std::vector<double> & latVGlobal,
+                     bool buildVerticalGeometry);
 
     // Distance from each JEDI point to the nearest land cell (metres)
     void buildDistFromCoast(const std::vector<double> & lonGlobal,
