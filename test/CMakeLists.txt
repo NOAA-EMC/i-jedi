@@ -95,6 +95,14 @@ ecbuild_add_test( TARGET  ijedi_hofx3d_coupled
                   ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
 
+# Geometry cache test
+ecbuild_add_test( TARGET  ijedi_geometry_cache_mom6
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    geometry_cache ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_geometry_cache-mom6.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata)
+
 # Variational tests (depends on diffusion operator being calibrated first)
 ecbuild_add_test( TARGET  ijedi_diffusion_mom6
                   MPI     2

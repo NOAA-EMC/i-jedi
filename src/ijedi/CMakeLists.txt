@@ -9,6 +9,10 @@ list(APPEND ijedi_src_files
 # ###############################################################################
 list(APPEND ijedi_src_files
 
+  # Applications
+  Applications/GeometryCache.cc
+  Applications/GeometryCache.h
+
   # Geometry
   Geometry/Geometry.cc
   Geometry/Geometry.h
