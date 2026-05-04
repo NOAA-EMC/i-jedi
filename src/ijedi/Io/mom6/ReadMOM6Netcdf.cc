@@ -91,13 +91,13 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
 
       size_t dimNi = 0, dimNj = 0, dimNz = 0;
       const std::string dimX =
-        findDimName(ncid, "x (longitude)", {"lonh", "xh", "xaxis_1", "nx"}, &dimNi);
+        findDimName(ncid, "x (longitude)", {"lonh", "xh", "xaxis_1", "nx", "ni"}, &dimNi);
       const std::string dimY =
-        findDimName(ncid, "y (latitude)", {"lath", "yh", "yaxis_1", "ny"}, &dimNj);
+        findDimName(ncid, "y (latitude)", {"lath", "yh", "yaxis_1", "ny", "nj"}, &dimNj);
 
       // z dimension is optional: 2D files (sea ice, fix) may not have one
       bool hasZDim = false;
-      for (const auto & zName : std::vector<std::string>{"Layer", "z_l", "zaxis_1"}) {
+      for (const auto & zName : std::vector<std::string>{"Layer", "z_l", "zaxis_1", "nz"}) {
         int dimid;
         if (nc_inq_dimid(ncid, zName.c_str(), &dimid) == NC_NOERR) {
           nc_inq_dimlen(ncid, dimid, &dimNz);
@@ -140,6 +140,13 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
             auto gView = atlas::array::make_view<double, 2>(globalFields[fi]);
             const bool is3D = (nLevels > 1);
 
+            // Detect whether the variable has a leading time dimension.
+            // Files like MOM6 restarts use (time, [z,] nj, ni); geometry
+            // cache files written by saveStructuredGrid use ([z,] nj, ni).
+            int var_ndims = 0;
+            nc_inq_varndims(ncid, varid, &var_ndims);
+            const bool hasTimeDim = (var_ndims == (is3D ? 4 : 3));
+
             if (is3D) {
               if (!hasZDim || file_nz != nLevels) {
                 oops::Log::warning()
@@ -149,11 +156,19 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
               } else {
                 std::vector<double> buf(
                     static_cast<size_t>(file_nz) * file_nj * file_ni);
-                const size_t start[4] = {0, 0, 0, 0};
-                const size_t count[4] = {1, static_cast<size_t>(file_nz),
-                                            static_cast<size_t>(file_nj),
-                                            static_cast<size_t>(file_ni)};
-                nc_get_vara_double(ncid, varid, start, count, buf.data());
+                if (hasTimeDim) {
+                  const size_t start[4] = {0, 0, 0, 0};
+                  const size_t count[4] = {1, static_cast<size_t>(file_nz),
+                                              static_cast<size_t>(file_nj),
+                                              static_cast<size_t>(file_ni)};
+                  nc_get_vara_double(ncid, varid, start, count, buf.data());
+                } else {
+                  const size_t start[3] = {0, 0, 0};
+                  const size_t count[3] = {static_cast<size_t>(file_nz),
+                                              static_cast<size_t>(file_nj),
+                                              static_cast<size_t>(file_ni)};
+                  nc_get_vara_double(ncid, varid, start, count, buf.data());
+                }
 
                 if (scale != 0.0)
                   for (auto & v : buf) v *= scale;
@@ -175,10 +190,17 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
             } else {
               std::vector<double> buf(
                   static_cast<size_t>(file_nj) * file_ni);
-              const size_t start[3] = {0, 0, 0};
-              const size_t count[3] = {1, static_cast<size_t>(file_nj),
-                                          static_cast<size_t>(file_ni)};
-              nc_get_vara_double(ncid, varid, start, count, buf.data());
+              if (hasTimeDim) {
+                const size_t start[3] = {0, 0, 0};
+                const size_t count[3] = {1, static_cast<size_t>(file_nj),
+                                            static_cast<size_t>(file_ni)};
+                nc_get_vara_double(ncid, varid, start, count, buf.data());
+              } else {
+                const size_t start[2] = {0, 0};
+                const size_t count[2] = {static_cast<size_t>(file_nj),
+                                            static_cast<size_t>(file_ni)};
+                nc_get_vara_double(ncid, varid, start, count, buf.data());
+              }
 
               if (scale != 0.0)
                 for (auto & v : buf) v *= scale;
@@ -191,11 +213,6 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
                                 << " <- " << fileVarName
                                 << " from " << filepath << std::endl;
             }
-          } else {
-            oops::Log::warning() << "readMOM6Netcdf: variable '" << fileVarName
-                                 << "' not found in " << filepath
-                                 << ", skipping '" << field.name()
-                                 << "'" << std::endl;
           }
         }
         ++fi;

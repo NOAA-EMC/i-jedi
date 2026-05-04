@@ -1151,9 +1151,11 @@ void GeometryMOM6::saveStructuredGrid(const std::string & filename,
   const int npes = static_cast<int>(comm.size());
   const int root = 0;
 
-  const std::vector<std::string> fieldNames =
-      {"lon", "lat", "dxT", "dyT", "areaT", "depth", "mask2d",
-       "lonu", "latu", "lonv", "latv"};
+  std::vector<std::string> fieldNames2D, fieldNames3D;
+  for (const auto & field : mom6Fields_) {
+    if (field.name() == "owned") continue;
+    (field.shape(1) == 1 ? fieldNames2D : fieldNames3D).push_back(field.name());
+  }
 
   // Step 1: gather per-rank local sizes on root
   const int localSize = jCount_ * iCount_;
@@ -1189,18 +1191,24 @@ void GeometryMOM6::saveStructuredGrid(const std::string & filename,
 
   // Step 3: create NetCDF file on root
   int ncid = -1;
-  std::vector<int> varids(fieldNames.size(), -1);
+  std::vector<int> varids2D(fieldNames2D.size(), -1);
+  std::vector<int> varids3D(fieldNames3D.size(), -1);
   int part_varid = -1;
   if (comm.rank() == root) {
     if (nc_create(filename.c_str(), NC_CLOBBER | NC_NETCDF4, &ncid) != NC_NOERR)
       throw eckit::CantOpenFile(filename, Here());
-    int nj_dim, ni_dim;
+    int nj_dim, ni_dim, nz_dim = -1;
     nc_def_dim(ncid, "nj", static_cast<size_t>(njEff_), &nj_dim);
     nc_def_dim(ncid, "ni", static_cast<size_t>(niEff_), &ni_dim);
-    const int dims[2] = {nj_dim, ni_dim};
-    for (size_t f = 0; f < fieldNames.size(); ++f)
-      nc_def_var(ncid, fieldNames[f].c_str(), NC_DOUBLE, 2, dims, &varids[f]);
-    nc_def_var(ncid, "partition", NC_INT, 2, dims, &part_varid);
+    if (!fieldNames3D.empty())
+      nc_def_dim(ncid, "nz", static_cast<size_t>(numLevels_), &nz_dim);
+    const int dims2D[2] = {nj_dim, ni_dim};
+    const int dims3D[3] = {nz_dim, nj_dim, ni_dim};
+    for (size_t f = 0; f < fieldNames2D.size(); ++f)
+      nc_def_var(ncid, fieldNames2D[f].c_str(), NC_DOUBLE, 2, dims2D, &varids2D[f]);
+    for (size_t f = 0; f < fieldNames3D.size(); ++f)
+      nc_def_var(ncid, fieldNames3D[f].c_str(), NC_DOUBLE, 3, dims3D, &varids3D[f]);
+    nc_def_var(ncid, "partition", NC_INT, 2, dims2D, &part_varid);
     nc_enddef(ncid);
   }
 
@@ -1211,27 +1219,52 @@ void GeometryMOM6::saveStructuredGrid(const std::string & filename,
     recvBuf.resize(total);
   }
 
-  for (size_t f = 0; f < fieldNames.size(); ++f) {
+  // Assemble one global (nj x ni) slice from per-rank contributions
+  auto assembleGlobal = [&](std::vector<double> & global) {
+    global.assign(static_cast<size_t>(njEff_) * niEff_, 0.0);
+    for (int p = 0; p < npes; ++p) {
+      const DomInfo & d = allDoms[p];
+      const int off = displs[p];
+      for (int jL = 0; jL < d.jCount; ++jL)
+        for (int iL = 0; iL < d.iCount; ++iL) {
+          const int jG = d.jStart - 1 + jL;
+          const int iG = d.iStart - 1 + iL;
+          global[static_cast<size_t>(jG) * niEff_ + iG] =
+              recvBuf[off + jL * d.iCount + iL];
+        }
+    }
+  };
+
+  // 2D fields
+  for (size_t f = 0; f < fieldNames2D.size(); ++f) {
     auto view = atlas::array::make_view<double, 2>(
-                    mom6Fields_.field(fieldNames[f]));
+                    mom6Fields_.field(fieldNames2D[f]));
     std::vector<double> localData(localSize);
     for (int n = 0; n < localSize; ++n) localData[n] = view(n, 0);
-
     comm.gatherv(localData, recvBuf, recvcounts, displs, root);
-
     if (comm.rank() == root) {
-      std::vector<double> global(static_cast<size_t>(njEff_) * niEff_, 0.0);
-      for (int p = 0; p < npes; ++p) {
-        const DomInfo & d = allDoms[p];
-        const int off = displs[p];
-        for (int jL = 0; jL < d.jCount; ++jL)
-          for (int iL = 0; iL < d.iCount; ++iL) {
-            const int jG = d.jStart - 1 + jL;
-            const int iG = d.iStart - 1 + iL;
-            global[jG * niEff_ + iG] = recvBuf[off + jL * d.iCount + iL];
-          }
+      std::vector<double> global;
+      assembleGlobal(global);
+      nc_put_var_double(ncid, varids2D[f], global.data());
+    }
+  }
+
+  // 3D fields: gather one level at a time
+  for (size_t f = 0; f < fieldNames3D.size(); ++f) {
+    auto view = atlas::array::make_view<double, 2>(
+                    mom6Fields_.field(fieldNames3D[f]));
+    for (int k = 0; k < numLevels_; ++k) {
+      std::vector<double> localData(localSize);
+      for (int n = 0; n < localSize; ++n) localData[n] = view(n, k);
+      comm.gatherv(localData, recvBuf, recvcounts, displs, root);
+      if (comm.rank() == root) {
+        std::vector<double> global;
+        assembleGlobal(global);
+        const size_t start[3] = {static_cast<size_t>(k), 0, 0};
+        const size_t count[3] = {1, static_cast<size_t>(njEff_),
+                                    static_cast<size_t>(niEff_)};
+        nc_put_vara_double(ncid, varids3D[f], start, count, global.data());
       }
-      nc_put_var_double(ncid, varids[f], global.data());
     }
   }
 
@@ -1257,13 +1290,14 @@ void GeometryMOM6::saveStructuredGrid(const std::string & filename,
 void GeometryMOM6::saveGrid(const std::string & filename,
                              const eckit::mpi::Comm & comm) const
 {
+  // "lon" and "lat" are written automatically by Atlas writeFieldSet as node
+  // coordinate variables; including them as fields causes a NetCDF name clash.
+  // "owned" is a rank-partitioning artefact that is meaningless after reload.
+  static const std::unordered_set<std::string> skip = {"owned", "lon", "lat"};
   atlas::FieldSet toWrite;
-  for (const char * name : {"depth", "mask2d", "dxT", "dyT", "areaT",
-                            "lonu", "latu", "lonv", "latv",
-                            "sea_water_cell_thickness", "sea_water_depth",
-                            "mask3d",
-                            "dist_from_coast", "dist_from_coast3d"})
-    toWrite.add(fields_.field(name));
+  for (const auto & field : fields_) {
+    if (!skip.count(field.name())) toWrite.add(field);
+  }
 
   std::string filepath = filename;
   const std::string ext = ".nc";

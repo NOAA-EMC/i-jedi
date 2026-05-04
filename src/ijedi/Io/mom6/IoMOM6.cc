@@ -7,6 +7,7 @@
 
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Io/mom6/IoMOM6.h"
+#include "ijedi/Io/mom6/FillMaskedCells.h"
 #include "ijedi/Io/mom6/ReadMOM6Netcdf.h"
 #include "ijedi/Io/mom6/WriteMOM6Netcdf.h"
 
@@ -54,6 +55,9 @@ namespace ijedi
     }
 
     readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings, geom_.getComm());
+
+    applyBoundaryConditions(x, geom_.fields().field("mask2d"),
+                            geom_.getFieldMetadata());
 
     oops::Log::trace() << classname() << " read state done" << std::endl;
   }

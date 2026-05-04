@@ -2,7 +2,6 @@ geometry:
   geometry_type: mom6
   ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
   ocean_topog: data_generated/mom6/ocean_topog.nc
-  vertical geometry from: data_generated/mom6/MOM.res.nc
   has northern fold: true
   coarsen factor: 1
   MOM_input:
@@ -18,14 +17,24 @@ state test:
     - sea_water_potential_temperature
     - sea_water_salinity
     - sea_surface_height_above_geoid
+    - sea_ice_area_fraction
+    - sea_ice_thickness
+    - sea_ice_snow_thickness
+    - landmask3d
     io:
       filetype: mom6
       datapath: data_generated/mom6
       ocn_file: MOM.res.nc
+      ice_file: cice6.nc
+      fix_file: mom6_structuredgeometry_cache_grid.nc
       field io names: &mom6_field_io_names
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt
         sea_surface_height_above_geoid: ave_ssh
+        sea_ice_area_fraction: aice_h
+        sea_ice_thickness: hi_h
+        sea_ice_snow_thickness: hs_h
+        landmask3d: mask3d
   write then read test:
     state write:
       io:
@@ -39,12 +48,16 @@ state test:
       - sea_water_potential_temperature
       - sea_water_salinity
       - sea_surface_height_above_geoid
+      - sea_ice_area_fraction
+      - sea_ice_thickness
+      - sea_ice_snow_thickness
+      - landmask3d
       io:
         filetype: mom6
         datapath: data_generated/mom6
         ocn_file: mom6_history_write_test.nc
         field io names: *mom6_field_io_names
   date: 2021-01-01T00:00:00Z
-  norm file: 7.21579384191683039e+03
+  norm file: 7.19112594846635511e+03
   tolerance: 1.0e-06
   test variable change constructor: false
