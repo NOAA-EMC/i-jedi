@@ -1,6 +1,7 @@
 #include <functional>
 #include <map>
 
+#include "ijedi/Applications/GeometryCache.h"
 #include "ijedi/Traits.h"
 
 #include "oops/runs/Run.h"
@@ -43,6 +44,9 @@ int runApp(int argc, char **argv, const std::string appName)
   apps["errortoolbox"] = []() {
     return std::make_unique<saber::ErrorCovarianceToolbox<ijedi::Traits>>();
   };
+  apps["geometry_cache"] = []() {
+    return std::make_unique<ijedi::GeometryCache>();
+  };
 
   // Create application object and point to it
   auto it = apps.find(appName);
@@ -69,7 +73,7 @@ int main(int argc, char **argv)
   // Check that the application is recognized
   // ----------------------------------------
   const std::set<std::string> validApps = {
-      "hofx3d", "var", "errortoolbox", "convertstate"
+      "hofx3d", "var", "errortoolbox", "convertstate", "geometry_cache"
   };
   ASSERT_MSG(validApps.find(appName) != validApps.end(), "Application not recognized: " + appName);
 

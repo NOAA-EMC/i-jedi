@@ -5,10 +5,8 @@ geometry:
   vertical geometry from: data_generated/mom6/MOM.res.nc
   coarsen factor: 1
   has northern fold: true
-  save unstructured grid to: mom6_grid.nc
-  save structured grid to: mom6_structured_grid.nc
-  save debug mesh to: mom6_grid_debug
-  save gmsh to: mom6_grid.msh
+  save unstructured grid to: data_generated/mom6/mom6_unstructuredgeometry_cache_grid.nc
+  save structured grid to: data_generated/mom6/mom6_structuredgeometry_cache_grid.nc
 
   MOM_input:
     NIGLOBAL: 72

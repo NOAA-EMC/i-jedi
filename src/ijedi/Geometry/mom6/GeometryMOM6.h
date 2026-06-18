@@ -55,29 +55,6 @@ namespace ijedi
                         atlas::Field * mom6Field) const;
 
    private:
-    // Replicates FMS compute_extent() — integer-division domain partition
-    static int computeExtent(int N, int ndivs, int pe);
-
-    // --- Grid read helpers (always return full global arrays) ---
-    // Read all T-cell and U/V-cell geometry from ocean_hgrid.nc in a single
-    // file open.  All output arrays are size [njGlobal * niGlobal], row-major
-    // (j, i).
-    void readHgrid(const std::string & path,
-                   std::vector<double> * lon,
-                   std::vector<double> * lat,
-                   std::vector<double> * dxT,
-                   std::vector<double> * dyT,
-                   std::vector<double> * areaT,
-                   std::vector<double> * lonU,
-                   std::vector<double> * latU,
-                   std::vector<double> * lonV,
-                   std::vector<double> * latV) const;
-    // depth(j, i) and wet(j, i) — MOM6's authoritative land/sea mask,
-    // size [njGlobal * niGlobal]
-    void readTopog(const std::string & path,
-                   std::vector<double> * depth,
-                   std::vector<double> * wet) const;
-
     // --- Function space builders ---
     // MOM6 structured space: replicates FMS rectangular tile decomposition
     // → mom6FunctionSpace_
@@ -85,7 +62,8 @@ namespace ijedi
                                 const std::vector<double> & lonGlobal,
                                 const std::vector<double> & latGlobal);
 
-    // JEDI unstructured space: ocean + land-fringe points, load-balanced
+    // JEDI unstructured space: ocean + configurable land-fringe points,
+    // load-balanced
     // → functionSpace_
     void buildJediFunctionSpace(const eckit::mpi::Comm & comm,
                                 const std::vector<double> & wetGlobal,
@@ -99,6 +77,9 @@ namespace ijedi
                          const std::vector<double> & latGlobal,
                          const std::vector<double> & depthGlobal,
                          const std::vector<double> & wetGlobal,
+                         const std::vector<double> & layerThicknessGlobal,
+                         const std::vector<double> & layerCenterDepthGlobal,
+                         const std::vector<double> & mask3dGlobal,
                          const std::vector<double> & dxTGlobal,
                          const std::vector<double> & dyTGlobal,
                          const std::vector<double> & areaTGlobal,
@@ -113,18 +94,23 @@ namespace ijedi
                      const std::vector<double> & latGlobal,
                      const std::vector<double> & depthGlobal,
                      const std::vector<double> & wetGlobal,
+                     const std::vector<double> & layerThicknessGlobal,
+                     const std::vector<double> & layerCenterDepthGlobal,
+                     const std::vector<double> & mask3dGlobal,
                      const std::vector<double> & dxTGlobal,
                      const std::vector<double> & dyTGlobal,
                      const std::vector<double> & areaTGlobal,
                      const std::vector<double> & lonUGlobal,
                      const std::vector<double> & latUGlobal,
                      const std::vector<double> & lonVGlobal,
-                     const std::vector<double> & latVGlobal);
+                     const std::vector<double> & latVGlobal,
+                     bool buildVerticalGeometry);
 
     // Distance from each JEDI point to the nearest land cell (metres)
     void buildDistFromCoast(const std::vector<double> & lonGlobal,
                             const std::vector<double> & latGlobal,
-                            const std::vector<double> & wetGlobal);
+                            const std::vector<double> & wetGlobal,
+                            const std::vector<double> & mask3dGlobal);
 
     // --- Scatter map & exchange plan ---
     void buildScatterMap();
@@ -147,10 +133,12 @@ namespace ijedi
     int numLevels_ = 0;
     int layoutX_   = 1;
     int layoutY_   = 1;
-    double minimumDepth_ = 0.0;
+    double minimumDepth_     = 0.0;
+    double minimumThickness_ = 1e-6;  // layer thickness below which a cell is masked
     int coarsenFactor_ = 1;
     int niEff_         = 0;   // niGlobal_ / coarsenFactor_
     int njEff_         = 0;   // njGlobal_ / coarsenFactor_
+    int fringeWidth_   = 2;   // retained land-fringe layers around ocean
     bool hasFold_      = false;  // true for tripolar grids with a northern fold
 
     // Local MOM6 compute domain (1-based, inclusive)
