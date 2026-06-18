@@ -144,9 +144,9 @@ void readTopog(const std::string & path,
         for (int jr = 0; jr < K; ++jr)
           for (int ir = 0; ir < K; ++ir)
             sumD += (*depth)[(K * jG + jr) * niGlobal + (K * iG + ir)];
-        depthC[jG * niEff + iG] = sumD / (K * K);
-        wetC[jG * niEff + iG] =
-            (depthC[jG * niEff + iG] > minimumDepth) ? 1.0 : 0.0;
+            depthC[jG * niEff + iG] = sumD / (K * K);
+            wetC[jG * niEff + iG] =
+              (depthC[jG * niEff + iG] > minimumDepth) ? 1.0 : 0.0;
       }
     }
     *depth = std::move(depthC);
