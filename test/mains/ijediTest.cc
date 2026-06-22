@@ -7,6 +7,7 @@
 #include "oops/test/interface/Geometry.h"
 #include "oops/test/interface/Increment.h"
 #include "oops/test/interface/State.h"
+#include "mist/test/interface/GeometryIterator.h"
 
 // -------------------------------------------------------------------------------------------------
 
@@ -32,6 +33,10 @@ int runApp(int argc, char **argv, const std::string testName)
   tests["increment"] = []()
   {
     return std::make_unique<test::Increment<ijedi::Traits>>();
+  };
+  tests["mistgeometryiterator"] = []()
+  {
+    return std::make_unique<mist::test::GeometryIterator<ijedi::Geometry>>();
   };
 
   // Create application object and point to it
@@ -62,6 +67,7 @@ int main(int argc, char **argv)
       "geometry",
       "state",
       "increment",
+      "mistgeometryiterator",
   };
   ASSERT_MSG(validtests.find(testApp) != validtests.end(), "Test not recognized: " + testApp);
 
