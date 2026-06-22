@@ -44,6 +44,13 @@ namespace ijedi
     // Build GeometryData
     geomData_.reset(new oops::GeometryData(functionspace_, fields_, levelsAreTopDown_, comm));
 
+    // Populate the mist::base::Geometry iterator support members now that
+    // functionspace_ is ready.  verticalCoord_ uses simple level indices since
+    // ijedi constructs its geometry without the ak/bk config path.
+    buildOwnedNodeIndices();
+    verticalCoord_.resize(numberLevels_);
+    std::iota(verticalCoord_.begin(), verticalCoord_.end(), 0.0);
+
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;
   }
