@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "oops/util/DateTime.h"
 #include "oops/util/parameters/OptionalParameter.h"
@@ -22,10 +23,25 @@ namespace ijedi
     OOPS_CONCRETE_PARAMETERS(IoMOM6Parameters, IoParametersBase)
 
    public:
-    // Single filename provided
-    oops::OptionalParameter<std::string> filename{"filename",
-                                      "name of the restart or history file to be read/written",
-                                      this};
+    // Path prepended to all files
+    oops::Parameter<std::string> datapath{"datapath",
+                                          "path to location of files to be read",
+                                          "./", this};
+
+    // Ocean background file
+    oops::RequiredParameter<std::string> ocn_file{"ocn_file",
+                                                  "ocean background file name",
+                                                  this};
+
+    // Sea ice file
+    oops::OptionalParameter<std::string> ice_file{"ice_file",
+                                                  "sea ice file name",
+                                                  this};
+
+    // Fix file (decorrelation length scales, distance from coast, etc.)
+    oops::OptionalParameter<std::string> fix_file{"fix_file",
+                                                  "fix fields file name",
+                                                  this};
   };
 
   // -------------------------------------------------------------------------------------------------
@@ -48,7 +64,8 @@ namespace ijedi
     void print(std::ostream &) const override;
 
     const Geometry & geom_;
-    std::string filename_;
+    std::vector<std::string> readFilepaths_;  // ordered: ocn, ice, fix
+    std::string writeFilepath_;               // ocean file for write
   };
 
   // -------------------------------------------------------------------------------------------------
