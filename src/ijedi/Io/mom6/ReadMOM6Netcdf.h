@@ -9,24 +9,24 @@
 
 namespace ijedi {
 
-/// Read a MOM6-format NetCDF file into an Atlas FieldSet.
+/// Read one or more MOM6-format NetCDF files into an Atlas FieldSet.
 ///
-/// Rank 0 reads the full structured grid from @p filepath, maps it into
-/// Atlas global fields using gathered global indices, then scatters to all
-/// ranks via Atlas NodeColumns::scatter().  A halo exchange is performed at
-/// the end to fill ghost nodes.
+/// Rank 0 reads each file in order (ocean, sea-ice, fix, …).  For every file
+/// the root maps the structured grid into Atlas global fields via gathered
+/// global indices; a later file may overwrite fields from an earlier one, but
+/// in practice each variable lives in exactly one file.  After all files are
+/// processed a single collective scatter distributes data to all ranks,
+/// followed by a halo exchange on ghost nodes.
 ///
-/// @param filepath         Input NetCDF path (rank 0 reads).
-/// @param x                Distributed FieldSet to populate.
-/// @param fileVarNames     Per-field file variable name (empty => skip).
-/// @param scalings         Per-field scaling factor (0 => no scaling).
-/// @param numLevelsGeom    Number of vertical levels expected by geometry.
-/// @param comm             MPI communicator.
-void readMOM6Netcdf(const std::string & filepath,
+/// @param filepaths    Ordered list of input NetCDF paths (rank 0 reads).
+/// @param x            Distributed FieldSet to populate.
+/// @param fileVarNames Per-field file variable name (empty => skip field).
+/// @param scalings     Per-field scaling factor (0 => no scaling).
+/// @param comm         MPI communicator.
+void readMOM6Netcdf(const std::vector<std::string> & filepaths,
                     atlas::FieldSet & x,
                     const std::vector<std::string> & fileVarNames,
                     const std::vector<double> & scalings,
-                    int numLevelsGeom,
                     const eckit::mpi::Comm & comm);
 
 }  // namespace ijedi

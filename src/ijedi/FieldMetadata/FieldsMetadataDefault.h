@@ -867,6 +867,14 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "landmask3d";
+    md.units = "none";
+    md.kind = "integer";
+    md.tracer = "false";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "latent_heat_vaporization";
     md.units = "none";
     md.kind = "double";
@@ -1422,7 +1430,7 @@ namespace ijedi
     md.longName = "sea_surface_height_above_geoid";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
@@ -1430,7 +1438,7 @@ namespace ijedi
     md.longName = "sea_surface_salinity";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);

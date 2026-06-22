@@ -2,6 +2,7 @@ input geometry:
   geometry_type: mom6
   ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
   ocean_topog: data_generated/mom6/ocean_topog.nc
+  vertical geometry from: data_generated/mom6/MOM.res.nc
   coarsen factor: 1
   MOM_input:
     NIGLOBAL: 72
@@ -14,6 +15,7 @@ output geometry:
   geometry_type: mom6
   ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
   ocean_topog: data_generated/mom6/ocean_topog.nc
+  vertical geometry from: data_generated/mom6/MOM.res.nc
   coarsen factor: 1
   MOM_input:
     NIGLOBAL: 72
@@ -33,7 +35,8 @@ states:
     - sea_surface_height_above_geoid
     io:
       filetype: mom6
-      filename: data_generated/mom6/MOM.res.nc
+      datapath: data_generated/mom6
+      ocn_file: MOM.res.nc
       field io names:
         sea_ice_area_fraction: frazil
         sea_ice_thickness: hisnow
@@ -52,7 +55,8 @@ states:
     - sea_surface_height_above_geoid
     io:
       filetype: mom6
-      filename: data_generated/mom6/convertstate_output.nc
+      datapath: data_generated/mom6
+      ocn_file: convertstate_output.nc
       field io names:
         sea_ice_area_fraction: frazil
         sea_ice_thickness: hisnow
