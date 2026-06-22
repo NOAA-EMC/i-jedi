@@ -12,7 +12,7 @@ ecbuild_bundle_initialize()
 # ===============================================================================
 option(TEST_IODA "download and ioda-data repo needed for ioda ctests" OFF)
 option(TEST_UFO "download and ufo-data repo needed for ufo ctests" OFF)
-option(TEST_SABER "download and saber-data repo needed for ioda ctests" OFF)
+option(TEST_VADER "download and jedi-model-data repo needed for saber and vader ctests" OFF)
 
 # ECMWF libraries
 option("BUNDLE_SKIP_ECKIT" "Don't build eckit" "ON") # Skip eckit build unless user passes -DBUNDLE_SKIP_ECKIT=OFF
@@ -75,11 +75,11 @@ if(TEST_UFO)
   endif()
 endif()
 
-if(TEST_SABER)
-  find_branch_name(REPO_DIR_NAME saber)
+if(TEST_VADER)
+  find_branch_name(REPO_DIR_NAME vader)
 
   if(NOT DEFINED ENV{LOCAL_PATH_JEDI_TESTFILES} AND NOT DEFINED ${GIT_TAG_FUNC})
-    ecbuild_bundle(PROJECT saber-data GIT "https://github.com/JCSDA-internal/saber-data.git" BRANCH develop UPDATE)
+    ecbuild_bundle(PROJECT jedi-model-data GIT "https://github.com/JCSDA-internal/jedi-model-data.git" BRANCH develop UPDATE)
   endif()
 endif()
 
