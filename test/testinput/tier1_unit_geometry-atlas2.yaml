@@ -3,15 +3,15 @@ geometry:
   nlevels: 1
   function space: StructuredColumns
   custom grid matching gsi:
-          type: rotated_lonlat
-          lats: 127
-          lons: 211
-          lat_start: -14.726005
-          lat_end: 14.726005
-          lon_start: -25.076254
-          lon_end: 25.076254
-          north_pole_lat: 51.499999
-          north_pole_lon: 82.500018
+    type: rotated_lonlat
+    lats: 127
+    lons: 211
+    lat_start: -14.726005
+    lat_end: 14.726005
+    lon_start: -25.076254
+    lon_end: 25.076254
+    north_pole_lat: 51.499999
+    north_pole_lon: 82.500018
   custom partitioner matching gsi:
-          bands: 2
+    bands: 2
   halo: 1
