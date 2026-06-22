@@ -36,6 +36,18 @@ ecbuild_add_test( TARGET  ijedi_geometry_fv3
                   COMMAND $<TARGET_FILE:ijedi_test.x>
                   ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-fv3.yaml)
 
+ecbuild_add_test( TARGET  ijedi_geometry_atlas1
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-atlas1.yaml)
+
+ecbuild_add_test( TARGET  ijedi_geometry_atlas2
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-atlas2.yaml)
+
 ecbuild_add_test( TARGET  ijedi_geometry_mom6
                   MPI     6
                   OMP     1

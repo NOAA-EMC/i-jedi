@@ -18,6 +18,8 @@ list(APPEND ijedi_src_files
   Geometry/Geometry.h
   Geometry/base/GeometryBase.cc
   Geometry/base/GeometryBase.h
+  Geometry/atlas/GeometryAtlas.cc
+  Geometry/atlas/GeometryAtlas.h
   Geometry/mpas/GeometryMPAS.cc
   Geometry/mpas/GeometryMPAS.h
   Geometry/mom6/GeometryMOM6.cc
@@ -158,6 +160,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC eckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC fckit)
 target_link_libraries(${PROJECT_NAME} PUBLIC atlas atlas_f)
 target_link_libraries(${PROJECT_NAME} PUBLIC oops)
+target_link_libraries(${PROJECT_NAME} PUBLIC saber)
 
 # Mist
 target_link_libraries(${PROJECT_NAME} PUBLIC mist_base)

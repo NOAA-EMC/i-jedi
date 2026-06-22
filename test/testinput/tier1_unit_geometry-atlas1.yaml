@@ -1,0 +1,7 @@
+geometry:
+  geometry_type: atlas
+  nlevels: 10
+  function space: StructuredColumns
+  grid:
+    type: regular_gaussian
+    N: 15
