@@ -24,7 +24,7 @@
 #include "oops/util/FunctionSpaceHelpers.h"
 #include "oops/util/Logger.h"
 
-#include "saber/interpolation/GsiGrid.h"
+#include "ijedi/Geometry/atlas/GsiGrid.h"
 
 namespace ijedi {
 
@@ -45,16 +45,15 @@ GeometryAtlas::GeometryAtlas(const eckit::Configuration &conf,
   halo_ = conf.getUnsigned("halo", 1);
 
   // A GSI-matching setup requires both the grid and the partitioner sub-configs (or neither).
-  const bool hasGsiGrid = conf.has(saber::interpolation::GsiGridKey);
-  const bool hasGsiPartitioner = conf.has(saber::interpolation::GsiPartitionerKey);
+  const bool hasGsiGrid = conf.has(GsiGridKey);
+  const bool hasGsiPartitioner = conf.has(GsiPartitionerKey);
   if (hasGsiGrid != hasGsiPartitioner) {
     throw eckit::BadParameter(
         "GeometryAtlas: must specify GSI-matching grid AND partitioner, OR neither", Here());
   }
   if (hasGsiGrid) {
     // Reuse SABER's GSI-matching grid + south-to-north checkerboard partitioner.
-    saber::interpolation::detail::setupGsiMatchingGrid(conf, comm, grid_,
-                                                       functionSpace_, geomFields);
+    setupGsiMatchingGrid(conf, comm, grid_, functionSpace_, geomFields);
     // SABER returns an empty fieldset for the GSI path; add the "owned" mask that downstream
     // oops code expects.
     atlas::Field owned = functionSpace_.createField<int>(atlas::option::name("owned") |
