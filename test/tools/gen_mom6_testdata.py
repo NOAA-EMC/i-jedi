@@ -30,6 +30,17 @@ def ncgen(cdl_path, nc_path):
         sys.exit(1)
 
 
+def ice_concentration(lat2d):
+    """Smooth sea-ice area fraction derived from 2-D latitude.
+
+    Arctic:    linear ramp from 0 at 70 N to 1 at 80 N.
+    Antarctic: linear ramp from 0 at 60 S to 1 at 70 S.
+    """
+    arctic    = np.clip((lat2d - 70.0) / 10.0, 0.0, 1.0)
+    antarctic = np.clip((-lat2d - 60.0) / 10.0, 0.0, 1.0)
+    return np.maximum(arctic, antarctic)
+
+
 def gen_mom6_restart(outdir):
     """Generate MOM.res.nc with analytically defined fields.
 
@@ -95,8 +106,10 @@ def gen_mom6_restart(outdir):
     )   # shape: (nz, nj, ni)
 
     # ---- Temp: warm tropics, cold poles; exponential decay with depth --------
-    # Use actual 2-D latitude (tripolar grid distorts near the poles)
+    # Use actual 2-D latitude (tripolar grid distorts near the poles).
+    # Force SST to the freezing point (-1.8 C) wherever sea ice is present.
     t_surf = np.clip(28.0 * np.cos(np.deg2rad(lat2d)) - 1.8, -1.8, 30.0)
+    t_surf = np.where(ice_concentration(lat2d) > 0.15, -1.8, t_surf)
     Temp = np.where(
         h > 1e-5,
         (t_surf[np.newaxis, :, :]
@@ -176,6 +189,85 @@ def gen_mom6_restart(outdir):
     print(f"  {out_nc}")
 
 
+def gen_cice6_history(outdir):
+    """Generate cice6.nc with CICE6-format sea-ice fields on the 72x35x25 grid.
+
+    Produces realistic Arctic (> 70 N) and Antarctic (< 60 S) sea-ice
+    distributions: aice_h, hi_h, hs_h, sice_h.  Arctic ice is thicker
+    (2 m in-ice) than Antarctic (1 m).
+    """
+    nj, ni = 35, 72
+    FILL_LARGE = np.float32(1.e30)
+
+    gridspec_nc = os.path.join(outdir, "soca_gridspec.72x35x25.nc")
+    with netCDF4.Dataset(gridspec_nc) as gs:
+        lonh  = gs["lonh"][0].data          # (ni,)
+        lat2d = gs["lat"][0].data           # (nj, ni)
+        mask  = gs["mask2d"][0].data        # (nj, ni) 1=ocean 0=land
+
+    lon2d = np.tile(lonh[np.newaxis, :], (nj, 1))  # (nj, ni)
+    aice  = (ice_concentration(lat2d) * mask).astype(np.float32)
+
+    in_ice_hi = np.where(lat2d > 0.0, 2.0, 1.0)   # Arctic: 2 m, Antarctic: 1 m
+    in_ice_hs = np.where(lat2d > 0.0, 0.3, 0.1)   # Arctic: 30 cm, Antarctic: 10 cm
+
+    # Grid-cell means (= in-ice value * aice); 0 where no ice
+    hi_h   = np.where(aice > 0.0, aice * in_ice_hi, 0.0).astype(np.float32)
+    hs_h   = np.where(aice > 0.0, aice * in_ice_hs, 0.0).astype(np.float32)
+    sice_h = np.where(aice > 0.0, np.float32(5.0), FILL_LARGE)
+
+    out_nc = os.path.join(outdir, "cice6.nc")
+    with netCDF4.Dataset(out_nc, "w", format="NETCDF4") as ds:
+        ds.title       = "sea ice model output for CICE (synthetic test data)"
+        ds.source      = "gen_mom6_testdata.py"
+        ds.conventions = "CF-1.0"
+
+        ds.createDimension("time", 1)
+        ds.createDimension("nj",   nj)
+        ds.createDimension("ni",   ni)
+
+        vt           = ds.createVariable("time", "f4", ("time",))
+        vt.units     = "days since 2021-07-01"
+        vt.long_name = "model time"
+        vt[:]        = np.float32(0.0)
+
+        def coord_var(name, long_name, units, data):
+            v               = ds.createVariable(name, "f4", ("nj", "ni"),
+                                                fill_value=FILL_LARGE)
+            v.long_name     = long_name
+            v.units         = units
+            v.missing_value = FILL_LARGE
+            v[:]            = data.astype(np.float32)
+
+        coord_var("TLAT", "T grid center latitude",  "degrees_north", lat2d)
+        coord_var("TLON", "T grid center longitude", "degrees_east",  lon2d)
+
+        def data_var(name, long_name, units, data, fill, coords, cell_measures=None):
+            v             = ds.createVariable(name, "f4", ("time", "nj", "ni"),
+                                              fill_value=fill)
+            v.long_name   = long_name
+            v.coordinates = coords
+            v.time_rep    = "instantaneous"
+            if units is not None:
+                v.units = units
+            if not np.isnan(float(fill)):
+                v.missing_value = fill
+            if cell_measures is not None:
+                v.cell_measures = cell_measures
+            v[0] = data
+
+        data_var("aice_h", "ice area  (aggregate)",        "1",
+                 aice,   FILL_LARGE, "TLON TLAT time", "area: tarea")
+        data_var("hi_h",   "grid cell mean ice thickness", None,
+                 hi_h,   np.float32(0.0), "TLAT TLON")
+        data_var("hs_h",   "grid cell mean snow thickness", None,
+                 hs_h,   np.float32(0.0), "TLAT TLON")
+        data_var("sice_h", "bulk ice salinity",            "ppt",
+                 sice_h, FILL_LARGE, "TLON TLAT time", "area: tarea")
+
+    print(f"  {out_nc}")
+
+
 def main():
     if len(sys.argv) != 3:
         print(f"Usage: {sys.argv[0]} <input_dir> <output_dir>")
@@ -206,6 +298,11 @@ def main():
     # MOM.res.nc — analytical restart (h, Temp, Salt, u, v, ave_ssh)
     # -------------------------------------------------------------------------
     gen_mom6_restart(outdir)
+
+    # -------------------------------------------------------------------------
+    # cice6.nc — CICE6-format sea-ice history (aice_h, hi_h, hs_h, sice_h)
+    # -------------------------------------------------------------------------
+    gen_cice6_history(outdir)
 
     print(f"MOM6 test data written to: {outdir}")
 
