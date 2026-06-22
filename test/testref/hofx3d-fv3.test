@@ -1,0 +1,10 @@
+State: 
+  Valid time: 2020-12-15T00:00:00Z, nFields = 4
+eastward_wind          : Min=-5.5976715205e+01, Max=7.4718500795e+01, RMS=1.6455900426e+01
+northward_wind         : Min=-6.6716713836e+01, Max=7.0110026128e+01, RMS=1.5013681035e+01
+air_temperature        : Min=1.6000000000e+02, Max=3.3000000000e+02, RMS=2.4993249181e+02
+air_pressure_thickness : Min=1.0000000000e-01, Max=2.1511944525e+03, RMS=8.3287261004e+02
+H(x): 
+Aircraft nobs= 315 Min=-2.7263181982e+01, Max=2.9279473329e+02, RMS=1.4844018620e+02
+
+End H(x)

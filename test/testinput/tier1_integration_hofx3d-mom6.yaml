@@ -47,3 +47,6 @@ observations:
     obs operator:
       name: Identity
       observation alias file: data/obs/obsop_name_map.yml
+
+test:
+  reference filename: testref/hofx3d-mom6.test

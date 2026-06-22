@@ -47,3 +47,6 @@ observations:
       observation vertical coordinate: pressure
       observation vertical coordinate group: MetaData
       interpolation method: log-linear
+
+test:
+  reference filename: testref/hofx3d-fv3.test

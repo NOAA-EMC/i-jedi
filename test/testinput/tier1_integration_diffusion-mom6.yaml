@@ -44,3 +44,6 @@ background error:
           as gaussian: true
         write:
           filepath: diffusion_vt
+
+test:
+  reference filename: testref/diffusion-mom6.test

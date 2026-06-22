@@ -79,3 +79,6 @@ output:
     filepath: mom6-3dvar-an-unstructured
 
 final j evaluation: false
+
+test:
+  reference filename: testref/3dvar-mom6.test
