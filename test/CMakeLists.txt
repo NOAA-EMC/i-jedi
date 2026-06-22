@@ -71,7 +71,7 @@ ecbuild_add_test( TARGET  ijedi_state_mom6
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi_test.x>
                   ARGS    state ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_state-mom6.yaml
-                  TEST_DEPENDS ijedi_setup_mom6_testdata)
+                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_geometry_cache_mom6)
 
 # H(x) tests
 ecbuild_add_test( TARGET  ijedi_hofx3d_mom6
