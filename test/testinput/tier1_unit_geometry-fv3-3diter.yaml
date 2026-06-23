@@ -8,4 +8,4 @@ geometry:
   npz: 127
   ntiles: 6
   akbk: gfs_127
-  iterator dimension: 2
+  iterator dimension: 3

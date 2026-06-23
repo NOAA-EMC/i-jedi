@@ -57,6 +57,21 @@ ecbuild_add_test( TARGET  ijedi_mist_geometryiterator_mom6
                   ARGS    mistgeometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
 
+ecbuild_add_test( TARGET  ijedi_mist_geometryiterator_fv3_3diter
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    mistgeometryiterator
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-fv3-3diter.yaml)
+
+ecbuild_add_test( TARGET  ijedi_mist_geometryiterator_mom6_3diter
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    mistgeometryiterator
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6-3diter.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata)
+
 # MOM6 structured-grid check against SOCA reference gridspec
 ecbuild_add_test(TARGET  ijedi_check_mom6_structured_grid
                  TYPE    SCRIPT
