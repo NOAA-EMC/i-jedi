@@ -1483,6 +1483,22 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "sea_water_depth";
+    md.units = "none";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "sea_water_temperature";
+    md.units = "none";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "sea_water_practical_salinity";
     md.units = "none";
     md.kind = "double";

@@ -26,6 +26,7 @@ cost function:
     - sea_water_salinity
     - sea_water_potential_temperature
     - sea_surface_height_above_geoid
+    - sea_water_depth
     io:
       filetype: mom6
       datapath: data_generated/mom6
@@ -53,6 +54,9 @@ cost function:
             filepath: diffusion_vt
 
   observations:
+    variable change:
+      vader cookbook:
+        sea_water_temperature: [SeaWaterTemperature_A]
     observers:
     - obs space:
         name: SST
@@ -64,6 +68,20 @@ cost function:
       obs operator:
         name: Identity
         observation alias file: data/obs/obsop_name_map.yml
+    - obs space:
+        name: InsituTemperature
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: data_generated/obs/insitu_temp_profile_argo_3prof.nc
+        simulated variables: [waterTemperature]
+      obs operator:
+        name: VertInterp
+        observation alias file: ./data/obs/obsop_name_map.yml
+        vertical coordinate: sea_water_depth
+        observation vertical coordinate: depth
+        interpolation method: linear
+        covariance model: diagonal
 
 variational:
   minimizer:

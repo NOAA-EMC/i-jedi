@@ -36,9 +36,10 @@ ecbuild_bundle(PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.0
 # ===============================================================================
 ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git"   UPDATE BRANCH develop RECURSIVE )
 if (BUILD_JEDI)
+  ecbuild_bundle( PROJECT gsw       GIT    "https://github.com/jcsda-internal/GSW-Fortran.git"  UPDATE BRANCH develop )
   ecbuild_bundle( PROJECT oops      GIT    "https://github.com/NOAA-EMC/oops.git"    UPDATE BRANCH feature/mist )
-  ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"      UPDATE BRANCH develop)
-  ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"      UPDATE BRANCH develop )
+  ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"      UPDATE BRANCH feature/add_gswocean_tl )
+  ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"      UPDATE BRANCH feature/torch-non-loncal )
   ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"       UPDATE BRANCH develop )
   ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"        UPDATE BRANCH develop )
   option(BUILD_FV3JEDI "Build fv3-jedi" OFF)

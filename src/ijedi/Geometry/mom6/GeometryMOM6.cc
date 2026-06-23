@@ -590,9 +590,9 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
     }
   }
 
-  if (buildVerticalGeometry) {
-    buildDistFromCoast(lonGlobal, latGlobal, wetGlobal, mask3dGlobal);
-  }
+  //if (buildVerticalGeometry) {
+  //  buildDistFromCoast(lonGlobal, latGlobal, wetGlobal, mask3dGlobal);
+  //}
 }
 
 // ---------------------------------------------------------------------------

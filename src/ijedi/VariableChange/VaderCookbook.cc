@@ -54,6 +54,8 @@ static std::map<std::string, std::vector<std::string>> cookbook() {
       {"virtual_temperature",                     {"AirVirtualTemperature_A"}},
       // sst: from t
       {"sea_surface_temperature",                 {"SeaSurfaceTemperature_A"}},
+      // t_insitu: from thetao (sea_water_potential_temperature), salinity, depth, lat/lon
+      {"sea_water_temperature",                  {"SeaWaterTemperature_A"}},
   };
 }
 }  // namespace detail
