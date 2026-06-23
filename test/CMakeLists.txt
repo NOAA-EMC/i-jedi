@@ -43,32 +43,32 @@ ecbuild_add_test( TARGET  ijedi_geometry_mom6
                   ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
 
-# mist::base::GeometryIterator tests
-ecbuild_add_test( TARGET  ijedi_mist_geometryiterator_fv3
+# OOPS GeometryIterator interface tests
+ecbuild_add_test( TARGET  ijedi_geometryiterator_fv3
                   MPI     6
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi_test.x>
-                  ARGS    mistgeometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-fv3.yaml)
+                  ARGS    geometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-fv3.yaml)
 
-ecbuild_add_test( TARGET  ijedi_mist_geometryiterator_mom6
+ecbuild_add_test( TARGET  ijedi_geometryiterator_mom6
                   MPI     6
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi_test.x>
-                  ARGS    mistgeometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
+                  ARGS    geometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
 
-ecbuild_add_test( TARGET  ijedi_mist_geometryiterator_fv3_3diter
+ecbuild_add_test( TARGET  ijedi_geometryiterator_fv3_3diter
                   MPI     6
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi_test.x>
-                  ARGS    mistgeometryiterator
+                  ARGS    geometryiterator
                           ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-fv3-3diter.yaml)
 
-ecbuild_add_test( TARGET  ijedi_mist_geometryiterator_mom6_3diter
+ecbuild_add_test( TARGET  ijedi_geometryiterator_mom6_3diter
                   MPI     6
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi_test.x>
-                  ARGS    mistgeometryiterator
+                  ARGS    geometryiterator
                           ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6-3diter.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
 

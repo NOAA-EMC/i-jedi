@@ -17,3 +17,9 @@ geometry:
     NZ: 25
     LAYOUT: [3, 2]
     MINIMUM_DEPTH: 0.5
+inc variables:
+- sea_water_potential_temperature
+- sea_water_salinity
+- sea_surface_height_above_geoid
+increment test:
+  date: 2021-01-01T00:00:00Z
