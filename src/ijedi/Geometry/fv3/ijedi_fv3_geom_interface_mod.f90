@@ -65,4 +65,33 @@ end subroutine c_fv3_geom_create
 
 ! --------------------------------------------------------------------------------------------------
 
+subroutine c_fv3_geom_set_and_fill_geometry_fields(c_functionspace, c_fieldset, vertcoord_selector, &
+                                                   ngrid, npz, ak, bk, area, surface_pressure, &
+                                                   surface_geopotential) &
+    bind(c, name='f_fv3_geom_set_and_fill_geometry_fields')
+
+! Arguments
+type(c_ptr), value, intent(in) :: c_functionspace
+type(c_ptr), value, intent(in) :: c_fieldset
+integer(c_int), value, intent(in) :: vertcoord_selector
+integer(c_int), value, intent(in) :: ngrid
+integer(c_int), value, intent(in) :: npz
+real(c_double), intent(in) :: ak(npz+1), bk(npz+1)
+real(c_double), intent(in) :: area(ngrid), surface_pressure(ngrid), surface_geopotential(ngrid)
+
+! Locals
+type(atlas_functionspace) :: f_functionspace
+type(atlas_fieldset) :: f_fieldset
+
+f_functionspace = atlas_functionspace(c_functionspace)
+f_fieldset = atlas_fieldset(c_fieldset)
+
+call fv3_geom_set_and_fill_geometry_fields(npz, ngrid, ak, bk, area, surface_pressure, &
+                                           surface_geopotential, vertcoord_selector, &
+                                           f_functionspace, f_fieldset)
+
+end subroutine c_fv3_geom_set_and_fill_geometry_fields
+
+! --------------------------------------------------------------------------------------------------
+
 end module fv3jedi_geom_interface_mod
