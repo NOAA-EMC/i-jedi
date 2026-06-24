@@ -416,14 +416,13 @@ end subroutine fv3_geom_create
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine fv3_geom_set_and_fill_geometry_fields(npz, ngrid, ak, bk, area, surface_pressure, &
+subroutine fv3_geom_set_and_fill_geometry_fields(npz, ngrid, ak, bk, surface_pressure, &
                                                  surface_geopotential, vertcoord_type, &
                                                  afunctionspace, afieldset)
 
 !Arguments
 integer,                   intent(in) :: npz, ngrid
 real(kind=kind_real),      intent(in) :: ak(npz+1), bk(npz+1)
-real(kind=kind_real),      intent(in) :: area(ngrid)
 real(kind=kind_real),      intent(in) :: surface_pressure(ngrid)
 real(kind=kind_real),      intent(in) :: surface_geopotential(ngrid)
 character(len=*),          intent(in) :: vertcoord_type
@@ -433,24 +432,9 @@ type(atlas_fieldset),      intent(inout) :: afieldset
 !Locals
 type(atlas_field) :: afield
 integer :: jl, jn
-integer, pointer :: int_ptr(:,:)
 real(kind=kind_real), pointer :: real_ptr(:,:)
 real(kind=kind_real) :: sigmaup, sigmadn, p_mid
 real(kind=kind_real), parameter :: grav = 9.80665_kind_real
-
-! Add owned vs halo/BC field
-afield = afunctionspace%create_field(name='owned', kind=atlas_integer(kind_int), levels=1)
-call afield%data(int_ptr)
-int_ptr(1, :) = 0
-int_ptr(1, 1:ngrid) = 1
-call afieldset%add(afield)
-
-! Add area
-afield = afunctionspace%create_field(name='area', kind=atlas_real(kind_real), levels=1)
-call afield%data(real_ptr)
-real_ptr(1, :) = -1.0_kind_real
-real_ptr(1, 1:ngrid) = area(:)
-call afieldset%add(afield)
 
 ! Add vertical coordinate
 if (trim(vertcoord_type) == 'sigma') then

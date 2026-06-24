@@ -194,6 +194,33 @@ namespace ijedi
     // Atlas fields for geometry variables
     geomFields = atlas::FieldSet();
 
+    // Create fields needed in geomFields
+    atlas::Field area = functionSpace.createField<double>(atlas::option::name("area") |
+                                                          atlas::option::levels(1));
+    atlas::Field owned = functionSpace.createField<int>(atlas::option::name("owned") |
+                                                        atlas::option::levels(1));
+
+    // Start with area being -1 everywhere
+    auto areaView = atlas::array::make_view<double, 2>(area);
+    auto ownedView = atlas::array::make_view<int, 2>(owned);
+
+    // 1. initialize all local entries, including halo, to -1
+    for (atlas::idx_t j = 0; j < functionSpace.size(); ++j)
+    {
+      areaView(j, 0) = -1.0;
+      ownedView(j, 0) = 0;
+    }
+    // 2. overwrite owned points with your data
+    for (atlas::idx_t j = 0; j < ngrid; ++j)
+    {
+      areaView(j, 0) = area_owned[j];
+      ownedView(j, 0) = 1;
+    }
+
+    // Add area to geomFields
+    geomFields.add(area);
+    geomFields.add(owned);
+
     std::vector<double> ak;
     std::vector<double> bk;
     geomVariables.get("sigma_pressure_hybrid_coordinate_a_coefficient", ak);
@@ -218,7 +245,6 @@ namespace ijedi
         numberLevels,
         ak.data(),
         bk.data(),
-        area_owned.data(),
         surfacePressure.data(),
         surfaceGeopotential.data());
 
