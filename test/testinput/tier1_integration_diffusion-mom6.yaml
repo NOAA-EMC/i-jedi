@@ -39,10 +39,10 @@ background error:
           fixed value: 100000.0    # 100 km Gaussian sigma
           as gaussian: true
         write:
-          filepath: diffusion_hz
+          filepath: diffusion_hz_mom6
       - vertical:
           fixed value: 2.0         # 2 levels Gaussian sigma
           levels: 25
           as gaussian: true
         write:
-          filepath: diffusion_vt
+          filepath: diffusion_vt_mom6
