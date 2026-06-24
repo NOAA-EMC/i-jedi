@@ -41,11 +41,14 @@ namespace ijedi
     // Set up levels information for each variable using the fields metadata
     levelsPerVariable_ = fieldsMeta_->levelsPerVariable();
 
+    // Expose vertical ordering to downstream components such as Vader recipes.
+    modelData_.set("levels_are_top_down", levelsAreTopDown_);
+
     // Build GeometryData
     geomData_.reset(new oops::GeometryData(functionspace_, fields_, levelsAreTopDown_, comm));
 
     // Trace
-    oops::Log::trace() << "Geometry constructor starting" << std::endl;
+    oops::Log::trace() << "Geometry constructor finished" << std::endl;
   }
   // -----------------------------------------------------------------------------------------------
   Geometry::~Geometry()
