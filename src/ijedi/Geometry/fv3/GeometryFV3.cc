@@ -145,6 +145,10 @@ namespace ijedi
     geomVariables.get("raw_tri_boundary_nodes", raw_tri_boundary_nodes);
     geomVariables.get("raw_quad_boundary_nodes", raw_quad_boundary_nodes);
 
+    if (area_owned.size() != static_cast<size_t>(ngrid)) {
+      throw eckit::BadValue("FV3 geometry area field size does not match ngrid", Here());
+    }
+
     // Atlas connection
     {
       const int num_elements = num_tri_elements + num_quad_elements;
@@ -267,6 +271,20 @@ namespace ijedi
     geomVariables.get("surface_pressure", surfacePressure);
     geomVariables.get("surface_geopotential", surfaceGeopotential);
 
+    if (functionSpace.size() < ngrid) {
+      throw eckit::BadValue("FV3 functionSpace size is smaller than ngrid", Here());
+    }
+    if (ak.size() != static_cast<size_t>(numberLevels + 1) ||
+        bk.size() != static_cast<size_t>(numberLevels + 1)) {
+      throw eckit::BadValue("FV3 ak/bk sizes do not match nLevels + 1", Here());
+    }
+    if (surfacePressure.size() != static_cast<size_t>(ngrid)) {
+      throw eckit::BadValue("FV3 surface_pressure size does not match ngrid", Here());
+    }
+    if (surfaceGeopotential.size() != static_cast<size_t>(ngrid)) {
+      throw eckit::BadValue("FV3 surface_geopotential size does not match ngrid", Here());
+    }
+
     const std::string vertCoordType = params.vertCoord;
     if (vertCoordType != "sigma" && vertCoordType != "logp" && vertCoordType != "orography") {
       throw eckit::BadValue("Unsupported FV3 vertical coordinate type for vert_coord: "
@@ -279,7 +297,7 @@ namespace ijedi
     auto vertCoordView = atlas::array::make_view<double, 2>(vertCoord);
     for (atlas::idx_t j = 0; j < functionSpace.size(); ++j) {
       for (atlas::idx_t k = 0; k < vertCoord.shape(1); ++k) {
-        vertCoordView(j, k) = 0.0;
+        vertCoordView(j, k) = -1.0;
       }
     }
 
