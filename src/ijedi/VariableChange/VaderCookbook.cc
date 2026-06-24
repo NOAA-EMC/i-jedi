@@ -54,8 +54,12 @@ static std::map<std::string, std::vector<std::string>> cookbook() {
       {"virtual_temperature",                     {"AirVirtualTemperature_A"}},
       // sst: from t
       {"sea_surface_temperature",                 {"SeaSurfaceTemperature_A"}},
-      // t_insitu: from thetao (sea_water_potential_temperature), salinity, depth, lat/lon
-      {"sea_water_temperature",                  {"SeaWaterTemperature_A"}},
+      // t_insitu: NL from thetao (sea_water_potential_temperature), salinity, depth, lat/lon
+      //           (SeaWaterTemperature_A); TL/AD via linearized TEOS-10 Jacobian
+      //           (SeaWaterTemperature_B). Both are needed so the variable change
+      //           works in the variational inner loop as well as the NL observer.
+      {"sea_water_temperature",                  {"SeaWaterTemperature_A",
+                                                  "SeaWaterTemperature_B"}},
   };
 }
 }  // namespace detail

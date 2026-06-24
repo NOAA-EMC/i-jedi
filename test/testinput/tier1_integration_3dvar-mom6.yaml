@@ -19,22 +19,24 @@ cost function:
   analysis variables:
   - sea_water_potential_temperature
   - sea_water_salinity
-  - sea_surface_height_above_geoid
+  #- sea_surface_height_above_geoid
   background:
     date: 2020-12-16T00:00:00Z
     state variables:
     - sea_water_salinity
     - sea_water_potential_temperature
-    - sea_surface_height_above_geoid
+    #- sea_surface_height_above_geoid
     - sea_water_depth
     io:
       filetype: mom6
       datapath: data_generated/mom6
       ocn_file: MOM.res.nc
+      fix_file: mom6_structuredgeometry_cache_grid.nc
       field io names:
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt
-        sea_surface_height_above_geoid: ave_ssh
+        #sea_surface_height_above_geoid: ave_ssh
+        sea_water_depth: sea_water_depth
 
   background error:
     covariance model: SABER
@@ -44,8 +46,9 @@ cost function:
         groups:
         - variables:
           - sea_water_potential_temperature
-          - sea_surface_height_above_geoid
-          - sea_surface_height_above_geoid
+          - sea_water_salinity
+          #- sea_surface_height_above_geoid
+
           multivariate strategy: univariate
           horizontal:
             filepath: diffusion_hz
@@ -56,24 +59,28 @@ cost function:
   observations:
     variable change:
       vader cookbook:
-        sea_water_temperature: [SeaWaterTemperature_A]
+        sea_water_temperature: [SeaWaterTemperature_A, SeaWaterTemperature_B]
     observers:
-    - obs space:
-        name: SST
-        obsdatain:
-          engine:
-            type: H5File
-            obsfile: data_generated/obs/sst.nc
-        simulated variables: [seaSurfaceTemperature]
-      obs operator:
-        name: Identity
-        observation alias file: data/obs/obsop_name_map.yml
+    #- obs space:
+    #    name: SST
+    #    obsdatain:
+    #      engine:
+    #        type: H5File
+    #        obsfile: data_generated/obs/sst.nc
+    #    simulated variables: [seaSurfaceTemperature]
+    #  obs operator:
+    #    name: Identity
+    #    observation alias file: data/obs/obsop_name_map.yml
     - obs space:
         name: InsituTemperature
         obsdatain:
           engine:
             type: H5File
             obsfile: data_generated/obs/insitu_temp_profile_argo_3prof.nc
+        obsdataout:
+          engine:
+            type: H5File
+            obsfile: data_generated/obs/insitu_temp_profile_argo_3prof_out.nc
         simulated variables: [waterTemperature]
       obs operator:
         name: VertInterp
@@ -81,6 +88,7 @@ cost function:
         vertical coordinate: sea_water_depth
         observation vertical coordinate: depth
         interpolation method: linear
+      obs error:
         covariance model: diagonal
 
 variational:
@@ -96,5 +104,17 @@ output:
   io:
     filetype: unstructured
     filepath: mom6-3dvar-an-unstructured
+
+final:
+  increment:
+    output:
+      state component:
+        io:
+          filetype: mom6
+          datapath: data_generated/mom6
+          ocn_file: mom6-3dvar-incr-structured.nc
+          field io names:
+            sea_water_potential_temperature: Temp
+            sea_water_salinity: Salt
 
 final j evaluation: false

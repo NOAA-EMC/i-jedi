@@ -116,7 +116,7 @@ ecbuild_add_test( TARGET  ijedi_3dvar_mom6
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml
-                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata ijedi_diffusion_mom6)
+                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata ijedi_diffusion_mom6 ijedi_geometry_cache_mom6)
 
 # Convert state tests
 ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_mom6
