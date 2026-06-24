@@ -22,6 +22,14 @@ file(CREATE_LINK
     SYMBOLIC
 )
 
+# Link the directory 'testref' to the test directory of the build
+# ---------------------------------------------------------------
+file(CREATE_LINK
+    "${CMAKE_CURRENT_SOURCE_DIR}/testref"
+    "${CMAKE_CURRENT_BINARY_DIR}/testref"
+    SYMBOLIC
+)
+
 # Test data generation
 ecbuild_add_test(TARGET  ijedi_setup_mom6_testdata
                  TYPE    SCRIPT
