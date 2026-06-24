@@ -7,7 +7,7 @@
 
 // Vendored from saber/src/saber/interpolation/Geometry.cc. Keep in sync with upstream.
 
-#include "ijedi/Geometry/atlas/GsiGrid.h"
+#include "ijedi/Geometry/gsibec/GsiGrid.h"
 
 #include <string>
 #include <vector>

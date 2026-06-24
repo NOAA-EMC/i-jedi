@@ -9,6 +9,7 @@
 #include "ijedi/Geometry/atlas/GeometryAtlas.h"
 #include "ijedi/Geometry/base/GeometryBase.h"
 #include "ijedi/Geometry/fv3/GeometryFV3.h"
+#include "ijedi/Geometry/gsibec/GeometryGsibec.h"
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
 #include "ijedi/Geometry/mom6/GeometryMOM6.h"
 
@@ -44,6 +45,11 @@ namespace ijedi
     {
       return std::make_shared<GeometryAtlas>(geomConf, comm, geomVars, functionSpace, fieldSet,
                                              levelsAreTopDown, numLevels);
+    }
+    if (type == "gsibec")
+    {
+      return std::make_shared<GeometryGsibec>(geomConf, comm, geomVars, functionSpace, fieldSet,
+                                              levelsAreTopDown, numLevels);
     }
 
     throw eckit::BadValue("Unsupported geometry type: " + type,

@@ -1,5 +1,5 @@
 geometry:
-  geometry_type: atlas
+  geometry_type: gsibec
   nlevels: 1
   function space: StructuredColumns
   custom grid matching gsi:

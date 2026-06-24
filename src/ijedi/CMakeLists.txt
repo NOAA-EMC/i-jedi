@@ -20,8 +20,10 @@ list(APPEND ijedi_src_files
   Geometry/base/GeometryBase.h
   Geometry/atlas/GeometryAtlas.cc
   Geometry/atlas/GeometryAtlas.h
-  Geometry/atlas/GsiGrid.cc
-  Geometry/atlas/GsiGrid.h
+  Geometry/gsibec/GeometryGsibec.cc
+  Geometry/gsibec/GeometryGsibec.h
+  Geometry/gsibec/GsiGrid.cc
+  Geometry/gsibec/GsiGrid.h
   Geometry/mpas/GeometryMPAS.cc
   Geometry/mpas/GeometryMPAS.h
   Geometry/mom6/GeometryMOM6.cc
