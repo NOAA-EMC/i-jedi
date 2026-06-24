@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
@@ -18,6 +19,41 @@
 #include "ijedi/Geometry/fv3/GeometryFV3.h"
 #include "ijedi/Geometry/fv3/GeometryFV3.interface.h"
 #include "ijedi/Geometry/fv3/GeometryFV3Parameters.h"
+#include "ijedi/Utilities/Constants.h"
+
+namespace {
+
+std::vector<double> fv3MidlayerPressurePhilips(const std::vector<double> & edgePressure,
+                                               const double kappa) {
+  const double kap1 = kappa + 1.0;
+  const double kapr = 1.0 / kappa;
+  std::vector<double> midPressure(edgePressure.size() - 1);
+  for (size_t k = 0; k < midPressure.size(); ++k) {
+    midPressure[k] = std::pow((std::pow(edgePressure[k + 1], kap1) -
+                               std::pow(edgePressure[k], kap1)) /
+                              (kap1 * (edgePressure[k + 1] - edgePressure[k])), kapr);
+  }
+  return midPressure;
+}
+
+std::vector<double> fv3LogPressureProfile(const std::vector<double> & ak,
+                                          const std::vector<double> & bk,
+                                          const double surfacePressure) {
+  std::vector<double> edgePressure(ak.size());
+  for (size_t k = 0; k < edgePressure.size(); ++k) {
+    edgePressure[k] = ak[k] + bk[k] * surfacePressure;
+  }
+
+  const std::vector<double> midPressure =
+      fv3MidlayerPressurePhilips(edgePressure, ijedi::getConstant("kappa"));
+  std::vector<double> logPressure(midPressure.size());
+  for (size_t k = 0; k < logPressure.size(); ++k) {
+    logPressure[k] = -std::log(midPressure[k]);
+  }
+  return logPressure;
+}
+
+}  // namespace
 
 namespace ijedi
 {
@@ -237,16 +273,40 @@ namespace ijedi
                             + vertCoordType, Here());
     }
 
-    f_fv3_geom_set_and_fill_geometry_fields(
-        reinterpret_cast<void *>(functionSpace.get()),
-        reinterpret_cast<void *>(geomFields.get()),
-        vertCoordType.c_str(),
-        ngrid,
-        numberLevels,
-        ak.data(),
-        bk.data(),
-        surfacePressure.data(),
-        surfaceGeopotential.data());
+    const int vertCoordLevels = vertCoordType == "orography" ? 1 : numberLevels;
+    atlas::Field vertCoord = functionSpace.createField<double>(
+        atlas::option::name("vert_coord") | atlas::option::levels(vertCoordLevels));
+    auto vertCoordView = atlas::array::make_view<double, 2>(vertCoord);
+    for (atlas::idx_t j = 0; j < functionSpace.size(); ++j) {
+      for (atlas::idx_t k = 0; k < vertCoord.shape(1); ++k) {
+        vertCoordView(j, k) = 0.0;
+      }
+    }
+
+    if (vertCoordType == "sigma") {
+      for (atlas::idx_t j = 0; j < ngrid; ++j) {
+        const double psLocal = surfacePressure[j];
+        for (int k = 0; k < numberLevels; ++k) {
+          const double sigmaUp = ak[k + 1] / psLocal + bk[k + 1];
+          const double sigmaDn = ak[k] / psLocal + bk[k];
+          vertCoordView(j, k) = 0.5 * (sigmaUp + sigmaDn);
+        }
+      }
+    } else if (vertCoordType == "logp") {
+      for (atlas::idx_t j = 0; j < ngrid; ++j) {
+        const std::vector<double> logPressure =
+            fv3LogPressureProfile(ak, bk, surfacePressure[j]);
+        for (int k = 0; k < numberLevels; ++k) {
+          vertCoordView(j, k) = logPressure[k];
+        }
+      }
+    } else if (vertCoordType == "orography") {
+      const double grav = getConstant("grav");
+      for (atlas::idx_t j = 0; j < ngrid; ++j) {
+        vertCoordView(j, 0) = surfaceGeopotential[j] / grav;
+      }
+    }
+    geomFields.add(vertCoord);
 
     oops::Log::trace() << "GeometryFV3 constructor done" << std::endl;
   }
