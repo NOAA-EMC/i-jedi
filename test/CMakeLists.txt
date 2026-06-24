@@ -159,3 +159,10 @@ ecbuild_add_test( TARGET  ijedi_convertstate_fv3_to_atlas
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-fv3_to_atlas.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_fv3_testdata)
+
+ecbuild_add_test( TARGET  ijedi_convertstate_fv3_to_fv3
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-fv3_to_fv3.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata)
