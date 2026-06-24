@@ -205,14 +205,7 @@ namespace ijedi
     geomVariables.get("surface_geopotential", surfaceGeopotential);
 
     const std::string vertCoordType = params.vertCoord;
-    int vertCoordSelector = 0;
-    if (vertCoordType == "sigma") {
-      vertCoordSelector = 1;
-    } else if (vertCoordType == "logp") {
-      vertCoordSelector = 2;
-    } else if (vertCoordType == "orography") {
-      vertCoordSelector = 3;
-    } else {
+    if (vertCoordType != "sigma" && vertCoordType != "logp" && vertCoordType != "orography") {
       throw eckit::BadValue("Unsupported FV3 vertical coordinate type for vert_coord: "
                             + vertCoordType, Here());
     }
@@ -220,7 +213,7 @@ namespace ijedi
     f_fv3_geom_set_and_fill_geometry_fields(
         reinterpret_cast<void *>(functionSpace.get()),
         reinterpret_cast<void *>(geomFields.get()),
-        vertCoordSelector,
+        vertCoordType.c_str(),
         ngrid,
         numberLevels,
         ak.data(),

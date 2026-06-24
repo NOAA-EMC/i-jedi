@@ -417,15 +417,16 @@ end subroutine fv3_geom_create
 ! --------------------------------------------------------------------------------------------------
 
 subroutine fv3_geom_set_and_fill_geometry_fields(npz, ngrid, ak, bk, area, surface_pressure, &
-                                                 surface_geopotential, vertcoord_selector, &
+                                                 surface_geopotential, vertcoord_type, &
                                                  afunctionspace, afieldset)
 
 !Arguments
-integer,                   intent(in) :: npz, ngrid, vertcoord_selector
+integer,                   intent(in) :: npz, ngrid
 real(kind=kind_real),      intent(in) :: ak(npz+1), bk(npz+1)
 real(kind=kind_real),      intent(in) :: area(ngrid)
 real(kind=kind_real),      intent(in) :: surface_pressure(ngrid)
 real(kind=kind_real),      intent(in) :: surface_geopotential(ngrid)
+character(len=*),          intent(in) :: vertcoord_type
 type(atlas_functionspace), intent(inout) :: afunctionspace
 type(atlas_fieldset),      intent(inout) :: afieldset
 
@@ -452,7 +453,7 @@ real_ptr(1, 1:ngrid) = area(:)
 call afieldset%add(afield)
 
 ! Add vertical coordinate
-if (vertcoord_selector == 1) then
+if (trim(vertcoord_type) == 'sigma') then
    afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=npz)
    call afield%data(real_ptr)
    real_ptr(:, :) = 0.0_kind_real
@@ -463,7 +464,7 @@ if (vertcoord_selector == 1) then
          real_ptr(jl, jn) = 0.5_kind_real*(sigmaup+sigmadn)
       enddo
    enddo
-else if (vertcoord_selector == 2) then
+else if (trim(vertcoord_type) == 'logp') then
    afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=npz)
    call afield%data(real_ptr)
    real_ptr(:, :) = 0.0_kind_real
@@ -474,7 +475,7 @@ else if (vertcoord_selector == 2) then
          real_ptr(jl, jn) = log(p_mid)
       enddo
    enddo
-else if (vertcoord_selector == 3) then
+else if (trim(vertcoord_type) == 'orography') then
    afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=1)
    call afield%data(real_ptr)
    real_ptr(:, :) = 0.0_kind_real
