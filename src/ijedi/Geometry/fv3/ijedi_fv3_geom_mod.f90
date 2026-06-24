@@ -267,6 +267,8 @@ call geom_vars%set("air_pressure_at_top_of_atmosphere_model", ak(1))
 ! Save some things later needed in Atlas-based Geometry Fields
 ! ------------------------------------------------------------
 call geom_vars%set("area", reshape(Atm(1)%gridstruct%area_64(isc:iec, jsc:jec), (/ngrid/)))
+call geom_vars%set("surface_pressure", reshape(Atm(1)%ps(isc:iec, jsc:jec), (/ngrid/)))
+call geom_vars%set("surface_geopotential", reshape(Atm(1)%phis(isc:iec, jsc:jec), (/ngrid/)))
 
 ! Ensemble manager
 ! ----------------
@@ -414,25 +416,26 @@ end subroutine fv3_geom_create
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine fv3_geom_set_and_fill_geometry_fields(isc, iec, jsc, jec, npz, ngrid, ak, bk, area, &
-                                        vertcoord_type, afunctionspace, afieldset, field_masks)
+subroutine fv3_geom_set_and_fill_geometry_fields(npz, ngrid, ak, bk, area, surface_pressure, &
+                                                 surface_geopotential, vertcoord_selector, &
+                                                 afunctionspace, afieldset)
 
 !Arguments
-integer,                   intent(in) :: isc, iec, jsc, jec, npz, ngrid
+integer,                   intent(in) :: npz, ngrid, vertcoord_selector
 real(kind=kind_real),      intent(in) :: ak(npz+1), bk(npz+1)
-real(kind=kind_real),      intent(in) :: area(isc:iec, jsc:jec)
-character(len=10),         intent(in) :: vertcoord_type
+real(kind=kind_real),      intent(in) :: area(ngrid)
+real(kind=kind_real),      intent(in) :: surface_pressure(ngrid)
+real(kind=kind_real),      intent(in) :: surface_geopotential(ngrid)
 type(atlas_functionspace), intent(inout) :: afunctionspace
 type(atlas_fieldset),      intent(inout) :: afieldset
-type(fckit_configuration), intent(in)    :: field_masks
 
 !Locals
-type(atlas_field) :: afield, afield2
-integer :: jl
+type(atlas_field) :: afield
+integer :: jl, jn
 integer, pointer :: int_ptr(:,:)
-real(kind=kind_real), pointer :: real_ptr(:,:), real_ptr2(:,:)
-real(kind=kind_real) :: sigmaup, sigmadn, ps
-real(kind=kind_real) :: logp(npz)
+real(kind=kind_real), pointer :: real_ptr(:,:)
+real(kind=kind_real) :: sigmaup, sigmadn, p_mid
+real(kind=kind_real), parameter :: grav = 9.80665_kind_real
 
 ! Add owned vs halo/BC field
 afield = afunctionspace%create_field(name='owned', kind=atlas_integer(kind_int), levels=1)
@@ -445,40 +448,42 @@ call afieldset%add(afield)
 afield = afunctionspace%create_field(name='area', kind=atlas_real(kind_real), levels=1)
 call afield%data(real_ptr)
 real_ptr(1, :) = -1.0_kind_real
-real_ptr(1, 1:ngrid) = reshape(area(isc:iec, jsc:jec), (/ngrid/))
+real_ptr(1, 1:ngrid) = area(:)
 call afieldset%add(afield)
 
-! Add vertical unit
-ps = constant('ps')
-if (trim(vertcoord_type) == 'sigma') then
+! Add vertical coordinate
+if (vertcoord_selector == 1) then
    afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=npz)
    call afield%data(real_ptr)
+   real_ptr(:, :) = 0.0_kind_real
    do jl=1,npz
-      sigmaup = ak(jl+1)/ps+bk(jl+1) ! si are now sigmas
-      sigmadn = ak(jl  )/ps+bk(jl  )
-      real_ptr(jl,:) = 0.5*(sigmaup+sigmadn) ! 'fake' sigma coordinates
+      do jn=1,ngrid
+         sigmaup = ak(jl+1)/surface_pressure(jn)+bk(jl+1)
+         sigmadn = ak(jl  )/surface_pressure(jn)+bk(jl  )
+         real_ptr(jl, jn) = 0.5_kind_real*(sigmaup+sigmadn)
+      enddo
    enddo
-else if (trim(vertcoord_type) == 'logp') then
+else if (vertcoord_selector == 2) then
    afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=npz)
    call afield%data(real_ptr)
-   call fv3_geom_getVerticalCoordLogP(ak,bk,logp,npz,ps)
+   real_ptr(:, :) = 0.0_kind_real
    do jl=1,npz
-      real_ptr(jl,:) = logp(jl)
+      do jn=1,ngrid
+         p_mid = 0.5_kind_real*(ak(jl) + ak(jl+1)) + &
+                 0.5_kind_real*(bk(jl) + bk(jl+1))*surface_pressure(jn)
+         real_ptr(jl, jn) = log(p_mid)
+      enddo
    enddo
-else if (trim(vertcoord_type) == 'orography') then
-   !> The orography vertical coordinate can only be used for 2D fields, so allocation here is
-   !> for one level. This option is not compatible with 3D fields.
+else if (vertcoord_selector == 3) then
    afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=1)
    call afield%data(real_ptr)
-   afield2 = afieldset%field('filtered_orography')
-   call afield2%data(real_ptr2)
-   real_ptr(1,:) = real_ptr2(1,:)
+   real_ptr(:, :) = 0.0_kind_real
+   real_ptr(1, 1:ngrid) = surface_geopotential(:) / grav
 else
    call abor1_ftn('ijedi_fv3_geom_mod%set_and_fill_geometry_fields: unknown vertical coordinate type')
 endif
 call afieldset%add(afield)
 call afield%final()
-call afield2%final()
 
 end subroutine fv3_geom_set_and_fill_geometry_fields
 
