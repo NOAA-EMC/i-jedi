@@ -345,11 +345,13 @@ namespace ijedi
 
             ntiles = (hasTileDim && (maxGIdx % 6 == 0)) ? 6 : 1;
             const size_t n2 = static_cast<size_t>(maxGIdx) / ntiles;
-            const size_t nxGuess = static_cast<size_t>(std::llround(std::sqrt(static_cast<double>(n2))));
+            const size_t nxGuess =
+                static_cast<size_t>(std::llround(std::sqrt(static_cast<double>(n2))));
             nx = ny = nxGuess;
             const size_t nxy = nx * ny;
             if (nxy == 0 || (nx * ny) != n2 || (nxy * ntiles) != static_cast<size_t>(maxGIdx)) {
-                throw eckit::Exception("Inferred (nx,ny,ntiles) are inconsistent with global indices; cannot write history file");
+                throw eckit::Exception("Inferred (nx,ny,ntiles) are inconsistent with "
+                    "global indices; cannot write history file");
             }
 
             for (const auto & jediName : jediNames) {
