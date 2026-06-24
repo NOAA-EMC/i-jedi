@@ -18,6 +18,12 @@ list(APPEND ijedi_src_files
   Geometry/Geometry.h
   Geometry/base/GeometryBase.cc
   Geometry/base/GeometryBase.h
+  Geometry/atlas/GeometryAtlas.cc
+  Geometry/atlas/GeometryAtlas.h
+  Geometry/gsibec/GeometryGsibec.cc
+  Geometry/gsibec/GeometryGsibec.h
+  Geometry/gsibec/GsiGrid.cc
+  Geometry/gsibec/GsiGrid.h
   Geometry/mpas/GeometryMPAS.cc
   Geometry/mpas/GeometryMPAS.h
   Geometry/mom6/GeometryMOM6.cc
@@ -43,6 +49,8 @@ list(APPEND ijedi_src_files
   Io/IoBase.h
   Io/gmsh/IoGmsh.cc
   Io/gmsh/IoGmsh.h
+  Io/mom6/FillMaskedCells.cc
+  Io/mom6/FillMaskedCells.h
   Io/mom6/IoMOM6.cc
   Io/mom6/IoMOM6.h
   Io/mom6/ReadMOM6Netcdf.cc
@@ -89,8 +97,10 @@ if(FMS_FOUND)
     Geometry/fv3/GeometryFV3.h
     Geometry/fv3/GeometryFV3Parameters.h
     Geometry/fv3/GeometryFV3.interface.h
-    Io/fv3/IoFV3.cc
-    Io/fv3/IoFV3.h
+    Io/fv3-history/IoFV3History.cc
+    Io/fv3-history/IoFV3History.h
+    Io/fv3-restart/IoFV3Restart.cc
+    Io/fv3-restart/IoFV3Restart.h
   )
   list(APPEND ijedi_fv3_fortran_src_files
     Geometry/fv3/ijedi_fv3_akbk_mod.f90

@@ -6,6 +6,7 @@
 #include "oops/util/Timer.h"
 
 #include "ijedi/Geometry/Geometry.h"
+#include "ijedi/Io/mom6/FillMaskedCells.h"
 #include "ijedi/Io/mom6/IoMOM6.h"
 #include "ijedi/Io/mom6/ReadMOM6Netcdf.h"
 #include "ijedi/Io/mom6/WriteMOM6Netcdf.h"
@@ -17,11 +18,22 @@ namespace ijedi
   // -------------------------------------------------------------------------------------------------
   IoMOM6::IoMOM6(const Geometry &geom, const Parameters_ &params)
       : IoBase(geom, params.toConfiguration()),
-        geom_(geom),
-        filename_(params.filename.value().value_or("MOM.res.nc"))
+        geom_(geom)
   {
     util::Timer timer(classname(), "IoMOM6");
     oops::Log::trace() << classname() << " constructor starting" << std::endl;
+
+    const std::string datapath = params.datapath.value();
+
+    writeFilepath_ = datapath + "/" + params.ocn_file.value();
+    readFilepaths_.push_back(writeFilepath_);
+
+    const auto addFile = [&](const boost::optional<std::string> & opt) {
+      if (opt) readFilepaths_.push_back(datapath + "/" + *opt);
+    };
+    addFile(params.ice_file.value());
+    addFile(params.fix_file.value());
+
     oops::Log::trace() << classname() << " constructor done" << std::endl;
   }
 
@@ -31,10 +43,6 @@ namespace ijedi
   {
     util::Timer timer(classname(), "read state");
     oops::Log::trace() << classname() << " read state starting" << std::endl;
-
-    // Get geometry info for level count check
-    const auto modelData = geom_.modelData();
-    const int nz = modelData.getInt("nz");
 
     // Resolve variable names and scalings for all fields
     std::vector<std::string> fileVarNames;
@@ -48,8 +56,12 @@ namespace ijedi
     }
 
     // Delegate to the NetCDF reader (root reads, scatter, halo exchange)
-    readMOM6Netcdf(filename_, x, fileVarNames, scalings, nz,
-                   geom_.getComm());
+    readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings, geom_.getComm());
+
+    // Apply boundary conditions to masked (land) cells: nearest-neighbour
+    // extrapolation for tracers, zero for non-tracers.
+    applyBoundaryConditions(x, geom_.fields().field("mask2d"),
+                            geom_.getFieldMetadata());
 
     oops::Log::trace() << classname() << " read state done" << std::endl;
   }
@@ -75,14 +87,14 @@ namespace ijedi
     }
 
     // Delegate to the NetCDF writer (Atlas gather + root writes)
-    writeMOM6Netcdf(filename_, x, fileVarNames, ni, nj, nz, geom_.getComm());
+    writeMOM6Netcdf(writeFilepath_, x, fileVarNames, ni, nj, nz, geom_.getComm());
 
     oops::Log::trace() << classname() << " write state done" << std::endl;
   }
   // -------------------------------------------------------------------------------------------------
   void IoMOM6::print(std::ostream &os) const
   {
-    os << classname() << " Io for MOM6 restarts and histories";
+    os << classname() << " Io for MOM6 ocean, sea ice, and fix files";
   }
   // -------------------------------------------------------------------------------------------------
 }  // namespace ijedi

@@ -16,6 +16,7 @@ geometry:
     geometry_type: mom6
     ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
     ocean_topog: data_generated/mom6//ocean_topog.nc
+    vertical geometry from: data_generated/mom6/MOM.res.nc
     coarsen factor: 1
     MOM_input:
       NIGLOBAL: 72
@@ -46,8 +47,7 @@ state:
     - air_temperature
     - air_pressure_thickness
     io:
-      filetype: fv3
-      source: history
+      filetype: fv3 history
       datapath: data_generated/fv3/
       atm_file: atmf006.nc
       sfc_file: sfcf006.nc
@@ -64,7 +64,8 @@ state:
     - sea_surface_height_above_geoid
     io:
       filetype: mom6
-      filename: data_generated/mom6/MOM.res.nc
+      datapath: data_generated/mom6
+      ocn_file: MOM.res.nc
       field io names:
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt
@@ -105,3 +106,7 @@ observations:
       observation vertical coordinate: pressure
       observation vertical coordinate group: MetaData
       interpolation method: log-linear
+
+#TODO: not passing in CI with the specified reference
+#test:
+#  reference filename: testref/hofx3d-coupled.test

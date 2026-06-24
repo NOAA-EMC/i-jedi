@@ -1,0 +1,10 @@
+Input state: 
+  Valid time: 2020-12-15T00:00:00Z, nFields = 3
+sea_water_potential_temperature : Min=0.0000000000e+00, Max=2.8042810076e+01, RMS=1.2984111056e+01
+sea_water_salinity              : Min=0.0000000000e+00, Max=3.4919769654e+01, RMS=2.7733494877e+01
+sea_surface_height_above_geoid  : Min=-9.7629600712e-02, Max=9.9900147104e-02, RMS=5.6903065947e-02
+Output state: 
+  Valid time: 2020-12-15T00:00:00Z, nFields = 3
+sea_water_potential_temperature : Min=-3.3347670579e+38, Max=2.8042810076e+01, RMS=1.5638152068e+38
+sea_water_salinity              : Min=-3.3347670579e+38, Max=3.4916160711e+01, RMS=1.5638152068e+38
+sea_surface_height_above_geoid  : Min=-3.3347670579e+38, Max=9.9654695088e-02, RMS=1.5638152068e+38

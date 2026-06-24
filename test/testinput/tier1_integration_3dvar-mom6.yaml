@@ -28,7 +28,8 @@ cost function:
     - sea_surface_height_above_geoid
     io:
       filetype: mom6
-      filename: data_generated/mom6/MOM.res.nc
+      datapath: data_generated/mom6
+      ocn_file: MOM.res.nc
       field io names:
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt
@@ -79,3 +80,7 @@ output:
     filepath: mom6-3dvar-an-unstructured
 
 final j evaluation: false
+
+#TODO: not passing in CI with the specified reference
+#test:
+#  reference filename: testref/3dvar-mom6.test

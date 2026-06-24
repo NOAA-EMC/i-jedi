@@ -1,0 +1,60 @@
+input geometry:
+  geometry_type: fv3
+  fms initialization:
+    namelist filename: data/fv3/input_c12.nml
+    field table filename: data/fv3/field_table
+  npx: 13
+  npy: 13
+  npz: 127
+  ntiles: 6
+  akbk: gfs_127
+
+output geometry:
+  geometry_type: fv3
+  fms initialization:
+    namelist filename: data/fv3/input_c12.nml
+    field table filename: data/fv3/field_table
+  npx: 25
+  npy: 25
+  npz: 127
+  ntiles: 6
+  akbk: gfs_127
+
+states:
+- input:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - eastward_wind
+    - northward_wind
+    - air_temperature
+    - air_pressure_thickness
+    io:
+      filetype: fv3 history
+      datapath: data_generated/fv3/
+      atm_file: atmf006.nc
+      sfc_file: sfcf006.nc
+      field io names:
+        eastward_wind: ugrd
+        northward_wind: vgrd
+        air_temperature: tmp
+        air_pressure_thickness: dpres
+  output:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - eastward_wind
+    - northward_wind
+    - air_temperature
+    - air_pressure_thickness
+    io:
+      filetype: fv3 history
+      datapath: data_generated/fv3/
+      atm_file: atmf006_c24.nc
+      sfc_file: sfcf006_c24.nc
+      field io names:
+        eastward_wind: ugrd
+        northward_wind: vgrd
+        air_temperature: tmp
+        air_pressure_thickness: dpres
+
+test:
+  reference filename: testref/convertstate-fv3-to-fv3.test

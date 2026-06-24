@@ -1,0 +1,12 @@
+Test     : Input state: 
+Test     :   Valid time: 2020-12-15T00:00:00Z, nFields = 4
+Test     : eastward_wind          : Min=-5.5976715205e+01, Max=7.4718500795e+01, RMS=1.6455900426e+01
+Test     : northward_wind         : Min=-6.6716713836e+01, Max=7.0110026128e+01, RMS=1.5013681035e+01
+Test     : air_temperature        : Min=1.6000000000e+02, Max=3.3000000000e+02, RMS=2.4993249181e+02
+Test     : air_pressure_thickness : Min=1.0000000000e-01, Max=2.1511944525e+03, RMS=8.3287261004e+02
+Test     : Output state: 
+Test     :   Valid time: 2020-12-15T00:00:00Z, nFields = 4
+Test     : eastward_wind          : Min=-4.1732508164e+01, Max=5.8388350413e+01, RMS=1.2611173032e+01
+Test     : northward_wind         : Min=-5.5565155222e+01, Max=5.2203725072e+01, RMS=1.0559296928e+01
+Test     : air_temperature        : Min=1.6076671071e+02, Max=3.3000000000e+02, RMS=2.4903460436e+02
+Test     : air_pressure_thickness : Min=2.7517025415e-01, Max=1.8009214799e+03, RMS=8.0554461063e+02

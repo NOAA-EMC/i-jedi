@@ -1,0 +1,9 @@
+State: 
+  Valid time: 2020-12-16T00:00:00Z, nFields = 3
+sea_water_salinity              : Min=0.0000000000e+00, Max=3.4919769654e+01, RMS=2.7733494877e+01
+sea_water_potential_temperature : Min=0.0000000000e+00, Max=2.8042810076e+01, RMS=1.2984111056e+01
+sea_surface_height_above_geoid  : Min=-9.7629600712e-02, Max=9.9900147104e-02, RMS=5.6903065947e-02
+H(x): 
+SST nobs= 199 Min=7.3154336194e+00, Max=2.8042810076e+01, RMS=2.5273074328e+01
+
+End H(x)
