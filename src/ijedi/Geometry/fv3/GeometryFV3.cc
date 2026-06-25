@@ -244,17 +244,20 @@ namespace ijedi
     auto areaView = atlas::array::make_view<double, 2>(area);
     auto ownedView = atlas::array::make_view<int, 2>(owned);
 
+    // 1. initialize all local entries, including halo, to -1
     for (atlas::idx_t j = 0; j < functionSpace.size(); ++j)
     {
       areaView(j, 0) = -1.0;
       ownedView(j, 0) = 0;
     }
+    // 2. overwrite owned points with your data
     for (atlas::idx_t j = 0; j < ngrid; ++j)
     {
       areaView(j, 0) = area_owned[j];
       ownedView(j, 0) = 1;
     }
 
+    // Add area to geomFields
     geomFields.add(area);
     geomFields.add(owned);
 
