@@ -10,7 +10,7 @@ use fms2_io_mod,                only: FmsNetcdfDomainFile_t, close_file, get_dim
                                       register_variable_attribute, unlimited, write_restart
 use ijedi_fv3_geom_mod,         only: fv3_geom_nodes_to_atlas_nodes, fv3_geom_setup_domain
 use ijedi_kinds_mod,            only: kind_real
-use mpp_domains_mod,            only: center, domain2D, mpp_deallocate_domain
+use mpp_domains_mod,            only: center, domain2D, mpp_deallocate_domain, mpp_update_domains
 use mpp_mod,                    only: mpp_pe, mpp_root_pe, mpp_sync
 
 implicit none
@@ -126,6 +126,12 @@ do n = 1, numfiles
     call read_restart(fileobj(n), ignore_checksum=ignore_checksum)
     call close_file(fileobj(n))
   end if
+end do
+
+! Populate halo cells from neighbouring PE compute domains so that atlas
+! ghost nodes receive valid data when copy_fv3_to_atlas is called below.
+do ibuf = 1, size(buffers)
+  call mpp_update_domains(buffers(ibuf)%array, domain)
 end do
 
 do ibuf = 1, size(buffers)
@@ -510,20 +516,26 @@ real(kind=kind_real), pointer, intent(in)    :: atlas_ptr(:,:)
 real(kind=kind_real),          intent(inout) :: fv3_array(:,:,:)
 integer,                       intent(in)    :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed
 integer,                       intent(in)    :: ntile, ntiles, ngrid
-integer :: jl, n, lin, ni, nj, nlev, nxy
+integer :: jl, n, lin, ni, nj, nlev, nxy, num_nodes
 real(kind=kind_real), allocatable :: map_code(:), coded_plane(:,:)
 
 nlev = size(fv3_array, 3)
 nxy = (iec - isc + 1) * (jec - jsc + 1)
 
-if (size(atlas_ptr, 1) /= nlev .and. size(atlas_ptr, 2) /= nlev) then
-  call abor1_ftn('copy_atlas_to_fv3: atlas levels dimension does not match FV3 array levels')
-end if
 if (ngrid /= nxy) then
   call abor1_ftn('copy_atlas_to_fv3: ngrid does not match FV3 compute-domain size')
 end if
 
-allocate(map_code(ngrid))
+! num_nodes is the total atlas node count (compute domain + ghost/halo nodes)
+if (size(atlas_ptr, 1) == nlev) then
+  num_nodes = size(atlas_ptr, 2)
+else if (size(atlas_ptr, 2) == nlev) then
+  num_nodes = size(atlas_ptr, 1)
+else
+  call abor1_ftn('copy_atlas_to_fv3: atlas levels dimension does not match FV3 array levels')
+end if
+
+allocate(map_code(num_nodes))
 allocate(coded_plane(isd:ied, jsd:jed))
 coded_plane = 0.0_kind_real
 
@@ -540,7 +552,7 @@ call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, 
 
 do jl = 1, nlev
   fv3_array(:,:,jl) = 0.0_kind_real
-  do n = 1, ngrid
+  do n = 1, num_nodes
     lin = nint(map_code(n))
     if (lin < 1 .or. lin > nxy) cycle
     nj = jsc + (lin - 1) / (iec - isc + 1)
@@ -565,21 +577,30 @@ real(kind=kind_real),          intent(in)    :: fv3_array(:,:,:)
 real(kind=kind_real), pointer, intent(inout) :: atlas_ptr(:,:)
 integer,                       intent(in)    :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed
 integer,                       intent(in)    :: ntile, ntiles, ngrid
-integer :: jl
+integer :: jl, nlev, num_nodes
 real(kind=kind_real), allocatable :: node_values(:)
 
+nlev = size(fv3_array, 3)
+
+! num_nodes is the total atlas node count (compute domain + ghost/halo nodes)
+if (size(atlas_ptr, 1) == nlev) then
+  num_nodes = size(atlas_ptr, 2)
+else if (size(atlas_ptr, 2) == nlev) then
+  num_nodes = size(atlas_ptr, 1)
+else
+  call abor1_ftn('copy_fv3_to_atlas: atlas levels dimension does not match FV3 array levels')
+end if
+
 atlas_ptr = 0.0_kind_real
-allocate(node_values(ngrid))
-do jl = 1, size(fv3_array, 3)
+allocate(node_values(num_nodes))
+do jl = 1, nlev
   node_values = 0.0_kind_real
   call fv3_geom_nodes_to_atlas_nodes(npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, &
                                      ntiles, ngrid, fv3_array(:,:,jl), node_values)
-  if (size(atlas_ptr, 1) == size(fv3_array, 3)) then
-    atlas_ptr(jl, 1:ngrid) = node_values
-  else if (size(atlas_ptr, 2) == size(fv3_array, 3)) then
-    atlas_ptr(1:ngrid, jl) = node_values
+  if (size(atlas_ptr, 1) == nlev) then
+    atlas_ptr(jl, :) = node_values
   else
-    call abor1_ftn('copy_fv3_to_atlas: atlas levels dimension does not match FV3 array levels')
+    atlas_ptr(:, jl) = node_values
   end if
 end do
 deallocate(node_values)
