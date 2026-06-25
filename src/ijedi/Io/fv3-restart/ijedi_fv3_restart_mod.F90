@@ -522,9 +522,6 @@ real(kind=kind_real), allocatable :: map_code(:), coded_plane(:,:)
 nlev = size(fv3_array, 3)
 nxy = (iec - isc + 1) * (jec - jsc + 1)
 
-if (size(atlas_ptr, 1) /= nlev .and. size(atlas_ptr, 2) /= nlev) then
-  call abor1_ftn('copy_atlas_to_fv3: atlas levels dimension does not match FV3 array levels')
-end if
 if (ngrid /= nxy) then
   call abor1_ftn('copy_atlas_to_fv3: ngrid does not match FV3 compute-domain size')
 end if
@@ -532,8 +529,10 @@ end if
 ! num_nodes is the total atlas node count (compute domain + ghost/halo nodes)
 if (size(atlas_ptr, 1) == nlev) then
   num_nodes = size(atlas_ptr, 2)
-else
+else if (size(atlas_ptr, 2) == nlev) then
   num_nodes = size(atlas_ptr, 1)
+else
+  call abor1_ftn('copy_atlas_to_fv3: atlas levels dimension does not match FV3 array levels')
 end if
 
 allocate(map_code(num_nodes))
