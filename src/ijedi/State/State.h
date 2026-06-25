@@ -86,6 +86,8 @@ namespace ijedi
 
     State &operator=(const State &);
 
+    void transpose(const State &, const eckit::mpi::Comm &, int ensNum, int transNum);
+
     void read(const eckit::Configuration &);
     void write(const eckit::Configuration &) const;
 

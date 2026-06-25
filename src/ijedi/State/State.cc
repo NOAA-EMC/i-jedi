@@ -79,6 +79,20 @@ namespace ijedi {
 
   // -----------------------------------------------------------------------------------------------
 
+  // Required so LocalEnsembleDA links for the current non-inline LETKF path.
+  // A real implementation is only needed for inline LETKF runs (`Run Inline: true`),
+  // where forecast states must be redistributed onto the DA-local patch layout.
+  void State::transpose(const State &, const eckit::mpi::Comm &, int ensNum, int transNum)
+  {
+    throw eckit::NotImplemented("ijedi::State::transpose is not implemented. "
+                                "LETKF inline forecast transposition is unsupported in I-JEDI. "
+                                "The current LETKF hookup supports the non-inline path only "
+                                "(ensNum=" + std::to_string(ensNum)
+                                + ", transNum=" + std::to_string(transNum) + ").", Here());
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
   void State::read(const eckit::Configuration &config)
   {
     oops::Log::trace() << "ijedi::State::read starting" << std::endl;

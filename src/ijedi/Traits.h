@@ -18,6 +18,10 @@
 
 #include "oops/generic/UnstructuredInterpolator.h"
 
+namespace ufo {
+template<typename ITERATOR> class ObsLocalization;
+}
+
 namespace ijedi
 {
 
@@ -40,6 +44,7 @@ namespace ijedi
     typedef mist::base::ModelAuxIncrement    ModelAuxIncrement;
     typedef mist::base::ModelAuxCovariance   ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
+    typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
   };
 
   struct TraitsAtm
@@ -64,6 +69,7 @@ namespace ijedi
     typedef mist::base::ModelAuxIncrement    ModelAuxIncrement;
     typedef mist::base::ModelAuxCovariance   ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
+    typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
   };
 
   struct TraitsOcn
@@ -85,6 +91,7 @@ namespace ijedi
     typedef mist::base::ModelAuxIncrement    ModelAuxIncrement;
     typedef mist::base::ModelAuxCovariance   ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
+    typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
   };
 
 }  // namespace ijedi
