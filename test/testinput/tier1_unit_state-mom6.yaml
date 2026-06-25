@@ -21,7 +21,6 @@ state test:
     - sea_ice_thickness
     - sea_ice_snow_thickness
     - landmask3d
-    - sea_water_depth
     io:
       filetype: mom6
       datapath: data_generated/mom6
