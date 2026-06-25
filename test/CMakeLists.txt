@@ -184,6 +184,21 @@ ecbuild_add_test( TARGET  ijedi_3dvar_fv3_inc_gauss
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_inc_gauss.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
 
+# LETKF tests
+ecbuild_add_test( TARGET  ijedi_letkf_observer_fv3
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    letkf ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_letkf_observer-fv3.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
+
+ecbuild_add_test( TARGET  ijedi_letkf_solver_fv3
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    letkf ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_letkf_solver-fv3.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata ijedi_letkf_observer_fv3)
+
 # Convert state tests
 ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_mom6
                   MPI     1

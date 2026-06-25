@@ -28,6 +28,7 @@ NPZ = 127         # number of full levels
 NTILES = 6
 NX = NPX - 1      # 12
 NY = NPY - 1      # 12
+NMEMS = 3
 
 # GFS L127 ak/bk (interface pressures: p_half = ak + bk * ps)
 AK = np.array([
@@ -311,8 +312,13 @@ def main():
     outdir = sys.argv[1]
     os.makedirs(outdir, exist_ok=True)
 
+    ###############################
+    # Generate deterministic member
+    ###############################
+
     # Fixed seed for reproducibility
-    rng = np.random.default_rng(seed=20201215)
+    seed = 20201215
+    rng = np.random.default_rng(seed=seed)
 
     atm_path = os.path.join(outdir, "atmf006.nc")
     generate_atmf(atm_path, rng)
@@ -321,6 +327,24 @@ def main():
     sfc_path = os.path.join(outdir, "sfcf006.nc")
     generate_sfcf(sfc_path, rng)
     print(f"  {sfc_path}")
+
+    ###############################
+    # Now generate ensemble members
+    ###############################
+
+    for imem in range(0, NMEMS+1):
+        seed += 1
+        memstr = str(imem).zfill(3)
+        rng = np.random.default_rng(seed=seed)
+
+        atm_path = os.path.join(outdir, f"atmf006_mem{memstr}.nc")
+        generate_atmf(atm_path, rng)
+        print(f"  {atm_path}")
+
+        sfc_path = os.path.join(outdir, f"sfcf006_mem{memstr}.nc")
+        generate_sfcf(sfc_path, rng)
+        print(f"  {sfc_path}")
+
 
     print(f"FV3 test data written to: {outdir}")
 
