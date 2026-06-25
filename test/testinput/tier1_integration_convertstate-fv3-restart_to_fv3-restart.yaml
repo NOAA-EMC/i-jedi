@@ -26,8 +26,6 @@ states:
 - input:
     date: 2020-12-15T00:00:00Z
     state variables:
-    - eastward_wind
-    - northward_wind
     - air_temperature
     - air_pressure_thickness
     io:
@@ -46,18 +44,13 @@ states:
   output:
     date: 2020-12-15T00:00:00Z
     state variables:
-    - eastward_wind
-    - northward_wind
     - air_temperature
     - air_pressure_thickness
     io:
-      filetype: fv3 restart
+      filetype: fv3 history
       datapath: data_generated/fv3/
-      filename_core: out_fv_core.res.nc
-      filename_trcr: out_fv_tracer.res.nc
-      filename_sfcd: out_sfc_data.res.nc
-      filename_sfcw: out_fv_srf_wnd.res.nc
-      filename_cplr: out_coupler.res
+      atm_file: atmf006_out.nc
+      sfc_file: sfcf006_out.nc
       field io names:
         eastward_wind: ua
         northward_wind: va
