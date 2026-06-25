@@ -334,6 +334,13 @@ namespace ijedi
 
             size_t nx = 0, ny = 0, nz = 0, ntiles = 0;
 
+            const auto modelData = geom_.modelData();
+            const size_t geomNpx = static_cast<size_t>(modelData.getInt("npx"));
+            const size_t geomNpy = static_cast<size_t>(modelData.getInt("npy"));
+            nx = geomNpx - 1;
+            ny = geomNpy - 1;
+            ntiles = hasTileDim ? static_cast<size_t>(modelData.getInt("ntiles")) : 1;
+
             auto globalIdx = atlas::array::make_view<atlas::gidx_t, 1>(funcSpace.global_index());
             atlas::gidx_t maxGIdx = 0;
             for (atlas::idx_t jnode = 0; jnode < funcSpace.size(); ++jnode) {
@@ -343,15 +350,15 @@ namespace ijedi
 
             if (maxGIdx == 0) throw eckit::Exception("maxGIdx is zero, cannot write history file");
 
-            ntiles = (hasTileDim && (maxGIdx % 6 == 0)) ? 6 : 1;
-            const size_t n2 = static_cast<size_t>(maxGIdx) / ntiles;
-            const size_t nxGuess =
-                static_cast<size_t>(std::llround(std::sqrt(static_cast<double>(n2))));
-            nx = ny = nxGuess;
             const size_t nxy = nx * ny;
-            if (nxy == 0 || (nx * ny) != n2 || (nxy * ntiles) != static_cast<size_t>(maxGIdx)) {
-                throw eckit::Exception("Inferred (nx,ny,ntiles) are inconsistent with "
-                    "global indices; cannot write history file");
+            if (nxy == 0 || ntiles == 0) {
+                throw eckit::Exception("Geometry-derived (nx,ny,ntiles) are invalid; "
+                                       "cannot write history file");
+            }
+            const bool regionalBcIndexed = (ntiles == 1 && static_cast<size_t>(maxGIdx) > nxy);
+            if (!regionalBcIndexed && static_cast<size_t>(maxGIdx) > nxy * ntiles) {
+                throw eckit::Exception("Geometry-derived (nx,ny,ntiles) are inconsistent with "
+                                       "global indices; cannot write history file");
             }
 
             for (const auto & jediName : jediNames) {
@@ -449,9 +456,20 @@ namespace ijedi
 
                     for (size_t gn = 0; gn < totalNodes; ++gn) {
                         size_t gid0 = static_cast<size_t>(globalGidxDoubleView(gn, 0)) - 1;
-                        size_t tile0 = gid0 / nxy;
-                        size_t spatialIdx = gid0 % nxy;
-                        if (tile0 >= ntiles) continue;
+                        size_t tile0 = 0;
+                        size_t spatialIdx = 0;
+
+                        if (regionalBcIndexed) {
+                            const size_t regionalStride = geomNpx + 1;
+                            const size_t j = gid0 / regionalStride;
+                            const size_t i = gid0 % regionalStride;
+                            if (i == 0 || i > nx || j == 0 || j > ny) continue;
+                            spatialIdx = (j - 1) * nx + (i - 1);
+                        } else {
+                            tile0 = gid0 / nxy;
+                            spatialIdx = gid0 % nxy;
+                            if (tile0 >= ntiles) continue;
+                        }
 
                         if (curr_nz > 1) {
                             for (size_t z = 0; z < (size_t)curr_nz; ++z) {

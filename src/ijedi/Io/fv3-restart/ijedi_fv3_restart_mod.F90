@@ -153,7 +153,8 @@ if (want_ps) then
     afield = afieldset%field('air_pressure_thickness')
     call afield%data(atlas_ptr)
     delp = 0.0_kind_real
-    call copy_atlas_to_fv3(atlas_ptr, delp, isc, iec, jsc, jec, ngrid)
+    call copy_atlas_to_fv3(atlas_ptr, delp, npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, &
+                 ntile, ntiles, ngrid)
     call afield%final()
   end if
   afield = afieldset%field('air_pressure_at_surface')
@@ -236,7 +237,8 @@ do ifield = 1, size(active_fields)
 
   allocate(buffers(ifield)%array(isd:ied, jsd:jed, max(1, afield%levels())))
   buffers(ifield)%array = 0.0_kind_real
-  call copy_atlas_to_fv3(atlas_ptr, buffers(ifield)%array, isc, iec, jsc, jec, ngrid)
+  call copy_atlas_to_fv3(atlas_ptr, buffers(ifield)%array, npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, &
+                         ntile, ntiles, ngrid)
   call unscale_array(buffers(ifield)%array, trim(active_fields(ifield)), field_io_scaling)
   call get_io_file(trim(active_fields(ifield)), afield%levels(), tracer_fields, buffers(ifield)%file_index)
   call afield%final()
@@ -505,24 +507,121 @@ end do
 
 end function is_tracer_field
 
-subroutine copy_atlas_to_fv3(atlas_ptr, fv3_array, isc, iec, jsc, jec, ngrid)
+subroutine copy_atlas_to_fv3(atlas_ptr, fv3_array, npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, &
+                             ntile, ntiles, ngrid)
 
-real(kind=kind_real), pointer, intent(in)    :: atlas_ptr(:,:)
-real(kind=kind_real),          intent(inout) :: fv3_array(:,:,:)
-integer,                       intent(in)    :: isc, iec, jsc, jec
-integer,                       intent(in)    :: ngrid
-integer :: jl
+real(kind=kind_real),         intent(in)    :: atlas_ptr(:,:)
+real(kind=kind_real),         intent(inout) :: fv3_array(isd:, jsd:, :)
+integer,                       intent(in)    :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed
+integer,                       intent(in)    :: ntile, ntiles, ngrid
+integer :: jl, a, b, ncopy
+logical :: at_lower_left_corner, at_upper_left_corner, at_lower_right_corner
+logical :: at_right_edge, at_upper_edge
+logical :: halo_w, halo_e, halo_s, halo_n, halo_sw, halo_nw, halo_ne, halo_se, halo_nw3, halo_se6
 
 do jl = 1, size(fv3_array, 3)
-  fv3_array(isc:iec, jsc:jec, jl) = reshape(atlas_ptr(jl, 1:ngrid), (/iec-isc+1, jec-jsc+1/))
+  halo_w = .true.
+  halo_s = .true.
+  halo_sw = .true.
+  halo_e = .false.
+  halo_n = .false.
+  halo_nw = .false.
+  halo_ne = .false.
+  halo_se = .false.
+  halo_nw3 = .false.
+  halo_se6 = .false.
+
+  if (ntiles == 6) then
+    at_lower_left_corner = (isc == 1 .and. jsc == 1)
+    at_upper_left_corner = (isc == 1 .and. jec == npy-1)
+    at_lower_right_corner = (iec == npx-1 .and. jsc == 1)
+
+    if (at_lower_left_corner) halo_sw = .false.
+    if (at_upper_left_corner .and. (ntile == 3)) halo_nw3 = .true.
+    if (at_lower_right_corner .and. (ntile == 6)) halo_se6 = .true.
+  else if (ntiles == 1) then
+    at_right_edge = (iec == npx-1)
+    at_upper_edge = (jec == npy-1)
+
+    if (at_upper_edge) then
+      halo_n = .true.
+      halo_nw = .true.
+    end if
+    if (at_right_edge) then
+      halo_e = .true.
+      halo_se = .true.
+      if (at_upper_edge) halo_ne = .true.
+    end if
+  else
+    call abor1_ftn('ijedi_fv3_restart_mod: copy_atlas_to_fv3 requires ntiles == 1 or 6')
+  end if
+
+  a = 1
+  b = ngrid
+  fv3_array(isc:iec, jsc:jec, jl) = reshape(atlas_ptr(jl, a:b), (/iec-isc+1, jec-jsc+1/))
+
+  ncopy = jec - jsc + 1
+  if (halo_w) then
+    a = b + 1
+    b = b + ncopy
+    fv3_array(isc-1, jsc:jec, jl) = atlas_ptr(jl, a:b)
+  end if
+  if (halo_e) then
+    a = b + 1
+    b = b + ncopy
+    fv3_array(iec+1, jsc:jec, jl) = atlas_ptr(jl, a:b)
+  end if
+
+  ncopy = iec - isc + 1
+  if (halo_s) then
+    a = b + 1
+    b = b + ncopy
+    fv3_array(isc:iec, jsc-1, jl) = atlas_ptr(jl, a:b)
+  end if
+  if (halo_n) then
+    a = b + 1
+    b = b + ncopy
+    fv3_array(isc:iec, jec+1, jl) = atlas_ptr(jl, a:b)
+  end if
+
+  if (halo_sw) then
+    a = b + 1
+    b = b + 1
+    fv3_array(isc-1, jsc-1, jl) = atlas_ptr(jl, a)
+  end if
+  if (halo_nw) then
+    a = b + 1
+    b = b + 1
+    fv3_array(isc-1, jec+1, jl) = atlas_ptr(jl, a)
+  end if
+  if (halo_ne) then
+    a = b + 1
+    b = b + 1
+    fv3_array(iec+1, jec+1, jl) = atlas_ptr(jl, a)
+  end if
+  if (halo_se) then
+    a = b + 1
+    b = b + 1
+    fv3_array(iec+1, jsc-1, jl) = atlas_ptr(jl, a)
+  end if
+  if (halo_nw3) then
+    a = b + 1
+    b = b + 1
+    fv3_array(isc, jec+1, jl) = atlas_ptr(jl, a)
+  end if
+  if (halo_se6) then
+    a = b + 1
+    b = b + 1
+    fv3_array(iec+1, jsc, jl) = atlas_ptr(jl, a)
+  end if
 end do
 end subroutine copy_atlas_to_fv3
 
 subroutine copy_fv3_to_atlas(fv3_array, atlas_ptr, npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed, &
                              ntile, ntiles, ngrid)
 
-real(kind=kind_real),          intent(in)    :: fv3_array(:,:,:)
-real(kind=kind_real), pointer, intent(inout) :: atlas_ptr(:,:)
+real(kind=kind_real),          intent(in)    :: fv3_array(isd:, jsd:, :)
+real(kind=kind_real),          intent(inout) :: atlas_ptr(:,:)
 integer,                       intent(in)    :: npx, npy, isc, iec, jsc, jec, isd, ied, jsd, jed
 integer,                       intent(in)    :: ntile, ntiles, ngrid
 integer :: jl

@@ -6,6 +6,7 @@
 #include "oops/util/Timer.h"
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Io/fv3-restart/IoFV3Restart.h"
+#include "ijedi/Io/fv3-restart/IoFV3Restart.interface.h"
 
 namespace ijedi
 {
