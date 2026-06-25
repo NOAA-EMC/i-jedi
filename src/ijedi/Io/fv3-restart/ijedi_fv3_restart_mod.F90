@@ -119,8 +119,7 @@ do n = 1, numfiles
       end if
       rstflag(n) = .true.
     end if
-    call register_restart_array(fileobj(n), trim(buffers(ibuf)%io_name), buffers(ibuf)%array, &
-                                isc, iec, jsc, jec)
+    call register_restart_array(fileobj(n), trim(buffers(ibuf)%io_name), buffers(ibuf)%array)
   end do
   if (rstflag(n)) then
     call read_restart(fileobj(n), ignore_checksum=ignore_checksum)
@@ -255,8 +254,7 @@ do n = 1, numfiles
       end if
       rstflag(n) = .true.
     end if
-    call register_restart_array(fileobj(n), trim(buffers(ibuf)%io_name), buffers(ibuf)%array, &
-                                isc, iec, jsc, jec)
+    call register_restart_array(fileobj(n), trim(buffers(ibuf)%io_name), buffers(ibuf)%array)
   end do
   if (rstflag(n)) then
     call write_restart(fileobj(n))
@@ -607,12 +605,11 @@ deallocate(node_values)
 
 end subroutine copy_fv3_to_atlas
 
-subroutine register_restart_array(fileobj, io_name, array, isc, iec, jsc, jec)
+subroutine register_restart_array(fileobj, io_name, array)
 
 type(FmsNetcdfDomainFile_t), intent(inout) :: fileobj
 character(len=*),            intent(in)    :: io_name
-real(kind=kind_real),        intent(inout) :: array(:,:,:)
-integer,                     intent(in)    :: isc, iec, jsc, jec
+real(kind=kind_real),        intent(in)    :: array(:,:,:)
 
 logical :: is_registered
 integer :: ndims, idim, num_zaxes, nz_dim, nz_field
@@ -624,18 +621,13 @@ if (fileobj%is_readonly) then
   allocate(dim_names(ndims))
   call get_variable_dimension_names(fileobj, trim(io_name), dim_names)
 
-  do idim = 1, ndims
-    if (index(trim(dim_names(idim)), 'xaxis') /= 0) then
-      if (.not. is_dimension_registered(fileobj, trim(dim_names(idim)))) then
-        call register_axis(fileobj, trim(dim_names(idim)), 'x', domain_position=center)
-      end if
-    else if (index(trim(dim_names(idim)), 'yaxis') /= 0) then
-      if (.not. is_dimension_registered(fileobj, trim(dim_names(idim)))) then
-        call register_axis(fileobj, trim(dim_names(idim)), 'y', domain_position=center)
-      end if
-    end if
-  end do
-  call register_restart_field(fileobj, trim(io_name), array, indices=(/isc, iec, jsc, jec/))
+  if (.not. is_dimension_registered(fileobj, trim(dim_names(1)))) then
+    call register_axis(fileobj, trim(dim_names(1)), 'x', domain_position=center)
+  end if
+  if (.not. is_dimension_registered(fileobj, trim(dim_names(2)))) then
+    call register_axis(fileobj, trim(dim_names(2)), 'y', domain_position=center)
+  end if
+  call register_restart_field(fileobj, trim(io_name), array)
   deallocate(dim_names)
 else
   is_registered = .false.
@@ -710,11 +702,9 @@ else
   end if
 
   if (nz_field > 1) then
-    call register_restart_field(fileobj, trim(io_name), array, (/xdim_name, ydim_name, zdim_name, 'Time    '/), &
-                                indices=(/isc, iec, jsc, jec/))
+    call register_restart_field(fileobj, trim(io_name), array, (/xdim_name, ydim_name, zdim_name, 'Time    '/))
   else
-    call register_restart_field(fileobj, trim(io_name), array, (/xdim_name, ydim_name, 'Time    '/), &
-                                indices=(/isc, iec, jsc, jec/))
+    call register_restart_field(fileobj, trim(io_name), array, (/xdim_name, ydim_name, 'Time    '/))
   end if
 end if
 
