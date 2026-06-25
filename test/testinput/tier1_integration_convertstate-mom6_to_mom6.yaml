@@ -65,3 +65,6 @@ states:
         sea_water_potential_temperature: Temp
         sea_surface_height_above_geoid: ave_ssh
 
+#TODO(GV): Uncomment when the test produces reasonable output.
+#test:
+#  reference filename: testref/convertstate-mom6-to-mom6.test

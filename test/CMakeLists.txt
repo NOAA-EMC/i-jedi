@@ -13,6 +13,14 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 
+# Link the directory 'testref' to the test directory of the build
+# ---------------------------------------------------------------
+file(CREATE_LINK
+    "${CMAKE_CURRENT_SOURCE_DIR}/testref"
+    "${CMAKE_CURRENT_BINARY_DIR}/testref"
+    SYMBOLIC
+)
+
 # Test data generation
 ecbuild_add_test(TARGET  ijedi_setup_mom6_testdata
                  TYPE    SCRIPT
@@ -35,6 +43,18 @@ ecbuild_add_test( TARGET  ijedi_geometry_fv3
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi_test.x>
                   ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-fv3.yaml)
+
+ecbuild_add_test( TARGET  ijedi_geometry_atlas
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-atlas.yaml)
+
+ecbuild_add_test( TARGET  ijedi_geometry_gsibec
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-gsibec.yaml)
 
 ecbuild_add_test( TARGET  ijedi_geometry_mom6
                   MPI     6
@@ -132,3 +152,17 @@ ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_fv3
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_fv3.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_fv3_testdata)
+
+ecbuild_add_test( TARGET  ijedi_convertstate_fv3_to_atlas
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-fv3_to_atlas.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_fv3_testdata)
+
+ecbuild_add_test( TARGET  ijedi_convertstate_fv3_to_fv3
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-fv3_to_fv3.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata)

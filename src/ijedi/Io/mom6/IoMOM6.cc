@@ -6,6 +6,7 @@
 #include "oops/util/Timer.h"
 
 #include "ijedi/Geometry/Geometry.h"
+#include "ijedi/Io/mom6/FillMaskedCells.h"
 #include "ijedi/Io/mom6/IoMOM6.h"
 #include "ijedi/Io/mom6/ReadMOM6Netcdf.h"
 #include "ijedi/Io/mom6/WriteMOM6Netcdf.h"
@@ -43,6 +44,7 @@ namespace ijedi
     util::Timer timer(classname(), "read state");
     oops::Log::trace() << classname() << " read state starting" << std::endl;
 
+    // Resolve variable names and scalings for all fields
     std::vector<std::string> fileVarNames;
     std::vector<double> scalings;
     for (const auto & field : x) {
@@ -53,7 +55,13 @@ namespace ijedi
                          ? fileioscaling.getDouble(jediName) : 0.0);
     }
 
+    // Delegate to the NetCDF reader (root reads, scatter, halo exchange)
     readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings, geom_.getComm());
+
+    // Apply boundary conditions to masked (land) cells: nearest-neighbour
+    // extrapolation for tracers, zero for non-tracers.
+    applyBoundaryConditions(x, geom_.fields().field("mask2d"),
+                            geom_.getFieldMetadata());
 
     oops::Log::trace() << classname() << " read state done" << std::endl;
   }
@@ -76,6 +84,7 @@ namespace ijedi
                              ? fileionames.getString(jediName) : "");
     }
 
+    // Delegate to the NetCDF writer (Atlas gather + root writes)
     writeMOM6Netcdf(writeFilepath_, x, fileVarNames, ni, nj, nz, geom_.getComm());
 
     oops::Log::trace() << classname() << " write state done" << std::endl;

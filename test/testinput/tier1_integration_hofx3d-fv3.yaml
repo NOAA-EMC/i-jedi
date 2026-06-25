@@ -19,8 +19,7 @@ state:
   - air_temperature
   - air_pressure_thickness
   io:
-    filetype: fv3
-    source: history
+    filetype: fv3 history
     datapath: data_generated/fv3/
     atm_file: atmf006.nc
     sfc_file: sfcf006.nc
@@ -47,3 +46,6 @@ observations:
       observation vertical coordinate: pressure
       observation vertical coordinate group: MetaData
       interpolation method: log-linear
+
+test:
+  reference filename: testref/hofx3d-fv3.test

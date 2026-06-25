@@ -49,3 +49,7 @@ observations:
     obs operator:
       name: Identity
       observation alias file: data/obs/obsop_name_map.yml
+
+#TODO: not passing in CI with the specified reference
+#test:
+#  reference filename: testref/hofx3d-mom6.test

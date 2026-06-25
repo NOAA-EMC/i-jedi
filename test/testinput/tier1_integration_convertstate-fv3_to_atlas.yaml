@@ -1,24 +1,30 @@
-geometry:
+input geometry:
+  geometry_type: fv3
   fms initialization:
     namelist filename: data/fv3/input_c12.nml
     field table filename: data/fv3/field_table
-  geometry_type: fv3
   npx: 13
   npy: 13
   npz: 127
   ntiles: 6
   akbk: gfs_127
-state test:
-  statefile:
+
+output geometry:
+  geometry_type: atlas
+  nlevels: 127
+  function space: StructuredColumns
+  grid:
+    type: regular_gaussian
+    N: 15
+
+states:
+- input:
     date: 2020-12-15T00:00:00Z
     state variables:
     - eastward_wind
     - northward_wind
     - air_temperature
     - air_pressure_thickness
-    - air_pressure_at_surface
-    - water_vapor_mixing_ratio_wrt_moist_air
-    - ozone_mass_mixing_ratio
     io:
       filetype: fv3 history
       datapath: data_generated/fv3/
@@ -29,10 +35,16 @@ state test:
         northward_wind: vgrd
         air_temperature: tmp
         air_pressure_thickness: dpres
-        air_pressure_at_surface: pressfc
-        water_vapor_mixing_ratio_wrt_moist_air: spfh
-        ozone_mass_mixing_ratio: o3mr
-  date: 2020-12-15T00:00:00Z
-  test variable change constructor: false
-  norm file: 2916052.09662111802
-  tolerance: 1.0e-8
+  output:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - eastward_wind
+    - northward_wind
+    - air_temperature
+    - air_pressure_thickness
+    io:
+      filetype: unstructured
+      filepath: convertstate-atlas-unstructured-from-fv3
+
+test:
+  reference filename: testref/convertstate-fv3-to-atlas.test

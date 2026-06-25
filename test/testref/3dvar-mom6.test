@@ -1,0 +1,10 @@
+CostJo   : Nonlinear Jo(SST) = 2.5295976716316043e+04, nobs = 199, Jo/n = 1.2711546088601027e+02, err = 3.6419991997020579e-01
+CostFunction: Nonlinear J = 2.5295976716316043e+04
+DRPCGMinimizer: reduction in residual norm = 9.9982552948284745e-02
+CostFunction::addIncrement: Analysis: 
+  Valid time: 2020-12-16T00:00:00Z, nFields = 3
+sea_water_salinity              : Min=0.0000000000e+00, Max=3.4919769654e+01, RMS=2.7733494877e+01
+sea_water_potential_temperature : Min=-1.4781092130e+01, Max=3.0760057145e+01, RMS=1.2940665928e+01
+sea_surface_height_above_geoid  : Min=-9.7629600712e-02, Max=9.9900147104e-02, RMS=5.6903065947e-02
+CostJo   : Nonlinear Jo(SST) = 1.2198732378e+03, nobs = 199, Jo/n = 6.1300162702e+00, err = 3.6419991997e-01
+CostFunction: Nonlinear J = 1.2198732378e+03
