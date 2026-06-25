@@ -234,40 +234,29 @@ namespace ijedi
     // Atlas fields for geometry variables
     geomFields = atlas::FieldSet();
 
-    std::vector<double> ak;
-    std::vector<double> bk;
-    geomVariables.get("sigma_pressure_hybrid_coordinate_a_coefficient", ak);
-    geomVariables.get("sigma_pressure_hybrid_coordinate_b_coefficient", bk);
+    // Create fields needed in geomFields
+    atlas::Field area = functionSpace.createField<double>(atlas::option::name("area") |
+                                                          atlas::option::levels(1));
+    atlas::Field owned = functionSpace.createField<int>(atlas::option::name("owned") |
+                                                        atlas::option::levels(1));
 
-    std::vector<double> surfacePressure;
-    std::vector<double> surfaceGeopotential;
-    geomVariables.get("surface_pressure", surfacePressure);
-    geomVariables.get("surface_geopotential", surfaceGeopotential);
+    // Start with area being -1 everywhere
+    auto areaView = atlas::array::make_view<double, 2>(area);
+    auto ownedView = atlas::array::make_view<int, 2>(owned);
 
-    const std::string vertCoordType = params.vertCoord;
-    int vertCoordSelector = 0;
-    if (vertCoordType == "sigma") {
-      vertCoordSelector = 1;
-    } else if (vertCoordType == "logp") {
-      vertCoordSelector = 2;
-    } else if (vertCoordType == "orography") {
-      vertCoordSelector = 3;
-    } else {
-      throw eckit::BadValue("Unsupported FV3 vertical coordinate type for vert_coord: "
-                            + vertCoordType, Here());
+    for (atlas::idx_t j = 0; j < functionSpace.size(); ++j)
+    {
+      areaView(j, 0) = -1.0;
+      ownedView(j, 0) = 0;
+    }
+    for (atlas::idx_t j = 0; j < ngrid; ++j)
+    {
+      areaView(j, 0) = area_owned[j];
+      ownedView(j, 0) = 1;
     }
 
-    f_fv3_geom_set_and_fill_geometry_fields(
-        reinterpret_cast<void *>(functionSpace.get()),
-        reinterpret_cast<void *>(geomFields.get()),
-        vertCoordSelector,
-        ngrid,
-        numberLevels,
-        ak.data(),
-        bk.data(),
-        area_owned.data(),
-        surfacePressure.data(),
-        surfaceGeopotential.data());
+    geomFields.add(area);
+    geomFields.add(owned);
 
     std::vector<double> ak;
     std::vector<double> bk;
