@@ -358,7 +358,8 @@ namespace ijedi
                 comm.allReduceInPlace(ownedGlobal, eckit::mpi::sum());
                 if (ownedGlobal > 0 && ownedGlobal % static_cast<atlas::idx_t>(ntiles) == 0) {
                     const size_t nOwnedPerTile = static_cast<size_t>(ownedGlobal / ntiles);
-                    const size_t side = static_cast<size_t>(std::sqrt(static_cast<double>(nOwnedPerTile)));
+                    const size_t side =
+                        static_cast<size_t>(std::sqrt(static_cast<double>(nOwnedPerTile)));
                     if (side * side == nOwnedPerTile) {
                         nx = ny = side;
                         nxy = nOwnedPerTile;
