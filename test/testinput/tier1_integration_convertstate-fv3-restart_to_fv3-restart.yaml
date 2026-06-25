@@ -49,8 +49,8 @@ states:
     io:
       filetype: fv3 history
       datapath: data_generated/fv3/
-      atm_file: atmf006_out.nc
-      sfc_file: sfcf006_out.nc
+      atm_file: atmf006_out_1tile.nc
+      sfc_file: sfcf006_out_1tile.nc
       field io names:
         eastward_wind: ua
         northward_wind: va
