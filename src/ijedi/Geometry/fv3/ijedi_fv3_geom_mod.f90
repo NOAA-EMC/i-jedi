@@ -450,7 +450,7 @@ real_ptr(1, :) = -1.0_kind_real
 real_ptr(1, 1:ngrid) = reshape(area(isc:iec, jsc:jec), (/ngrid/))
 call afieldset%add(afield)
 
-! Add vertical coordinate
+! Add vertical unit
 ps = constant('ps')
 if (trim(vertcoord_type) == 'sigma') then
    afield = afunctionspace%create_field(name='vert_coord', kind=atlas_real(kind_real), levels=npz)

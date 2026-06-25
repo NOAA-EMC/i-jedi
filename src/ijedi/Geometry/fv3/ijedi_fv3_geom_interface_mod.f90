@@ -1,10 +1,12 @@
 module fv3jedi_geom_interface_mod
 
+use atlas_module, only: atlas_fieldset, atlas_functionspace
 use iso_c_binding
 
 use fckit_mpi_module,           only: fckit_mpi_comm
 use fckit_configuration_module, only: fckit_configuration
 
+use ijedi_kinds_mod
 use ijedi_fv3_geom_mod
 
 implicit none
