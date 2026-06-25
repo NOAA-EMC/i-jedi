@@ -12,6 +12,7 @@ file(CREATE_LINK
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
 
 # Link the directory 'testref' to the test directory of the build
 # ---------------------------------------------------------------
@@ -166,6 +167,22 @@ ecbuild_add_test( TARGET  ijedi_3dvar_mom6
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata ijedi_diffusion_mom6)
+
+# 3DVar comparison: FV3 increment with interpolation to gaussian (Variant A) vs
+# native atlas/gaussian increment (Variant B).
+ecbuild_add_test( TARGET  ijedi_3dvar_fv3_interp_gauss
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_interp_gauss.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
+
+ecbuild_add_test( TARGET  ijedi_3dvar_fv3_inc_gauss
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_inc_gauss.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
 
 # Convert state tests
 ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_mom6

@@ -1,0 +1,8 @@
+CostJo   : Nonlinear Jo(Aircraft) = 3.0204199742572087e+04, nobs = 55, Jo/n = 5.4916726804676523e+02, err = 1.1056877696958747e+00
+CostFunction: Nonlinear J = 3.0204199742572087e+04
+DRPCGMinimizer: reduction in residual norm = 1.1541126942953844e-02
+CostFunction::addIncrement: Analysis: 
+  Valid time: 2020-12-15T00:00:00Z, nFields = 1
+air_temperature : Min=1.5180067631e+02, Max=3.7352655076e+02, RMS=2.4995008689e+02
+CostJo   : Nonlinear Jo(Aircraft) = 1.5377661859e+04, nobs = 55, Jo/n = 2.7959385198e+02, err = 1.1056877697e+00
+CostFunction: Nonlinear J = 1.5377661859e+04
