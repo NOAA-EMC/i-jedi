@@ -267,6 +267,8 @@ call geom_vars%set("air_pressure_at_top_of_atmosphere_model", ak(1))
 ! Save some things later needed in Atlas-based Geometry Fields
 ! ------------------------------------------------------------
 call geom_vars%set("area", reshape(Atm(1)%gridstruct%area_64(isc:iec, jsc:jec), (/ngrid/)))
+call geom_vars%set("surface_pressure", reshape(Atm(1)%ps(isc:iec, jsc:jec), (/ngrid/)))
+call geom_vars%set("surface_geopotential", reshape(Atm(1)%phis(isc:iec, jsc:jec), (/ngrid/)))
 
 ! Ensemble manager
 ! ----------------

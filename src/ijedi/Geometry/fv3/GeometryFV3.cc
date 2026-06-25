@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
@@ -18,6 +19,41 @@
 #include "ijedi/Geometry/fv3/GeometryFV3.h"
 #include "ijedi/Geometry/fv3/GeometryFV3.interface.h"
 #include "ijedi/Geometry/fv3/GeometryFV3Parameters.h"
+#include "ijedi/Utilities/Constants.h"
+
+namespace {
+
+std::vector<double> fv3MidlayerPressurePhilips(const std::vector<double> & edgePressure,
+                                               const double kappa) {
+  const double kap1 = kappa + 1.0;
+  const double kapr = 1.0 / kappa;
+  std::vector<double> midPressure(edgePressure.size() - 1);
+  for (size_t k = 0; k < midPressure.size(); ++k) {
+    midPressure[k] = std::pow((std::pow(edgePressure[k + 1], kap1) -
+                               std::pow(edgePressure[k], kap1)) /
+                              (kap1 * (edgePressure[k + 1] - edgePressure[k])), kapr);
+  }
+  return midPressure;
+}
+
+std::vector<double> fv3LogPressureProfile(const std::vector<double> & ak,
+                                          const std::vector<double> & bk,
+                                          const double surfacePressure) {
+  std::vector<double> edgePressure(ak.size());
+  for (size_t k = 0; k < edgePressure.size(); ++k) {
+    edgePressure[k] = ak[k] + bk[k] * surfacePressure;
+  }
+
+  const std::vector<double> midPressure =
+      fv3MidlayerPressurePhilips(edgePressure, ijedi::getConstant("kappa"));
+  std::vector<double> logPressure(midPressure.size());
+  for (size_t k = 0; k < logPressure.size(); ++k) {
+    logPressure[k] = -std::log(midPressure[k]);
+  }
+  return logPressure;
+}
+
+}  // namespace
 
 namespace ijedi
 {
@@ -108,6 +144,10 @@ namespace ijedi
     geomVariables.get("partition", partitions);
     geomVariables.get("raw_tri_boundary_nodes", raw_tri_boundary_nodes);
     geomVariables.get("raw_quad_boundary_nodes", raw_quad_boundary_nodes);
+
+    if (area_owned.size() != static_cast<size_t>(ngrid)) {
+      throw eckit::BadValue("FV3 geometry area field size does not match ngrid", Here());
+    }
 
     // Atlas connection
     {
@@ -220,6 +260,71 @@ namespace ijedi
     // Add area to geomFields
     geomFields.add(area);
     geomFields.add(owned);
+
+    std::vector<double> ak;
+    std::vector<double> bk;
+    geomVariables.get("sigma_pressure_hybrid_coordinate_a_coefficient", ak);
+    geomVariables.get("sigma_pressure_hybrid_coordinate_b_coefficient", bk);
+
+    std::vector<double> surfacePressure;
+    std::vector<double> surfaceGeopotential;
+    geomVariables.get("surface_pressure", surfacePressure);
+    geomVariables.get("surface_geopotential", surfaceGeopotential);
+
+    if (functionSpace.size() < ngrid) {
+      throw eckit::BadValue("FV3 functionSpace size is smaller than ngrid", Here());
+    }
+    if (ak.size() != static_cast<size_t>(numberLevels + 1) ||
+        bk.size() != static_cast<size_t>(numberLevels + 1)) {
+      throw eckit::BadValue("FV3 ak/bk sizes do not match nLevels + 1", Here());
+    }
+    if (surfacePressure.size() != static_cast<size_t>(ngrid)) {
+      throw eckit::BadValue("FV3 surface_pressure size does not match ngrid", Here());
+    }
+    if (surfaceGeopotential.size() != static_cast<size_t>(ngrid)) {
+      throw eckit::BadValue("FV3 surface_geopotential size does not match ngrid", Here());
+    }
+
+    const std::string vertCoordType = params.vertCoord;
+    if (vertCoordType != "sigma" && vertCoordType != "logp" && vertCoordType != "orography") {
+      throw eckit::BadValue("Unsupported FV3 vertical coordinate type for vert_coord: "
+                            + vertCoordType, Here());
+    }
+
+    const int vertCoordLevels = vertCoordType == "orography" ? 1 : numberLevels;
+    atlas::Field vertCoord = functionSpace.createField<double>(
+        atlas::option::name("vert_coord") | atlas::option::levels(vertCoordLevels));
+    auto vertCoordView = atlas::array::make_view<double, 2>(vertCoord);
+    for (atlas::idx_t j = 0; j < functionSpace.size(); ++j) {
+      for (atlas::idx_t k = 0; k < vertCoord.shape(1); ++k) {
+        vertCoordView(j, k) = -1.0;
+      }
+    }
+
+    if (vertCoordType == "sigma") {
+      for (atlas::idx_t j = 0; j < ngrid; ++j) {
+        const double psLocal = surfacePressure[j];
+        for (int k = 0; k < numberLevels; ++k) {
+          const double sigmaUp = ak[k + 1] / psLocal + bk[k + 1];
+          const double sigmaDn = ak[k] / psLocal + bk[k];
+          vertCoordView(j, k) = 0.5 * (sigmaUp + sigmaDn);
+        }
+      }
+    } else if (vertCoordType == "logp") {
+      for (atlas::idx_t j = 0; j < ngrid; ++j) {
+        const std::vector<double> logPressure =
+            fv3LogPressureProfile(ak, bk, surfacePressure[j]);
+        for (int k = 0; k < numberLevels; ++k) {
+          vertCoordView(j, k) = logPressure[k];
+        }
+      }
+    } else if (vertCoordType == "orography") {
+      const double grav = getConstant("grav");
+      for (atlas::idx_t j = 0; j < ngrid; ++j) {
+        vertCoordView(j, 0) = surfaceGeopotential[j] / grav;
+      }
+    }
+    geomFields.add(vertCoord);
 
     oops::Log::trace() << "GeometryFV3 constructor done" << std::endl;
   }
