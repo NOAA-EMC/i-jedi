@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "oops/util/DateTime.h"
@@ -11,109 +12,113 @@
 #include "oops/util/parameters/RequiredParameter.h"
 
 #include "ijedi/Io/IoBase.h"
-// #include "IoFV3History.interface.h"
 
 namespace ijedi
 {
 
-  // -------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------
 
-  class IoFV3HistoryParameters : public IoParametersBase
-  {
-    OOPS_CONCRETE_PARAMETERS(IoFV3HistoryParameters, IoParametersBase)
+    class IoFV3HistoryParameters : public IoParametersBase
+    {
+        OOPS_CONCRETE_PARAMETERS(IoFV3HistoryParameters, IoParametersBase)
 
-   public:
-    // Names of files to be read/written to
-    oops::Parameter<std::string> provider{"provider", "name of the model", "geos", this};
+     public:
+        // Atmosphere file name
+        oops::RequiredParameter<std::string> atm_file{"atm_file",
+                                                      "atmosphere file name",
+                                                      this};
 
-    // Filenames provided as a list
-    oops::OptionalParameter<std::vector<std::string>> filenames{"filenames",
-                                                                "names of the files to be read",
+        // Surface file name
+        oops::RequiredParameter<std::string> sfc_file{"sfc_file",
+                                                      "surface file name",
+                                                      this};
+
+        // Path prepended to all files
+        oops::Parameter<std::string> datapath{"datapath", "path to location of files to be read",
+                                              "./", this};
+
+        // Option to clobber existing files
+        oops::OptionalParameter<std::vector<bool>> clobber{"clobber existing files",
+                                                           "clobber existing files", this};
+
+        // Whether the tile is a dimension in the file
+        oops::OptionalParameter<std::vector<bool>> tiledim{"tile is a dimension",
+                                                           "tile is a dimension", this};
+
+        // Name of the X Dimension in the file
+        oops::OptionalParameter<std::vector<std::string>> xdim{"x dimension name",
+                                                               "x dimension name",
+                                                               this};
+
+        // Name of the Y Dimension in the file
+        oops::OptionalParameter<std::vector<std::string>> ydim{"y dimension name",
+                                                               "y dimension name",
+                                                               this};
+
+        // Name of the Z Full Dimension in the file
+        oops::OptionalParameter<std::vector<std::string>> zfdim{"z full dimension name",
+                                                                "z full dimension name",
                                                                 this};
 
-    // Single filename provided
-    oops::OptionalParameter<std::string> filename{"filename",
-                                                  "name of the file to be read",
-                                                  this};
+        // Name of the Z Half Dimension in the file
+        oops::OptionalParameter<std::vector<std::string>> zhdim{"z half dimension name",
+                                                                "z half dimension name",
+                                                                this};
 
-    // Path prepended to all files
-    oops::Parameter<std::string> datapath{"datapath", "path to location of files to be read",
-                                          "./", this};
+        // Set date/time on read
+        oops::OptionalParameter<bool> setDateTime{"set datetime on read",
+                                                  "set datetime on read", this};
 
-    // Option to clobber existing files
-    oops::OptionalParameter<std::vector<bool>> clobber{"clobber existing files",
-                                                       "clobber existing files", this};
+        // Optional list of fields to write out
+        oops::OptionalParameter<std::vector<std::string>>
+            fieldsToWrite{"fields to write",
+                          "names of the fields to write",
+                           this};
 
-    // Whether the tile is a dimension in the file
-    oops::OptionalParameter<std::vector<bool>> tiledim{"tile is a dimension",
-                                                       "tile is a dimension", this};
+        // Floating point precision in bytes for NetCDF write
+        oops::OptionalParameter<int> floatPrecision{"float precision in bytes",
+                                                    "number of bytes of floating point precision",
+                                                    this};
 
-    // Name of the X Dimension in the file
-    oops::OptionalParameter<std::vector<std::string>> xdim{"x dimension name",
-                                                           "x dimension name",
-                                                           this};
+        // Compute pressure at the edges from pressure at the surface (instead of reading it)
+        oops::OptionalParameter<bool> computeP{"compute edge pressure from surface pressure",
+                                               "compute edge pressure from surface pressure",
+                                               this};
 
-    // Name of the Y Dimension in the file
-    oops::OptionalParameter<std::vector<std::string>> ydim{"y dimension name",
-                                                           "y dimension name",
-                                                           this};
+        // Maximum allowable difference in the Geometry lat/lon compared to the file lat/lon
+        // In practice users should expect differences order 1e-12 or smaller if everything
+        // is in double precision. In practice models may produce files at lower precision.
+        // Differences smaller than 1e-6 should be sufficient to assess that the geometry of
+        // the model producing the file being read is the same at the one in fv3-jedi.
+        oops::Parameter<double> maxDiff{"max allowable geometry difference",
+                                        "max allowable geometry difference", 1e-6, this};
+    };
 
-    // Name of the Z Full Dimension in the file
-    oops::OptionalParameter<std::vector<std::string>> zfdim{"z full dimension name",
-                                                            "z full dimension name",
-                                                            this};
+    // -------------------------------------------------------------------------------------------------
+    class IoFV3History : public IoBase, private util::ObjectCounter<IoFV3History>
+    {
+     public:
+        static const std::string classname() { return "ijedi::IoFV3History"; }
 
-    // Name of the Z Half Dimension in the file
-    oops::OptionalParameter<std::vector<std::string>> zhdim{"z half dimension name",
-                                                            "z half dimension name",
-                                                            this};
+        typedef IoFV3HistoryParameters Parameters_;
 
-    // Set date/time on read
-    oops::OptionalParameter<bool> setDateTime{"set datetime on read", "set datetime on read", this};
+        IoFV3History(const Geometry &, const Parameters_ &);
+        ~IoFV3History();
+        void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
+                  const eckit::LocalConfiguration &) const override;
+        void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
+                   const eckit::LocalConfiguration &) const override;
 
-    // Optional list of fields to write out
-    oops::OptionalParameter<std::vector<std::string>> fieldsToWrite{"fields to write",
-                                                                    "names of the fields to write",
-                                                                    this};
+     private:
+        void print(std::ostream &) const override;
 
-    // Floating point precision in bytes for NetCDF write
-    oops::OptionalParameter<int> floatPrecision{"float precision in bytes",
-                                                "number of bytes of floating point precision",
-                                                this};
+        void checkNetCDF(int status, const std::string &operation) const;
 
-    // Compute pressure at the edges from pressure at the surface (instead of reading it)
-    oops::OptionalParameter<bool> computeP{"compute edge pressure from surface pressure",
-                                           "compute edge pressure from surface pressure",
-                                           this};
+        // Store parameters and geometry reference
+        Parameters_ parameters_;
+        const Geometry &geom_;
+    };
 
-    // Maximum allowable difference in the Geometry lat/lon compared to the file lat/lon
-    // In practice users should expect differences order 1e-12 or smaller if everything
-    // is in double precision. In practice models may produce files at lower precision.
-    // Differences smaller than 1e-6 should be sufficient to assess that the geometry of
-    // the model producing the file being read is the same at the one in fv3-jedi.
-    oops::Parameter<double> maxDiff{"max allowable geometry difference",
-                                    "max allowable geometry difference", 1e-6, this};
-  };
-
-  // -------------------------------------------------------------------------------------------------
-  class IoFV3History : public IoBase, private util::ObjectCounter<IoFV3History>
-  {
-   public:
-    static const std::string classname() { return "ijedi::IoFV3History"; }
-
-    typedef IoFV3HistoryParameters Parameters_;
-
-    IoFV3History(const Geometry &, const Parameters_ &);
-    ~IoFV3History();
-    void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
-              const eckit::LocalConfiguration &) const override;
-    void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
-               const eckit::LocalConfiguration &) const override;
-
-   private:
-    void print(std::ostream &) const override;
-  };
-
-  // -------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------
 
 }  // namespace ijedi

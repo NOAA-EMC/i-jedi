@@ -97,8 +97,10 @@ if(FMS_FOUND)
     Geometry/fv3/GeometryFV3.h
     Geometry/fv3/GeometryFV3Parameters.h
     Geometry/fv3/GeometryFV3.interface.h
-    Io/fv3/IoFV3.cc
-    Io/fv3/IoFV3.h
+    Io/fv3-history/IoFV3History.cc
+    Io/fv3-history/IoFV3History.h
+    Io/fv3-restart/IoFV3Restart.cc
+    Io/fv3-restart/IoFV3Restart.h
   )
   list(APPEND ijedi_fv3_fortran_src_files
     Geometry/fv3/ijedi_fv3_akbk_mod.f90
