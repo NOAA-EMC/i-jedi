@@ -47,10 +47,10 @@ cost function:
           - sea_surface_height_above_geoid
           multivariate strategy: univariate
           horizontal:
-            filepath: diffusion_hz
+            filepath: diffusion_hz_mom6
           vertical:
             levels: 25
-            filepath: diffusion_vt
+            filepath: diffusion_vt_mom6
 
   observations:
     observers:

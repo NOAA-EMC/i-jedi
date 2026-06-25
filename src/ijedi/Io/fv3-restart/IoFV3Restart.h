@@ -6,6 +6,7 @@
 
 #include "ijedi/Geometry/Geometry.h"
 #include "oops/util/ObjectCounter.h"
+#include "oops/util/DateTime.h"
 #include "oops/util/parameters/OptionalParameter.h"
 #include "oops/util/parameters/Parameter.h"
 #include "oops/util/parameters/Parameters.h"

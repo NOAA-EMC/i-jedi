@@ -23,7 +23,11 @@ std::tuple<double, double, double> fieldMinMaxRMS(const eckit::mpi::Comm & comm,
   double localMax          = std::numeric_limits<double>::lowest();
   double localSumSq        = 0.0;
   atlas::gidx_t localCount = 0;
+  // NB: run serially.  The reduction below mutates shared accumulators, so the
+  // default (parallel) execution pattern would be a data race across OpenMP
+  // threads and make the RMS non-reproducible run-to-run (with >1 thread).
   util::for_each_value(
+      util::ExecutionPattern::serial,
       util::IndexRange::exclude_halo,
       [&](const double val) {
         localMin = std::min(localMin, val);
