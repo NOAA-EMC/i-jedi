@@ -199,6 +199,20 @@ ecbuild_add_test( TARGET  ijedi_letkf_solver_fv3
                   ARGS    letkf ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_letkf_solver-fv3.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata ijedi_letkf_observer_fv3)
 
+ecbuild_add_test( TARGET  ijedi_letkf_observer_fv3-restart
+                  MPI     1
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    letkf ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_letkf_observer-fv3-restart.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
+
+ecbuild_add_test( TARGET  ijedi_letkf_solver_fv3-restart
+                  MPI     1
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    letkf ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_letkf_solver-fv3-restart.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata ijedi_letkf_observer_fv3-restart)
+
 # Dirac tests
 ecbuild_add_test( TARGET  ijedi_dirac_fv3_interp_gauss
                   MPI     6
