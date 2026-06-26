@@ -7,18 +7,18 @@ jobs:
     name: Full CI (style and tests)
     container: jcsda/docker-gnu-openmpi-dev:1.9
     steps:
-    # This would probably work if the first strategy does not work.
-    - name: checkout-mist
-      uses: actions/checkout@v6
-      with:
-        repository: "JCSDA-internal/mist"
-        path: i-jedi/bundle/mist
-        ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
     - name: Checkout
       uses: actions/checkout@v2
       with:
         path: i-jedi
         submodules: recursive
+        ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
+    # Checkout mist from jcsda-internal
+    - name: checkout-mist
+      uses: actions/checkout@v6
+      with:
+        repository: "JCSDA-internal/mist"
+        path: i-jedi/i-jedi/bundle/mist
         ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
     - name: Run ecbuild
       shell: bash
