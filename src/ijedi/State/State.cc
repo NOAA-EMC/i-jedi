@@ -23,8 +23,8 @@ namespace ijedi {
   // -----------------------------------------------------------------------------------------------
 
   State::State(const Geometry &geom, const eckit::Configuration &config)
-      : mist::base::State(geom, oops::Variables(config, "state variables"),
-                          util::DateTime(config.getString("date")), false),
+      : mist::State(geom, oops::Variables(config, "state variables"),
+                    util::DateTime(config.getString("date")), false),
         geom_(geom)
   {
     // If config has 'analytic init' then call analytic_init, else if config has 'io' then call read
@@ -43,25 +43,25 @@ namespace ijedi {
 
   State::State(const Geometry &geom, const oops::Variables &vars, const util::DateTime &time,
                bool initToZero)
-      : mist::base::State(geom, vars, time, initToZero), geom_(geom) {
+      : mist::State(geom, vars, time, initToZero), geom_(geom) {
     setAtlasFieldMetadata();
   }
 
   // -----------------------------------------------------------------------------------------------
 
   State::State(const Geometry &geom, const State &other)
-      : mist::base::State(geom, other), geom_(geom) {
+      : mist::State(geom, other), geom_(geom) {
     setAtlasFieldMetadata();
   }
 
   // -----------------------------------------------------------------------------------------------
 
   State::State(const oops::Variables &vars, const State &other)
-      : mist::base::State(vars, other), geom_(other.geom_) {
+      : mist::State(vars, other), geom_(other.geom_) {
     setAtlasFieldMetadata();
   }
 
-  State::State(const State &other) : mist::base::State(other), geom_(other.geom_) {
+  State::State(const State &other) : mist::State(other), geom_(other.geom_) {
     setAtlasFieldMetadata();
   }
 
@@ -73,7 +73,7 @@ namespace ijedi {
 
   State &State::operator=(const State &rhs)
   {
-    mist::base::State::operator=(rhs);
+    mist::State::operator=(rhs);
     return *this;
   }
 

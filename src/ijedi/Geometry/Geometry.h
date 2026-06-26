@@ -38,7 +38,7 @@ namespace ijedi
   // -----------------------------------------------------------------------------
   // Geometry handles geometry.
 
-  class Geometry : public mist::base::Geometry, private util::ObjectCounter<Geometry>
+  class Geometry : public mist::Geometry, private util::ObjectCounter<Geometry>
   {
    public:
     static const std::string classname() { return "ijedi::Geometry"; }
