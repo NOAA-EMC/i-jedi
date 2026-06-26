@@ -1485,16 +1485,13 @@ subroutine fv3_geom_nodes_to_atlas_nodes_r(npx, npy, isc, iec, jsc, jec, isd, ie
     atlas_data(a) = fv3_data(iec+1, jsc)
   end if
 
-  ! sanity check on size: b = size(atlas_data)
-  if (b /= size(atlas_data)) then
-    write(*,'(a,i0,a,i0,a,i0,a,i0,a,l1)') &
-      'DIAG nodes_to_atlas_r pe=', mpp_pe(), ' b=', b, ' size(atlas_data)=', size(atlas_data), &
-      ' ngrid=', ngrid, ' ntiles6=', (ntiles==6)
-    write(*,'(a,i0,a,5(i0,1x))') &
-      'DIAG nodes_to_atlas_r pe=', mpp_pe(), ' isc,iec,jsc,jec,ntile=', isc, iec, jsc, jec, ntile
-    write(*,'(a,i0,a,i0,1x,i0)') &
-      'DIAG nodes_to_atlas_r pe=', mpp_pe(), ' npx,npy=', npx, npy
-    call abor1_ftn('fv3jedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
+  ! Overflow guard only: the copy fills the owned points plus the FV3-counted
+  ! edge/corner halos (ending at b). The atlas NodeColumns function space has had
+  ! build_halo applied, so size(atlas_data) >= b in general; the remaining nodes are
+  ! filled later by an atlas halo exchange (the field is marked dirty by the caller).
+  ! It is only an error to write past the end of the array.
+  if (b > size(atlas_data)) then
+    call abor1_ftn('ijedi_fv3_geom_mod%fv3_nodes_to_atlas_nodes: atlas_data overflow')
   end if
 
 end subroutine fv3_geom_nodes_to_atlas_nodes_r
@@ -1634,16 +1631,9 @@ subroutine fv3_geom_nodes_to_atlas_nodes_i(npx, npy, isc, iec, jsc, jec, isd, ie
     atlas_data(a) = fv3_data(iec+1, jsc)
   end if
 
-  ! sanity check on size: b = size(atlas_data)
-  if (b /= size(atlas_data)) then
-    write(*,'(a,i0,a,i0,a,i0,a,i0,a,l1)') &
-      'DIAG nodes_to_atlas_i pe=', mpp_pe(), ' b=', b, ' size(atlas_data)=', size(atlas_data), &
-      ' ngrid=', ngrid, ' ntiles6=', (ntiles==6)
-    write(*,'(a,i0,a,5(i0,1x))') &
-      'DIAG nodes_to_atlas_i pe=', mpp_pe(), ' isc,iec,jsc,jec,ntile=', isc, iec, jsc, jec, ntile
-    write(*,'(a,i0,a,i0,1x,i0)') &
-      'DIAG nodes_to_atlas_i pe=', mpp_pe(), ' npx,npy=', npx, npy
-    call abor1_ftn('ijedi_fv3_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
+  ! Overflow guard only -- see fv3_geom_nodes_to_atlas_nodes_r for rationale.
+  if (b > size(atlas_data)) then
+    call abor1_ftn('ijedi_fv3_geom_mod%fv3_nodes_to_atlas_nodes: atlas_data overflow')
   end if
 
 end subroutine fv3_geom_nodes_to_atlas_nodes_i

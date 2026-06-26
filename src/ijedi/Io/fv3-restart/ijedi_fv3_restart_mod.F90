@@ -614,6 +614,13 @@ do jl = 1, size(fv3_array, 3)
     b = b + 1
     fv3_array(iec+1, jsc, jl) = atlas_ptr(jl, a)
   end if
+
+  ! Overflow guard: b indexes the owned points plus the FV3-counted edge/corner
+  ! halos. The atlas array additionally holds build_halo nodes (size >= b), which we
+  ! intentionally do not read back. It is only an error to read past the end.
+  if (b > size(atlas_ptr, 2)) then
+    call abor1_ftn('ijedi_fv3_restart_mod: copy_atlas_to_fv3 atlas_ptr overflow')
+  end if
 end do
 end subroutine copy_atlas_to_fv3
 
