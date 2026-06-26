@@ -1,0 +1,64 @@
+input geometry:
+  geometry_type: fv3
+  fms initialization:
+    namelist filename: data/fv3/input_c12_1tile.nml
+    field table filename: data/fv3/field_table
+  namelist filename: data/fv3/input_c12_1tile.nml
+  npx: 13
+  npy: 13
+  npz: 127
+  ntiles: 1
+  akbk: gfs_127
+
+output geometry:
+  geometry_type: fv3
+  fms initialization:
+    namelist filename: data/fv3/input_c12_1tile.nml
+    field table filename: data/fv3/field_table
+  namelist filename: data/fv3/input_c12_1tile.nml
+  npx: 13
+  npy: 13
+  npz: 127
+  ntiles: 1
+  akbk: gfs_127
+
+states:
+- input:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - air_temperature
+    - air_pressure_thickness
+    io:
+      filetype: fv3 restart
+      datapath: data_generated/fv3/
+      filename_core: fv_core.res.tile1.nc
+      filename_trcr: fv_tracer.res.tile1.nc
+      filename_sfcd: sfc_data.res.tile1.nc
+      filename_sfcw: fv_srf_wnd.res.tile1.nc
+      filename_cplr: coupler.res
+      field io names:
+        eastward_wind: ua
+        northward_wind: va
+        air_temperature: T
+        air_pressure_thickness: DELP
+  output:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - air_temperature
+    - air_pressure_thickness
+    io:
+      filetype: fv3 restart
+      datapath: data_generated/fv3/
+      filename_core: out_fv_core.res.tile1.nc
+      filename_trcr: out_fv_tracer.res.tile1.nc
+      filename_sfcd: out_sfc_data.res.tile1.nc
+      filename_sfcw: out_fv_srf_wnd.res.tile1.nc
+      filename_cplr: out_coupler.res
+      field io names:
+        eastward_wind: ua
+        northward_wind: va
+        air_temperature: T
+        air_pressure_thickness: DELP
+
+test:
+  reference filename: testref/convertstate-fv3-restart-to-fv3-restart.test
