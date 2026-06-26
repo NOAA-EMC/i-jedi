@@ -5,6 +5,7 @@
 
 #include "oops/runs/Run.h"
 #include "oops/test/interface/Geometry.h"
+#include "oops/test/interface/GeometryIterator.h"
 #include "oops/test/interface/Increment.h"
 #include "oops/test/interface/State.h"
 
@@ -33,6 +34,10 @@ int runApp(int argc, char **argv, const std::string testName)
   {
     return std::make_unique<test::Increment<ijedi::Traits>>();
   };
+  tests["geometryiterator"] = []()
+  {
+    return std::make_unique<test::GeometryIterator<ijedi::Traits>>();
+  };
 
   // Create application object and point to it
   auto it = tests.find(testName);
@@ -60,6 +65,7 @@ int main(int argc, char **argv)
   // ----------------------------------------
   const std::set<std::string> validtests = {
       "geometry",
+      "geometryiterator",
       "state",
       "increment",
   };

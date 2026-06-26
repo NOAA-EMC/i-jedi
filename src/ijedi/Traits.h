@@ -27,6 +27,7 @@ namespace ijedi
     static std::string nameCovar() { return "ijediError"; }
 
     typedef ijedi::Geometry                  Geometry;
+    typedef mist::base::GeometryIterator     GeometryIterator;
     typedef ijedi::State                     State;
     typedef ijedi::Increment                 Increment;
     typedef mist::ModelData                  ModelData;
@@ -50,6 +51,7 @@ namespace ijedi
     static std::string nameCovar() { return "ijediError"; }
 
     typedef ijedi::Geometry                  Geometry;
+    typedef mist::base::GeometryIterator     GeometryIterator;
     typedef ijedi::State                     State;
     typedef ijedi::Increment                 Increment;
     typedef mist::ModelData                  ModelData;
@@ -70,6 +72,7 @@ namespace ijedi
     static std::string nameCovar() { return "ijediError"; }
 
     typedef ijedi::Geometry                  Geometry;
+    typedef mist::base::GeometryIterator     GeometryIterator;
     typedef ijedi::State                     State;
     typedef ijedi::Increment                 Increment;
     typedef mist::ModelData                  ModelData;
