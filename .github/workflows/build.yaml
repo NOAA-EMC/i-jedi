@@ -7,7 +7,7 @@ jobs:
     name: Full CI (style and tests)
     container: jcsda/docker-gnu-openmpi-dev:1.9
     steps:
-    # This would probably work if the first strategy does not work.
+    # Checkout mist from jcsda-internal
     - name: checkout-mist
       uses: actions/checkout@v6
       with:
