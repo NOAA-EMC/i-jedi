@@ -32,10 +32,12 @@ cost function:
       filetype: mom6
       datapath: data_generated/mom6
       ocn_file: MOM.res.nc
+      fix_file: mom6_structuredgeometry_cache_grid.nc
       field io names:
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt
         sea_surface_height_above_geoid: ave_ssh
+        sea_water_depth: sea_water_depth
 
   background error:
     covariance model: SABER
@@ -55,13 +57,6 @@ cost function:
             filepath: diffusion_vt
 
   observations:
-    #get values:
-    #  variable change:
-    #    vader cookbook:
-    #      sea_surface_temperature: [SeaSurfaceTemperature_A]
-    #      sea_water_temperature: [SeaWaterTemperature_A, SeaWaterTemperature_B]
-
-
     observers:
     - obs space:
         name: SST
@@ -118,6 +113,6 @@ output:
 
 final j evaluation: false
 
-#TODO: not passing in CI with the specified reference
-#test:
-#  reference filename: testref/3dvar-mom6.test
+test:
+  reference filename: testref/3dvar-mom6.test
+  test output filename: 3dvar-mom6.test

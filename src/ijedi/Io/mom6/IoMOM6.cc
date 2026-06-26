@@ -60,8 +60,8 @@ namespace ijedi
 
     // Apply boundary conditions to masked (land) cells: nearest-neighbour
     // extrapolation for tracers, zero for non-tracers.
-      applyBoundaryConditions(x, geom_.fields().field("mask3d"),
-                            geom_.getFieldMetadata());
+    applyBoundaryConditions(x, geom_.fields().field("mask3d"),
+                          geom_.getFieldMetadata());
 
     oops::Log::trace() << classname() << " read state done" << std::endl;
   }

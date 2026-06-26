@@ -501,11 +501,17 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
     return f;
   };
 
-  // "owned": 1 for owned nodes, 0 for ghost nodes
+  // "owned": 1 for owned nodes, 0 for ghost nodes. The functionspace spans
+  // more nodes than jediPoints_ (build_halo appends periodic / northern-fold
+  // halo nodes), so initialise the whole field to 0 first - otherwise those
+  // extra halo nodes carry uninitialised "owned" flags, which is both a
+  // correctness hazard and a source of non-reproducible reductions.
   atlas::Field fOwned = functionSpace_.createField<int>(
       atlas::option::name("owned") | atlas::option::levels(1));
   auto vOwned = atlas::array::make_view<int, 2>(fOwned);
-  for (int n = 0; n < npts; ++n) vOwned(n, 0) = (n < ownedCount_) ? 1 : 0;
+  const int nOwnedField = static_cast<int>(fOwned.shape(0));
+  for (int n = 0; n < nOwnedField; ++n)
+    vOwned(n, 0) = (n < ownedCount_) ? 1 : 0;
   fields_.add(fOwned);
 
   atlas::Field fLon   = addField("lon");
@@ -587,6 +593,20 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
       vLatU(n, 0)  = latUGlobal[gIdx];
       vLonV(n, 0)  = lonVGlobal[gIdx];
       vLatV(n, 0)  = latVGlobal[gIdx];
+    }
+  }
+
+  // Halo-exchange the geometry fields so that the periodic / northern-fold halo
+  // nodes added by build_halo (which the jediPoints_ loop above does not cover)
+  // carry valid owner values. Without this, downstream consumers that iterate
+  // every functionspace node - notably the land-mask flood fill, which seeds on
+  // mask3d - read uninitialised halo memory, giving non-reproducible results
+  // run to run. "owned" is excluded: it must stay 1 on owned / 0 on ghost.
+  {
+    atlas::functionspace::NodeColumns fsHalo(functionSpace_);
+    for (auto & f : fields_) {
+      if (f.name() == "owned") continue;
+      fsHalo.haloExchange(f);
     }
   }
 

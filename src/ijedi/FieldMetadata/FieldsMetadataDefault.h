@@ -20,11 +20,12 @@ namespace ijedi
     std::string tracer;  // Turned into bool but input as string to allow checking
     std::string levels;
     std::string vtype;
+    std::string bctype;  // Optional; boundary-condition treatment of masked cells
   };
 
   // -----------------------------------------------------------------------------------------------
 
-  void setMetadataStruct(struct metadataStruct md)
+  void setMetadataStruct(struct metadataStruct & md)
   {
     md.longName = "long name";
     md.units = "units";
@@ -32,6 +33,7 @@ namespace ijedi
     md.tracer = "tracer";
     md.levels = "levels";
     md.vtype = "vtype";
+    md.bctype = "none";  // Optional: default is no boundary condition applied
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -51,7 +53,7 @@ namespace ijedi
   // -----------------------------------------------------------------------------------------------
 
   void addFieldMetadata(std::map<std::string, FieldMetadata> &fieldsmetadata, const int &nlev,
-                        struct metadataStruct md)
+                        struct metadataStruct & md)
   {
     // Check that structure is set
     assertStructIsSet(md);
@@ -65,6 +67,7 @@ namespace ijedi
     fieldmetadata.setNumLevls(md.levels);
     fieldmetadata.setVectType(md.vtype);
     fieldmetadata.setIsTracer(md.tracer);
+    fieldmetadata.setBcType(md.bctype);
 
     // Validate the choices
     fieldmetadata.validate();
@@ -313,6 +316,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
+    md.bctype = "zero";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "eastward_wind";
@@ -1249,6 +1253,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
+    md.bctype = "zero";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "northward_wind";
@@ -1393,6 +1398,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
+    md.bctype = "extrapolate";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_ice_category_area_fraction";
@@ -1417,6 +1423,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
+    md.bctype = "extrapolate";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_ice_thickness";
@@ -1425,6 +1432,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
+    md.bctype = "extrapolate";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_surface_height_above_geoid";
@@ -1433,6 +1441,7 @@ namespace ijedi
     md.tracer = "true";
     md.levels = "1";
     md.vtype = "magnitude";
+    md.bctype = "extrapolate";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_surface_salinity";
@@ -1454,7 +1463,7 @@ namespace ijedi
     md.longName = "sea_water_absolute_salinity";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
@@ -1462,15 +1471,16 @@ namespace ijedi
     md.longName = "sea_water_cell_thickness";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
+    md.bctype = "none";  // already massless at masked cells; must not be extrapolated
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_conservative_temperature";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
@@ -1478,9 +1488,10 @@ namespace ijedi
     md.longName = "sea_water_potential_temperature";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
+    md.bctype = "extrapolate";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_depth";
@@ -1489,6 +1500,7 @@ namespace ijedi
     md.tracer = "false";
     md.levels = "full";
     md.vtype = "magnitude";
+    md.bctype = "none";  // geometry-provided coordinate; must not be altered
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "sea_water_temperature";
@@ -1502,7 +1514,7 @@ namespace ijedi
     md.longName = "sea_water_practical_salinity";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
@@ -1510,9 +1522,10 @@ namespace ijedi
     md.longName = "sea_water_salinity";
     md.units = "none";
     md.kind = "double";
-    md.tracer = "false";
+    md.tracer = "true";
     md.levels = "full";
     md.vtype = "magnitude";
+    md.bctype = "extrapolate";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
     md.longName = "seaice_fraction";

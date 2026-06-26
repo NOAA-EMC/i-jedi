@@ -18,10 +18,6 @@ void applyBoundaryConditions(atlas::FieldSet & x,
                              const atlas::Field & mask3d,
                              const FieldsMetadata & meta) {
   const auto & longNames = meta.getLongNames();
-  std::unordered_set<std::string> tracerNames;
-  for (const auto & name : longNames) {
-    if (meta.getFieldMetadata(name).getIsTracer()) tracerNames.insert(name);
-  }
   const std::unordered_set<std::string> knownNames(longNames.begin(), longNames.end());
 
   const auto fs   = atlas::functionspace::NodeColumns(mask3d.functionspace());
@@ -55,6 +51,15 @@ void applyBoundaryConditions(atlas::FieldSet & x,
       continue;
     }
 
+    const std::string bcType = meta.getFieldMetadata(fname).getBcType();
+
+    // "none": leave the field untouched (e.g. geometry-provided coordinates).
+    if (bcType == "none") {
+      oops::Log::info() << "applyBoundaryConditions: " << fname
+                        << " bctype=none, no boundary condition applied" << std::endl;
+      continue;
+    }
+
     const int nlev  = static_cast<int>(field.shape(1));
     auto fView = atlas::array::make_view<double, 2>(field);
 
@@ -63,8 +68,8 @@ void applyBoundaryConditions(atlas::FieldSet & x,
     // mask3d has nmask levels; clamp k to the last mask level so that a field
     // with more levels than the mask (shouldn't happen in practice) is safe.
 
-    if (!tracerNames.count(fname)) {
-      // Non-tracer: no-flux / no-slip → zero every masked node at every level.
+    if (bcType == "zero") {
+      // "zero": no-flux / no-slip → zero every masked node at every level.
       int nZeroed = 0;
       for (int n = 0; n < npts; ++n) {
         for (int k = 0; k < nlev; ++k) {
@@ -78,7 +83,8 @@ void applyBoundaryConditions(atlas::FieldSet & x,
       continue;
     }
 
-    // Tracer: flood-fill each level independently from ocean seeds at that level.
+    // "extrapolate": flood-fill each level independently from ocean seeds at that
+    // level (Neumann / zero-gradient boundary condition).
     // Ghost ocean nodes are included as seeds — they carry valid values from the
     // scatter + halo exchange in readMOM6Netcdf.
     //
