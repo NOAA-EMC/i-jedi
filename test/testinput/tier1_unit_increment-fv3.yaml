@@ -1,10 +1,10 @@
 increment test:
   date: 2020-12-15T00:00:00Z
   dirac:
-    dirac fields: [air_temperature, air_temperature]
-    dirac processors: [0, 1]
-    dirac horizontal index: [0, 0]
-    dirac vertical level: [120, 150]
+    lon: [180.0, 90.0]
+    lat: [0.0, 45.0]
+    level: [120, 150]
+    variable: [air_temperature, air_temperature]
   tolerance AD resolution change: 1.0e-13
 geometry:
   fms initialization:
