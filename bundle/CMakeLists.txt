@@ -41,7 +41,7 @@ if (BUILD_JEDI)
   ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"         UPDATE BRANCH develop)
   if (CLONE_MIST)
     ecbuild_bundle( PROJECT mist      GIT    "https://github.com/JCSDA-internal/mist.git" UPDATE BRANCH feature/geom_iter )
-  else
+  else()
     ecbuild_bundle( PROJECT mist SOURCE "./mist" )
   endif()
   ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"         UPDATE BRANCH develop )
