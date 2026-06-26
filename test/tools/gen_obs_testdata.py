@@ -33,7 +33,8 @@ def main():
     # -------------------------------------------------------------------------
     # observations
     # -------------------------------------------------------------------------
-    for name in ("sst", "aircraft", "insitu_temp_profile_argo_3prof"):
+    for name in ("sst", "aircraft", "insitu_temp_profile_argo_3prof",
+                 "insitu_salt_profile_argo_3prof"):
         cdl = os.path.join(indir, f"{name}.cdl")
         nc  = os.path.join(outdir, f"{name}.nc")
         ncgen(cdl, nc)

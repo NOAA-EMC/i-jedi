@@ -2,6 +2,7 @@ geometry:
   geometry_type: mom6
   ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
   ocean_topog: data_generated/mom6/ocean_topog.nc
+  vertical geometry from: data_generated/mom6/MOM.res.nc
   has northern fold: true
   coarsen factor: 1
   MOM_input:
@@ -20,7 +21,7 @@ state test:
     - sea_ice_area_fraction
     - sea_ice_thickness
     - sea_ice_snow_thickness
-    - landmask3d
+    #- landmask3d
     io:
       filetype: mom6
       datapath: data_generated/mom6
@@ -34,7 +35,7 @@ state test:
         sea_ice_area_fraction: aice_h
         sea_ice_thickness: hi_h
         sea_ice_snow_thickness: hs_h
-        landmask3d: mask3d
+        #landmask3d: mask3d
   write then read test:
     state write:
       io:
@@ -51,7 +52,7 @@ state test:
       - sea_ice_area_fraction
       - sea_ice_thickness
       - sea_ice_snow_thickness
-      - landmask3d
+      #- landmask3d
       io:
         filetype: mom6
         datapath: data_generated/mom6

@@ -8,6 +8,7 @@ cost function:
     geometry_type: mom6
     ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
     ocean_topog: data_generated/mom6/ocean_topog.nc
+    vertical geometry from: data_generated/mom6/MOM.res.nc
     coarsen factor: 1
     has northern fold: true
     MOM_input:
@@ -54,9 +55,13 @@ cost function:
             filepath: diffusion_vt
 
   observations:
-    variable change:
-      vader cookbook:
-        sea_water_temperature: [SeaWaterTemperature_B, SeaWaterTemperature_A]
+    #get values:
+    #  variable change:
+    #    vader cookbook:
+    #      sea_surface_temperature: [SeaSurfaceTemperature_A]
+    #      sea_water_temperature: [SeaWaterTemperature_A, SeaWaterTemperature_B]
+
+
     observers:
     - obs space:
         name: SST
@@ -75,6 +80,20 @@ cost function:
             type: H5File
             obsfile: data_generated/obs/insitu_temp_profile_argo_3prof.nc
         simulated variables: [waterTemperature]
+      obs operator:
+        name: VertInterp
+        observation alias file: ./data/obs/obsop_name_map.yml
+        vertical coordinate: sea_water_depth
+        observation vertical coordinate: depth
+        interpolation method: linear
+        covariance model: diagonal
+    - obs space:
+        name: InsituSalinity
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: data_generated/obs/insitu_salt_profile_argo_3prof.nc
+        simulated variables: [salinity]
       obs operator:
         name: VertInterp
         observation alias file: ./data/obs/obsop_name_map.yml

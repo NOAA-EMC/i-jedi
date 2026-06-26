@@ -81,7 +81,14 @@ void applyBoundaryConditions(atlas::FieldSet & x,
     // Tracer: flood-fill each level independently from ocean seeds at that level.
     // Ghost ocean nodes are included as seeds — they carry valid values from the
     // scatter + halo exchange in readMOM6Netcdf.
+    //
+    // Levels are processed top-down so that any node the horizontal flood cannot
+    // reach (a mesh component with no wet node at this level, e.g. below-bottom
+    // layers) can fall back to the value directly above it, which is guaranteed
+    // filled by induction. At the surface (k == 0) there is no level above, so
+    // an unreachable node is set to 0 as a last resort.
     int nFilled = 0;
+    int nVertical = 0;
     for (int k = 0; k < nlev; ++k) {
       const int km = std::min(k, nmask - 1);
       std::vector<bool> filled(npts, false);
@@ -98,6 +105,13 @@ void applyBoundaryConditions(atlas::FieldSet & x,
             q.push(nb);
             ++nFilled;
           }
+        }
+      }
+      // Vertical fallback for nodes the horizontal flood never reached.
+      for (int n = 0; n < npts; ++n) {
+        if (!filled[n]) {
+          fView(n, k) = (k > 0) ? fView(n, k - 1) : 0.0;
+          ++nVertical;
         }
       }
     }
