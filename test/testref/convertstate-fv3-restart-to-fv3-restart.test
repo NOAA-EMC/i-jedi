@@ -1,0 +1,8 @@
+Test     : Input state: 
+Test     :   Valid time: 2020-12-15T00:00:00Z, nFields = 2
+Test     : air_temperature        : Min=1.6000000000e+02, Max=3.3000000000e+02, RMS=2.4976066469e+02
+Test     : air_pressure_thickness : Min=1.0000000149e-01, Max=2.0801096191e+03, RMS=8.3533422231e+02
+Test     : Output state: 
+Test     :   Valid time: 2020-12-15T00:00:00Z, nFields = 2
+Test     : air_temperature        : Min=1.6000000000e+02, Max=3.3000000000e+02, RMS=2.4976066469e+02
+Test     : air_pressure_thickness : Min=1.0000000149e-01, Max=2.0801096191e+03, RMS=8.3533422231e+02

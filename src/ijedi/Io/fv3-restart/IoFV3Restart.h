@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "ijedi/Geometry/Geometry.h"
+#include "oops/util/ObjectCounter.h"
 #include "oops/util/DateTime.h"
 #include "oops/util/parameters/OptionalParameter.h"
 #include "oops/util/parameters/Parameter.h"
@@ -11,7 +13,6 @@
 #include "oops/util/parameters/RequiredParameter.h"
 
 #include "ijedi/Io/IoBase.h"
-// #include "IoFV3Restart.interface.h"
 
 namespace ijedi
 {
@@ -23,76 +24,85 @@ namespace ijedi
     OOPS_CONCRETE_PARAMETERS(IoFV3RestartParameters, IoParametersBase)
 
    public:
-    // Names of files to be read/written to
-    oops::Parameter<std::string> provider{"provider", "name of the model", "geos", this};
+      // Are files to be read restarts or not?
+      oops::Parameter<bool> is_restart{"is restart", "is restart", true, this};
 
-    // Filenames provided as a list
-    oops::OptionalParameter<std::vector<std::string>> filenames{"filenames",
-                                                                "names of the files to be read",
-                                                                this};
+      // Data path for files being read
+      oops::Parameter<std::string> datapath{"datapath",
+                                            "path to location of files to be read",
+                                            "./", this};
 
-    // Single filename provided
-    oops::OptionalParameter<std::string> filename{"filename",
-                                                  "name of the file to be read",
-                                                  this};
+      // Filename to be read or written
+      oops::Parameter<std::string> filename_nonrestart{"filename_nonrestart",
+                                                       "filename_nonrestart",
+                                                       "fms_nonrestart.nc", this};
 
-    // Path prepended to all files
-    oops::Parameter<std::string> datapath{"datapath", "path to location of files to be read",
-                                          "./", this};
+      // Restart filenames to be read
+      oops::Parameter<std::string> filename_core{"filename_core",
+                                                 "filename_core",
+                                                 "fv_core.res.nc", this};
+      oops::Parameter<std::string> filename_trcr{"filename_trcr",
+                                                 "filename_trcr",
+                                                 "fv_tracer.res.nc", this};
+      oops::Parameter<std::string> filename_sfcd{"filename_sfcd",
+                                                 "filename_sfcd",
+                                                 "sfc_data.nc", this};
+      oops::Parameter<std::string> filename_sfcw{"filename_sfcw",
+                                                 "filename_sfcw",
+                                                 "fv_srf_wnd.res.nc", this};
+      oops::Parameter<std::string> filename_cplr{"filename_cplr",
+                                                 "filename_cplr",
+                                                 "coupler.res", this};
+      oops::Parameter<std::string> filename_spec{"filename_spec",
+                                                 "filename_spec",
+                                                 "null", this};
+      oops::Parameter<std::string> filename_phys{"filename_phys",
+                                                 "filename_phys",
+                                                 "phy_data.nc", this};
+      oops::Parameter<std::string> filename_orog{"filename_orog",
+                                                 "filename_orog",
+                                                 "oro_data.nc", this};
+      oops::Parameter<std::string> filename_cold{"filename_cold",
+                                                 "filename_cold",
+                                                 "gfs_data.nc", this};
 
-    // Option to clobber existing files
-    oops::OptionalParameter<std::vector<bool>> clobber{"clobber existing files",
-                                                       "clobber existing files", this};
+      // Input filename may be templated with datetimes
+      oops::Parameter<bool> filename_is_datetime_templated{
+        "filename is datetime templated",
+        "filename is datetime templated",
+        false, this};
 
-    // Whether the tile is a dimension in the file
-    oops::OptionalParameter<std::vector<bool>> tiledim{"tile is a dimension",
-                                                       "tile is a dimension", this};
+      // Skip reading/writing the coupler.res file
+      oops::Parameter<bool> skip_coupler_file{"skip coupler file",
+                                              "skip coupler file",
+                                              false, this};
 
-    // Name of the X Dimension in the file
-    oops::OptionalParameter<std::vector<std::string>> xdim{"x dimension name",
-                                                           "x dimension name",
-                                                           this};
+      // Prepend the files with the date
+      oops::Parameter<bool> prepend_files_with_date{"prepend files with date",
+                                                    "prepend files with date",
+                                                    true, this};
 
-    // Name of the Y Dimension in the file
-    oops::OptionalParameter<std::vector<std::string>> ydim{"y dimension name",
-                                                           "y dimension name",
-                                                           this};
+      // Force tell the system that surface pressure is in the file
+      oops::Parameter<bool> psinfile{"psinfile",
+                                     "tell the system surface pressure is in the file",
+                                     false, this};
 
-    // Name of the Z Full Dimension in the file
-    oops::OptionalParameter<std::vector<std::string>> zfdim{"z full dimension name",
-                                                            "z full dimension name",
-                                                            this};
+      // Optionally the config may contain member
+      oops::OptionalParameter<int> member{"member", "ensemble member number", this};
 
-    // Name of the Z Half Dimension in the file
-    oops::OptionalParameter<std::vector<std::string>> zhdim{"z half dimension name",
-                                                            "z half dimension name",
-                                                            this};
+      // Let user set the calendar type
+      oops::Parameter<int> calendar_type{"calendar type", "calendar type", 2, this};
 
-    // Set date/time on read
-    oops::OptionalParameter<bool> setDateTime{"set datetime on read", "set datetime on read", this};
+      // Ignore checksum for FMS restarts?
+      oops::Parameter<bool> ignore_checksum{"ignore checksum",
+                                            "whether to ignore restart checksums",
+                                            true, this};
 
-    // Optional list of fields to write out
-    oops::OptionalParameter<std::vector<std::string>> fieldsToWrite{"fields to write",
-                                                                    "names of the fields to write",
-                                                                    this};
-
-    // Floating point precision in bytes for NetCDF write
-    oops::OptionalParameter<int> floatPrecision{"float precision in bytes",
-                                                "number of bytes of floating point precision",
-                                                this};
-
-    // Compute pressure at the edges from pressure at the surface (instead of reading it)
-    oops::OptionalParameter<bool> computeP{"compute edge pressure from surface pressure",
-                                           "compute edge pressure from surface pressure",
-                                           this};
-
-    // Maximum allowable difference in the Geometry lat/lon compared to the file lat/lon
-    // In practice users should expect differences order 1e-12 or smaller if everything
-    // is in double precision. In practice models may produce files at lower precision.
-    // Differences smaller than 1e-6 should be sufficient to assess that the geometry of
-    // the model producing the file being read is the same at the one in fv3-jedi.
-    oops::Parameter<double> maxDiff{"max allowable geometry difference",
-                                    "max allowable geometry difference", 1e-6, this};
+      // Write only a subset of fields?
+      oops::OptionalParameter<std::vector<std::string>> fields_to_write{
+        "fields to write",
+        "names of fields to write",
+        this};
   };
 
   // -------------------------------------------------------------------------------------------------
@@ -112,6 +122,9 @@ namespace ijedi
 
    private:
     void print(std::ostream &) const override;
+
+    const Geometry & geom_;
+    Parameters_ parameters_;
   };
 
   // -------------------------------------------------------------------------------------------------

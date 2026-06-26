@@ -43,9 +43,9 @@ namespace ijedi
 
     IoUnstructured(const Geometry &, const Parameters_ &);
     ~IoUnstructured() = default;
-    void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
+            void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
               const eckit::LocalConfiguration &) const override;
-    void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
+            void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
                const eckit::LocalConfiguration &) const override;
 
    private:
