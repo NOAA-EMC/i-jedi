@@ -15,7 +15,7 @@ namespace ijedi
 {
   // -----------------------------------------------------------------------------------------------
   Geometry::Geometry(const eckit::Configuration &geomConf, const eckit::mpi::Comm &comm)
-      : mist::base::Geometry(comm)
+      : mist::Geometry(comm)
   {
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;

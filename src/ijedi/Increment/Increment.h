@@ -64,7 +64,7 @@ namespace ijedi {
 
   // -----------------------------------------------------------------------------------------------
 
-  class Increment : public mist::base::Increment, private util::ObjectCounter<Increment> {
+  class Increment : public mist::Increment, private util::ObjectCounter<Increment> {
    public:
     static std::string classname() { return "ijedi::Increment"; }
 

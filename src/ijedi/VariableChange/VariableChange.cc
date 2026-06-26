@@ -34,10 +34,10 @@ VariableChange::VariableChange(const eckit::Configuration & varchangeConfig,
   eckit::LocalConfiguration config{};
   config.set(vader::configCookbookKey, configCookbook);
   // Set up model data for cookbook
-  auto configModelData = mist::base::ModelData(geometry).modelData();
+  auto configModelData = mist::ModelData(geometry).modelData();
   config.set(vader::configModelVarsKey, configModelData);
 
-  varchange_ = std::make_unique<mist::utils::VariableChange>(config);
+  varchange_ = std::make_unique<mist::VaderVariableChange>(config);
   oops::Log::trace() << "ijedi::VariableChange::VariableChange done" << std::endl;
 }
 

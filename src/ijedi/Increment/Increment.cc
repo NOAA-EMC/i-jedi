@@ -20,17 +20,17 @@ namespace ijedi {
 
   Increment::Increment(const Geometry & geom, const oops::Variables & vars,
                        const util::DateTime & time)
-      : mist::base::Increment(geom, vars, time), geom_(geom) {}
+      : mist::Increment(geom, vars, time), geom_(geom) {}
 
   // -----------------------------------------------------------------------------------------------
 
   Increment::Increment(const Geometry & geom, const Increment & other, const bool ad)
-      : mist::base::Increment(geom, other, ad), geom_(geom) {}
+      : mist::Increment(geom, other, ad), geom_(geom) {}
 
   // -----------------------------------------------------------------------------------------------
 
   Increment::Increment(const Increment & other, const bool copy)
-      : mist::base::Increment(other, copy), geom_(other.geom_) {}
+      : mist::Increment(other, copy), geom_(other.geom_) {}
 
   // -----------------------------------------------------------------------------------------------
 
@@ -39,7 +39,7 @@ namespace ijedi {
   // -----------------------------------------------------------------------------------------------
 
   Increment & Increment::operator=(const Increment & rhs) {
-    mist::base::Increment::operator=(rhs);
+    mist::Increment::operator=(rhs);
     return *this;
   }
 

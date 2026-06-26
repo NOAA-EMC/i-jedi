@@ -16,9 +16,9 @@
 #include "oops/util/ObjectCounter.h"
 #include "oops/util/Printable.h"
 
-namespace mist::base {
+namespace mist {
 class ModelAuxControl;
-}  // namespace mist::base
+}  // namespace mist
 
 namespace ijedi {
 
@@ -36,7 +36,7 @@ class Model : public util::Printable, private util::ObjectCounter<Model> {
   ~Model() = default;
 
   void initialize(State &) const {}
-  void step(State &, const mist::base::ModelAuxControl &) const {}
+  void step(State &, const mist::ModelAuxControl &) const {}
   void finalize(State &) const {}
 
   const util::Duration & timeResolution() const { return tstep_; }
