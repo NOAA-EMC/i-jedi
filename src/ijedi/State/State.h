@@ -70,7 +70,7 @@ namespace ijedi
 
   // -----------------------------------------------------------------------------------------------
 
-  class State : public mist::base::State, private util::ObjectCounter<State>
+  class State : public mist::State, private util::ObjectCounter<State>
   {
    public:
     static std::string classname() { return "ijedi::State"; }

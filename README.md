@@ -13,6 +13,7 @@ Required dependencies:
 - fckit
 - ATLAS
 - OOPS
+- MIST
 
 Installation
 ------------

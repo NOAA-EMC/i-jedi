@@ -13,7 +13,7 @@ namespace ijedi {
 
 class Geometry;
 
-class LinearVariableChange : public mist::base::LinearVariableChange {
+class LinearVariableChange : public mist::LinearVariableChange {
  public:
   LinearVariableChange(const Geometry &, const eckit::Configuration &);
 };

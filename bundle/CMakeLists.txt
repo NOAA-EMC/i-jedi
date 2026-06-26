@@ -25,6 +25,7 @@ option(ENABLE_QG_MODEL "Build QG toy model" OFF)
 
 # Options to build JCSDA repositories
 option(BUILD_JEDI "Build JEDI" ON)
+option(CLONE_MIST "Clone mist with ecbuild" ON)
 
 ecbuild_bundle(PROJECT eckit GIT "https://github.com/ecmwf/eckit.git" TAG 1.16.0)
 ecbuild_bundle(PROJECT fckit GIT "https://github.com/ecmwf/fckit.git" TAG 0.9.2)
@@ -34,13 +35,18 @@ ecbuild_bundle(PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.0
 # required repositories
 
 # ===============================================================================
-ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git"   UPDATE BRANCH develop RECURSIVE )
+ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git"      UPDATE BRANCH develop RECURSIVE )
 if (BUILD_JEDI)
-  ecbuild_bundle( PROJECT oops      GIT    "https://github.com/NOAA-EMC/oops.git"    UPDATE BRANCH feature/mist_geom_iter )
-  ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"      UPDATE BRANCH develop)
-  ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"      UPDATE BRANCH develop )
-  ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"       UPDATE BRANCH develop )
-  ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"        UPDATE BRANCH develop )
+  ecbuild_bundle( PROJECT oops      GIT    "https://github.com/JCSDA/oops.git"          UPDATE BRANCH develop )
+  ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"         UPDATE BRANCH develop)
+  if (CLONE_MIST)
+    ecbuild_bundle( PROJECT mist      GIT    "https://github.com/JCSDA-internal/mist.git" UPDATE BRANCH feature/geom_iter )
+  else()
+    ecbuild_bundle( PROJECT mist SOURCE "./mist" )
+  endif()
+  ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"         UPDATE BRANCH develop )
+  ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"          UPDATE BRANCH develop )
+  ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"           UPDATE BRANCH develop )
   option(BUILD_FV3JEDI "Build fv3-jedi" OFF)
   if (BUILD_FV3JEDI)
     ecbuild_bundle( PROJECT fv3-jedi-lm    GIT "https://github.com/JCSDA/fv3-jedi-linearmodel.git"   UPDATE BRANCH develop )
