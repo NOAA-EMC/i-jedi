@@ -650,11 +650,20 @@ if (fileobj%is_readonly) then
   allocate(dim_names(ndims))
   call get_variable_dimension_names(fileobj, trim(io_name), dim_names)
 
-  if (.not. is_dimension_registered(fileobj, trim(dim_names(1)))) then
-    call register_axis(fileobj, trim(dim_names(1)), 'x', domain_position=center)
+  xdim_name = ''
+  ydim_name = ''
+  do idim = 1, ndims
+    if (dim_names(idim)(1:6) == 'xaxis_') xdim_name = trim(dim_names(idim))
+    if (dim_names(idim)(1:6) == 'yaxis_') ydim_name = trim(dim_names(idim))
+  end do
+  if (len_trim(xdim_name) == 0) xdim_name = trim(dim_names(1))
+  if (len_trim(ydim_name) == 0 .and. ndims >= 2) ydim_name = trim(dim_names(2))
+
+  if (.not. is_dimension_registered(fileobj, trim(xdim_name))) then
+    call register_axis(fileobj, trim(xdim_name), 'x', domain_position=center)
   end if
-  if (.not. is_dimension_registered(fileobj, trim(dim_names(2)))) then
-    call register_axis(fileobj, trim(dim_names(2)), 'y', domain_position=center)
+  if (len_trim(ydim_name) > 0 .and. .not. is_dimension_registered(fileobj, trim(ydim_name))) then
+    call register_axis(fileobj, trim(ydim_name), 'y', domain_position=center)
   end if
   call register_restart_field(fileobj, trim(io_name), array)
   deallocate(dim_names)
