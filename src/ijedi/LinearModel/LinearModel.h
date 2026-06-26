@@ -16,10 +16,10 @@
 #include "oops/util/ObjectCounter.h"
 #include "oops/util/Printable.h"
 
-namespace mist::base {
+namespace mist {
 class ModelAuxControl;
 class ModelAuxIncrement;
-}  // namespace mist::base
+}  // namespace mist
 
 namespace ijedi {
 
@@ -38,15 +38,15 @@ class LinearModel : public util::Printable, private util::ObjectCounter<LinearMo
   ~LinearModel() = default;
 
   /// Model trajectory computation
-  void setTrajectory(const State &, State &, const mist::base::ModelAuxControl &) {}
+  void setTrajectory(const State &, State &, const mist::ModelAuxControl &) {}
 
 /// Run TLM and its adjoint
   void initializeTL(Increment &) const {}
-  void stepTL(Increment &, const mist::base::ModelAuxIncrement &) const {}
+  void stepTL(Increment &, const mist::ModelAuxIncrement &) const {}
   void finalizeTL(Increment &) const {}
 
   void initializeAD(Increment &) const {}
-  void stepAD(Increment &, mist::base::ModelAuxIncrement &) const {}
+  void stepAD(Increment &, mist::ModelAuxIncrement &) const {}
   void finalizeAD(Increment &) const {}
 
 /// Other utilities

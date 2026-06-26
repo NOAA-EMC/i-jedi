@@ -16,7 +16,7 @@ namespace ijedi
 {
   // -----------------------------------------------------------------------------------------------
   Geometry::Geometry(const eckit::Configuration &geomConf, const eckit::mpi::Comm &comm)
-      : mist::base::Geometry(comm)
+      : mist::Geometry(comm)
   {
     // Trace
     oops::Log::trace() << "Geometry constructor starting" << std::endl;
@@ -48,7 +48,7 @@ namespace ijedi
     // Build GeometryData
     geomData_.reset(new oops::GeometryData(functionspace_, fields_, levelsAreTopDown_, comm));
 
-    // Populate the mist::base::Geometry iterator support members now that
+    // Populate the mist::Geometry iterator support members now that
     // functionspace_ is ready.  verticalCoord_ uses simple level indices since
     // ijedi constructs its geometry without the ak/bk config path.
     iteratorDimension_ = geomConf.getInt("iterator dimension", iteratorDimension_);

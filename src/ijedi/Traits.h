@@ -31,18 +31,18 @@ namespace ijedi
     static std::string nameCovar() { return "ijediError"; }
 
     typedef ijedi::Geometry                  Geometry;
-    typedef mist::base::GeometryIterator     GeometryIterator;
+    typedef mist::GeometryIterator           GeometryIterator;
     typedef ijedi::State                     State;
     typedef ijedi::Increment                 Increment;
-    typedef mist::base::ModelData            ModelData;
+    typedef mist::ModelData                  ModelData;
     typedef ijedi::VariableChange            VariableChange;
     typedef ijedi::LinearVariableChange      LinearVariableChange;
     typedef ijedi::Model                     Model;
     typedef ijedi::LinearModel               LinearModel;
-    typedef mist::base::ErrorCovariance      Covariance;
-    typedef mist::base::ModelAuxControl      ModelAuxControl;
-    typedef mist::base::ModelAuxIncrement    ModelAuxIncrement;
-    typedef mist::base::ModelAuxCovariance   ModelAuxCovariance;
+    typedef mist::ErrorCovariance            Covariance;
+    typedef mist::ModelAuxControl            ModelAuxControl;
+    typedef mist::ModelAuxIncrement          ModelAuxIncrement;
+    typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
     typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
   };
@@ -56,18 +56,18 @@ namespace ijedi
     static std::string nameCovar() { return "ijediError"; }
 
     typedef ijedi::Geometry                  Geometry;
-    typedef mist::base::GeometryIterator     GeometryIterator;
+    typedef mist::GeometryIterator           GeometryIterator;
     typedef ijedi::State                     State;
     typedef ijedi::Increment                 Increment;
-    typedef mist::base::ModelData            ModelData;
+    typedef mist::ModelData                  ModelData;
     typedef ijedi::VariableChange            VariableChange;
     typedef ijedi::LinearVariableChange      LinearVariableChange;
     typedef ijedi::Model                     Model;
     typedef ijedi::LinearModel               LinearModel;
-    typedef mist::base::ErrorCovariance      Covariance;
-    typedef mist::base::ModelAuxControl      ModelAuxControl;
-    typedef mist::base::ModelAuxIncrement    ModelAuxIncrement;
-    typedef mist::base::ModelAuxCovariance   ModelAuxCovariance;
+    typedef mist::ErrorCovariance            Covariance;
+    typedef mist::ModelAuxControl            ModelAuxControl;
+    typedef mist::ModelAuxIncrement          ModelAuxIncrement;
+    typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
     typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
   };
@@ -78,18 +78,18 @@ namespace ijedi
     static std::string nameCovar() { return "ijediError"; }
 
     typedef ijedi::Geometry                  Geometry;
-    typedef mist::base::GeometryIterator     GeometryIterator;
+    typedef mist::GeometryIterator           GeometryIterator;
     typedef ijedi::State                     State;
     typedef ijedi::Increment                 Increment;
-    typedef mist::base::ModelData            ModelData;
+    typedef mist::ModelData                  ModelData;
     typedef ijedi::VariableChange            VariableChange;
     typedef ijedi::LinearVariableChange      LinearVariableChange;
     typedef ijedi::Model                     Model;
     typedef ijedi::LinearModel               LinearModel;
-    typedef mist::base::ErrorCovariance      Covariance;
-    typedef mist::base::ModelAuxControl      ModelAuxControl;
-    typedef mist::base::ModelAuxIncrement    ModelAuxIncrement;
-    typedef mist::base::ModelAuxCovariance   ModelAuxCovariance;
+    typedef mist::ErrorCovariance            Covariance;
+    typedef mist::ModelAuxControl            ModelAuxControl;
+    typedef mist::ModelAuxIncrement          ModelAuxIncrement;
+    typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
     typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
   };
