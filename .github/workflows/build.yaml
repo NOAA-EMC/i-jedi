@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v6
       with:
         repository: "JCSDA-internal/mist"
-        path: i-jedi/i-jedi/bundle/mist
+        path: i-jedi/bundle/mist
         ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
     - name: Run ecbuild
       shell: bash
