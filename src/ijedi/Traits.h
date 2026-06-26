@@ -44,7 +44,7 @@ namespace ijedi
     typedef mist::ModelAuxIncrement          ModelAuxIncrement;
     typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
-    typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
+    typedef ufo::ObsLocalization<mist::GeometryIterator> ObsLocalization;
   };
 
   struct TraitsAtm
@@ -69,7 +69,7 @@ namespace ijedi
     typedef mist::ModelAuxIncrement          ModelAuxIncrement;
     typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
-    typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
+    typedef ufo::ObsLocalization<mist::GeometryIterator> ObsLocalization;
   };
 
   struct TraitsOcn
@@ -91,7 +91,7 @@ namespace ijedi
     typedef mist::ModelAuxIncrement          ModelAuxIncrement;
     typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
-    typedef ufo::ObsLocalization<mist::base::GeometryIterator> ObsLocalization;
+    typedef ufo::ObsLocalization<mist::GeometryIterator> ObsLocalization;
   };
 
 }  // namespace ijedi
