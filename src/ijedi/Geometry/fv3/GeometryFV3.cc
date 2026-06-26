@@ -219,6 +219,11 @@ namespace ijedi
       atlas::mesh::actions::build_halo(mesh, 1);
       functionSpace = atlas::functionspace::NodeColumns(mesh, atlas_config);
 
+      oops::Log::info() << "DIAG GeometryFV3 rank=" << comm.rank()
+                        << " ngrid=" << ngrid
+                        << " num_nodes=" << num_nodes
+                        << " functionSpace.size()=" << functionSpace.size() << std::endl;
+
       // Optionally write atlas mesh for viewing with gmsh
       if (params.writeGmsh)
       {

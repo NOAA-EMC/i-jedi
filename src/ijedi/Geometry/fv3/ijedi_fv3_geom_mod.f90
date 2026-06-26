@@ -1487,6 +1487,13 @@ subroutine fv3_geom_nodes_to_atlas_nodes_r(npx, npy, isc, iec, jsc, jec, isd, ie
 
   ! sanity check on size: b = size(atlas_data)
   if (b /= size(atlas_data)) then
+    write(*,'(a,i0,a,i0,a,i0,a,i0,a,l1)') &
+      'DIAG nodes_to_atlas_r pe=', mpp_pe(), ' b=', b, ' size(atlas_data)=', size(atlas_data), &
+      ' ngrid=', ngrid, ' ntiles6=', (ntiles==6)
+    write(*,'(a,i0,a,5(i0,1x))') &
+      'DIAG nodes_to_atlas_r pe=', mpp_pe(), ' isc,iec,jsc,jec,ntile=', isc, iec, jsc, jec, ntile
+    write(*,'(a,i0,a,i0,1x,i0)') &
+      'DIAG nodes_to_atlas_r pe=', mpp_pe(), ' npx,npy=', npx, npy
     call abor1_ftn('fv3jedi_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
   end if
 
@@ -1629,6 +1636,13 @@ subroutine fv3_geom_nodes_to_atlas_nodes_i(npx, npy, isc, iec, jsc, jec, isd, ie
 
   ! sanity check on size: b = size(atlas_data)
   if (b /= size(atlas_data)) then
+    write(*,'(a,i0,a,i0,a,i0,a,i0,a,l1)') &
+      'DIAG nodes_to_atlas_i pe=', mpp_pe(), ' b=', b, ' size(atlas_data)=', size(atlas_data), &
+      ' ngrid=', ngrid, ' ntiles6=', (ntiles==6)
+    write(*,'(a,i0,a,5(i0,1x))') &
+      'DIAG nodes_to_atlas_i pe=', mpp_pe(), ' isc,iec,jsc,jec,ntile=', isc, iec, jsc, jec, ntile
+    write(*,'(a,i0,a,i0,1x,i0)') &
+      'DIAG nodes_to_atlas_i pe=', mpp_pe(), ' npx,npy=', npx, npy
     call abor1_ftn('ijedi_fv3_geom_mod%fv3_nodes_to_atlas_nodes: inconsistent atlas_data size')
   end if
 
