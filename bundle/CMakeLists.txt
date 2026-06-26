@@ -25,6 +25,7 @@ option(ENABLE_QG_MODEL "Build QG toy model" OFF)
 
 # Options to build JCSDA repositories
 option(BUILD_JEDI "Build JEDI" ON)
+option(CLONE_MIST "Clone mist with ecbuild" ON)
 
 ecbuild_bundle(PROJECT eckit GIT "https://github.com/ecmwf/eckit.git" TAG 1.16.0)
 ecbuild_bundle(PROJECT fckit GIT "https://github.com/ecmwf/fckit.git" TAG 0.9.2)
@@ -38,7 +39,11 @@ ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.gi
 if (BUILD_JEDI)
   ecbuild_bundle( PROJECT oops      GIT    "https://github.com/JCSDA/oops.git"          UPDATE BRANCH develop )
   ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"         UPDATE BRANCH develop)
-  ecbuild_bundle( PROJECT mist      GIT    "https://github.com/JCSDA-internal/mist.git" UPDATE BRANCH feature/geom_iter )
+  if (CLONE_MIST)
+    ecbuild_bundle( PROJECT mist      GIT    "https://github.com/JCSDA-internal/mist.git" UPDATE BRANCH feature/geom_iter )
+  else()
+    ecbuild_bundle( PROJECT mist SOURCE "./mist" )
+  endif()
   ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"         UPDATE BRANCH develop )
   ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"          UPDATE BRANCH develop )
   ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"           UPDATE BRANCH develop )
