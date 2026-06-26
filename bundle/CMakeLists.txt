@@ -31,6 +31,12 @@ ecbuild_bundle(PROJECT eckit GIT "https://github.com/ecmwf/eckit.git" TAG 1.16.0
 ecbuild_bundle(PROJECT fckit GIT "https://github.com/ecmwf/fckit.git" TAG 0.9.2)
 ecbuild_bundle(PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.0)
 
+# This is needed first since other bundles check for the data
+option(ENABLE_TESTDATA "Clone JEDI test data" OFF)
+if (ENABLE_TESTDATA)
+  ecbuild_bundle( PROJECT jedi-model-data GIT "https://github.com/JCSDA-internal/jedi-model-data.git"   UPDATE BRANCH develop )
+endif()
+
 # ===============================================================================
 # required repositories
 
