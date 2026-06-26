@@ -4,7 +4,7 @@ geometry:
   ocean_topog: data_generated/mom6/ocean_topog.nc
   vertical geometry from: data_generated/mom6/MOM.res.nc
   coarsen factor: 1
-  iterator dimension: 2
+  iterator dimension: 3
   has northern fold: true
   save unstructured grid to: mom6_grid.nc
   save structured grid to: mom6_structured_grid.nc

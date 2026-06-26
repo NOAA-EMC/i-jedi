@@ -6,6 +6,7 @@
 
 #include "oops/base/Variables.h"
 #include "oops/util/Logger.h"
+#include "oops/util/missingValues.h"
 
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Geometry/base/GeometryBase.h"
@@ -46,6 +47,18 @@ namespace ijedi
 
     // Build GeometryData
     geomData_.reset(new oops::GeometryData(functionspace_, fields_, levelsAreTopDown_, comm));
+
+    // Populate the mist::base::Geometry iterator support members now that
+    // functionspace_ is ready.  verticalCoord_ uses simple level indices since
+    // ijedi constructs its geometry without the ak/bk config path.
+    iteratorDimension_ = geomConf.getInt("iterator dimension", iteratorDimension_);
+    if (iteratorDimension_ != 2 && iteratorDimension_ != 3) {
+      throw eckit::BadValue("ijedi::Geometry: 'iterator dimension' must be 2 or 3", Here());
+    }
+    iteratorVerticalCoord_ = util::missingValue<double>();
+    buildOwnedNodeIndices();
+    verticalCoord_.resize(numberLevels_);
+    std::iota(verticalCoord_.begin(), verticalCoord_.end(), 0.0);
 
     // Trace
     oops::Log::trace() << "Geometry constructor finished" << std::endl;
