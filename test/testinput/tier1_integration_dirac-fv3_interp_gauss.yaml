@@ -1,0 +1,64 @@
+geometry: &geom
+  geometry_type: fv3
+  fms initialization:
+    namelist filename: data/fv3/input_c12.nml
+    field table filename: data/fv3/field_table
+  npx: 13
+  npy: 13
+  npz: 127
+  ntiles: 6
+  akbk: gfs_127
+
+background:
+  date: 2020-12-15T00:00:00Z
+  state variables:
+  - air_temperature
+  io:
+    filetype: fv3 history
+    datapath: data_generated/fv3/
+    atm_file: atmf006.nc
+    sfc_file: sfcf006.nc
+    field io names:
+      air_temperature: tmp
+
+# Background error covariance as in tier1_integration_3dvar-fv3_interp_gauss.yaml:
+# spectral filter on the gaussian grid, then interpolated back to the FV3 grid.
+background error:
+  covariance model: SABER
+  saber central block:
+    saber block name: spectral analytical filter
+    function:
+      horizontal daley length: 2000e3  # (in m)
+    normalize filter variance: true
+  saber outer blocks:
+  - saber block name: spectral to gauss
+  - saber block name: interpolation
+    inner geometry:
+      function space: StructuredColumns
+      grid:
+        type: regular_gaussian
+        N: 48
+      partitioner: ectrans
+      halo: 1
+    forward interpolator:
+      local interpolator type: oops unstructured grid interpolator
+    inverse interpolator:
+      local interpolator type: oops unstructured grid interpolator
+    active variables:
+    - air_temperature
+
+# Single dirac at the equator/prime meridian, mid-atmosphere.
+dirac:
+  lon:
+  - 180.0
+  lat:
+  - 0.0
+  level:
+  - 64
+  variable:
+  - air_temperature
+
+output dirac:
+  io:
+    filetype: unstructured
+    filepath: dirac-fv3-interp-gauss-%id%

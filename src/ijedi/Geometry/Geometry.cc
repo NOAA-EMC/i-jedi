@@ -48,7 +48,7 @@ namespace ijedi
     // Build GeometryData
     geomData_.reset(new oops::GeometryData(functionspace_, fields_, levelsAreTopDown_, comm));
 
-    // Populate the mist::Geometry iterator support members now that
+    // Populate the mist::base::Geometry iterator support members now that
     // functionspace_ is ready.  verticalCoord_ uses simple level indices since
     // ijedi constructs its geometry without the ak/bk config path.
     iteratorDimension_ = geomConf.getInt("iterator dimension", iteratorDimension_);
