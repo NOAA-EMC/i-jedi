@@ -116,7 +116,7 @@ if(FMS_FOUND)
     Geometry/fv3/ijedi_fv3_namelist_mod.f90
     Geometry/fv3/ijedi_fv3_sorted_index.F90
     Io/fv3-restart/IoFV3Restart.interface.F90
-    Io/fv3-restart/ijedi_fv3_restart_mod.F90
+    Io/fv3-restart/ijedi_fv3_restart_mod.f90
   )
 
   list(APPEND ijedi_fv3_src_files
