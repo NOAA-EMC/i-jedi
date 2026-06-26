@@ -173,12 +173,21 @@ namespace ijedi {
       maxNameLen = std::max(maxNameLen, var.name().size());
     }
     for (const auto & var : this->variables()) {
-      const atlas::Field & field            = fs.field(var.name());
-      const auto[globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
-      os << std::endl
-         << std::left << std::setw(maxNameLen) << var.name()
-         << " : " << std::scientific << std::setprecision(10)
-         << "Min=" << globalMin << ", Max=" << globalMax << ", RMS=" << rms;
+        const atlas::Field & field = fs.field(var.name());
+        if (geom_.fields().has("owned")) {
+          const atlas::Field owned = geom_.fields().field("owned");
+          const auto[globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field, &owned);
+          os << std::endl
+             << std::left << std::setw(maxNameLen) << var.name()
+             << " : " << std::scientific << std::setprecision(10)
+             << "Min=" << globalMin << ", Max=" << globalMax << ", RMS=" << rms;
+        } else {
+          const auto[globalMin, globalMax, rms] = fieldMinMaxRMS(comm, field);
+          os << std::endl
+             << std::left << std::setw(maxNameLen) << var.name()
+             << " : " << std::scientific << std::setprecision(10)
+             << "Min=" << globalMin << ", Max=" << globalMax << ", RMS=" << rms;
+        }
     }
   }
 

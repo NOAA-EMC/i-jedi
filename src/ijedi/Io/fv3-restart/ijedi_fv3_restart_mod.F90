@@ -109,8 +109,10 @@ if (want_ps .and. (.not. have_delp)) then
   buffers(ibuf)%array = 0.0_kind_real
 end if
 
+nbuf = ibuf
+
 do n = 1, numfiles
-  do ibuf = 1, size(buffers)
+  do ibuf = 1, nbuf
     if (buffers(ibuf)%file_index /= n) cycle
     if (.not. rstflag(n)) then
       if (.not. open_file(fileobj(n), trim(datapath)//'/'//trim(filenames(n)), 'read', domain, &
@@ -129,11 +131,11 @@ end do
 
 ! Populate halo cells from neighbouring PE compute domains so that atlas
 ! ghost nodes receive valid data when copy_fv3_to_atlas is called below.
-do ibuf = 1, size(buffers)
+do ibuf = 1, nbuf
   call mpp_update_domains(buffers(ibuf)%array, domain)
 end do
 
-do ibuf = 1, size(buffers)
+do ibuf = 1, nbuf
   call scale_array(buffers(ibuf)%array, trim(buffers(ibuf)%field_name), field_io_scaling)
   if (.not. buffers(ibuf)%copy_to_fieldset) then
     delp = buffers(ibuf)%array
@@ -170,7 +172,7 @@ if (want_ps) then
   deallocate(delp)
 end if
 
-do ibuf = 1, size(buffers)
+do ibuf = 1, nbuf
   if (allocated(buffers(ibuf)%array)) deallocate(buffers(ibuf)%array)
 end do
 deallocate(buffers)
@@ -251,6 +253,13 @@ do n = 1, numfiles
       if (.not. open_file(fileobj(n), trim(datapath)//'/'//trim(filenames(n)), 'overwrite', domain, &
                           is_restart=.true., dont_add_res_to_filename=.true.)) then
         call abor1_ftn('ijedi_fv3_restart_write: failed to open '//trim(datapath)//'/'//trim(filenames(n)))
+      end if
+      if (.not. is_dimension_registered(fileobj(n), 'Time')) then
+        call register_axis(fileobj(n), 'Time', unlimited)
+        call register_field(fileobj(n), 'Time', 'double', (/'Time'/))
+        call register_variable_attribute(fileobj(n), 'Time', 'long_name', 'Time', str_len=4)
+        call register_variable_attribute(fileobj(n), 'Time', 'units', 'time level', str_len=10)
+        call register_variable_attribute(fileobj(n), 'Time', 'cartesian_axis', 'T', str_len=1)
       end if
       rstflag(n) = .true.
     end if
@@ -729,14 +738,6 @@ else
       call register_variable_attribute(fileobj, trim(zdim_name), 'cartesian_axis', 'Z', str_len=1)
     end if
     deallocate(dim_names)
-  end if
-
-  if (.not. is_dimension_registered(fileobj, 'Time')) then
-    call register_axis(fileobj, 'Time', unlimited)
-    call register_field(fileobj, 'Time', 'double', (/'Time'/))
-    call register_variable_attribute(fileobj, 'Time', 'long_name', 'Time', str_len=4)
-    call register_variable_attribute(fileobj, 'Time', 'units', 'time level', str_len=10)
-    call register_variable_attribute(fileobj, 'Time', 'cartesian_axis', 'T', str_len=1)
   end if
 
   if (nz_field > 1) then

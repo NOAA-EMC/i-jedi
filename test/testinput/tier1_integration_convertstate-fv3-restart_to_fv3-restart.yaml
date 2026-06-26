@@ -47,10 +47,13 @@ states:
     - air_temperature
     - air_pressure_thickness
     io:
-      filetype: fv3 history
+      filetype: fv3 restart
       datapath: data_generated/fv3/
-      atm_file: atmf006_out_1tile.nc
-      sfc_file: sfcf006_out_1tile.nc
+      filename_core: out_fv_core.res.tile1.nc
+      filename_trcr: out_fv_tracer.res.tile1.nc
+      filename_sfcd: out_sfc_data.res.tile1.nc
+      filename_sfcw: out_fv_srf_wnd.res.tile1.nc
+      filename_cplr: out_coupler.res
       field io names:
         eastward_wind: ua
         northward_wind: va
