@@ -78,6 +78,14 @@ jobs:
               -DCLONE_MIST=OFF \
               -DMPI_ARGS='--map-by :OVERSUBSCRIBE' \
               /src/i-jedi/bundle 
+            
+            mkdir -p ${{ env.INSTALL_PREFIX }}/etc
+            for d in /src/i-jedi/bundle/*; do
+              if [ -d "\$d/.git" ]; then
+                echo "\$(basename \$d) \$(git -C \$d rev-parse HEAD)" >> ${{ env.INSTALL_PREFIX }}/etc/jedi_repo_hashes.txt
+              fi
+            done
+            
             make -j\$(nproc) install
             rm -rf /build
           "

@@ -5,7 +5,7 @@ jobs:
   run_all_tests:
     runs-on: ubuntu-latest
     name: Full CI (style and tests)
-    container: jcsda/docker-gnu-openmpi-dev:1.9
+    container: ghcr.io/noaa-emc/i-jedi:latest
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -31,13 +31,40 @@ jobs:
         cd Build
         ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DCLONE_MIST="OFF" ../i-jedi/bundle
         cd ../i-jedi/bundle
+    - name: Check container libraries
+      id: check-container
+      shell: bash
+      run: |
+        MATCH=true
+        if [ -f /opt/jedi/etc/jedi_repo_hashes.txt ]; then
+          for d in $GITHUB_WORKSPACE/i-jedi/bundle/*; do
+            if [ -d "$d/.git" ]; then
+              REPO=$(basename $d)
+              CURRENT_SHA=$(git -C $d rev-parse HEAD)
+              CONTAINER_SHA=$(grep "^$REPO " /opt/jedi/etc/jedi_repo_hashes.txt | cut -d' ' -f2 || true)
+              if [ "$CURRENT_SHA" != "$CONTAINER_SHA" ]; then
+                echo "$REPO has changed ($CONTAINER_SHA -> $CURRENT_SHA)"
+                MATCH=false
+              fi
+            fi
+          done
+        else
+          echo "No hash file found in container."
+          MATCH=false
+        fi
+        echo "match=$MATCH" >> $GITHUB_OUTPUT
+        
+        # Also generate a hash for caching if container doesn't match
+        HASH=$(find $GITHUB_WORKSPACE/i-jedi/bundle -maxdepth 2 -name .git -type d | sort | xargs -I {} git -C {}/.. rev-parse HEAD | sha256sum | awk '{print $1}')
+        echo "hash=$HASH" >> $GITHUB_OUTPUT
     - name: Cache install of JEDI libraries
+      if: steps.check-container.outputs.match == 'false'
       id: cache-jedi
       uses: actions/cache@v5
       with:
         path: |
           ${{ github.workspace }}/install
-        key: ${{ runner.os }}-jedi
+        key: ${{ runner.os }}-jedi-${{ steps.check-container.outputs.hash }}
     - name: Run coding style checks
       shell: bash
       run: |
@@ -47,7 +74,7 @@ jobs:
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
     - name: Compile the code without any cache
-      if: steps.cache-jedi.outputs.cache-hit != 'true'
+      if: steps.check-container.outputs.match == 'false' && steps.cache-jedi.outputs.cache-hit != 'true'
       shell: bash
       run: |
         su - nonroot
@@ -61,7 +88,7 @@ jobs:
         make -j4
         make install
     - name: Compile the code with cache
-      if: steps.cache-jedi.outputs.cache-hit == 'true'
+      if: steps.check-container.outputs.match == 'false' && steps.cache-jedi.outputs.cache-hit == 'true'
       shell: bash
       run: |
         su - nonroot
@@ -74,6 +101,20 @@ jobs:
         mkdir -p Build
         cd Build
         ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
+        cd ijedi
+        make -j4
+    - name: Compile the code with container libraries
+      if: steps.check-container.outputs.match == 'true'
+      shell: bash
+      run: |
+        su - nonroot
+        export jedi_cmake_ROOT=/opt/view
+        source /opt/spack-environment/activate.sh
+        cd $GITHUB_WORKSPACE
+        rm -rf Build
+        mkdir -p Build
+        cd Build
+        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=/opt/jedi -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
         cd ijedi
         make -j4
     - name: Run ctests
