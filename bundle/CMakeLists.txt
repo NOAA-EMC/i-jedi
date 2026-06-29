@@ -31,10 +31,19 @@ ecbuild_bundle(PROJECT eckit GIT "https://github.com/ecmwf/eckit.git" TAG 1.16.0
 ecbuild_bundle(PROJECT fckit GIT "https://github.com/ecmwf/fckit.git" TAG 0.9.2)
 ecbuild_bundle(PROJECT atlas GIT "https://github.com/ecmwf/atlas.git" TAG 0.35.0)
 
-# This is needed first since other bundles check for the data
-option(ENABLE_TESTDATA "Clone JEDI test data" OFF)
-if (ENABLE_TESTDATA)
-  ecbuild_bundle( PROJECT jedi-model-data GIT "https://github.com/JCSDA-internal/jedi-model-data.git"   UPDATE BRANCH develop )
+# ===============================================================================
+# optional test data (needed first since other bundles check for data)
+# ===============================================================================
+if(TEST_IODA)
+  ecbuild_bundle(PROJECT ioda-data GIT "https://github.com/JCSDA-internal/ioda-data.git" BRANCH develop UPDATE)
+endif()
+
+if(TEST_UFO)
+  ecbuild_bundle(PROJECT ufo-data GIT "https://github.com/JCSDA-internal/ufo-data.git" BRANCH develop UPDATE)
+endif()
+
+if(TEST_VADER)
+  ecbuild_bundle(PROJECT jedi-model-data GIT "https://github.com/JCSDA-internal/jedi-model-data.git" BRANCH develop UPDATE)
 endif()
 
 # ===============================================================================
@@ -67,33 +76,6 @@ ecbuild_bundle(PROJECT ijedi SOURCE "../")
 # required repositories
 # ===============================================================================
 include(jedicmake/cmake/Functions/git_functions.cmake)
-
-# ===============================================================================
-# optional test data for the upstream repos
-# ===============================================================================
-if(TEST_IODA)
-  find_branch_name(REPO_DIR_NAME ioda)
-
-  if(NOT DEFINED ENV{LOCAL_PATH_JEDI_TESTFILES} AND NOT DEFINED ${GIT_TAG_FUNC})
-    ecbuild_bundle(PROJECT ioda-data GIT "https://github.com/JCSDA-internal/ioda-data.git" BRANCH develop UPDATE)
-  endif()
-endif()
-
-if(TEST_UFO)
-  find_branch_name(REPO_DIR_NAME ufo)
-
-  if(NOT DEFINED ENV{LOCAL_PATH_JEDI_TESTFILES} AND NOT DEFINED ${GIT_TAG_FUNC})
-    ecbuild_bundle(PROJECT ufo-data GIT "https://github.com/JCSDA-internal/ufo-data.git" BRANCH develop UPDATE)
-  endif()
-endif()
-
-if(TEST_VADER)
-  find_branch_name(REPO_DIR_NAME vader)
-
-  if(NOT DEFINED ENV{LOCAL_PATH_JEDI_TESTFILES} AND NOT DEFINED ${GIT_TAG_FUNC})
-    ecbuild_bundle(PROJECT jedi-model-data GIT "https://github.com/JCSDA-internal/jedi-model-data.git" BRANCH develop UPDATE)
-  endif()
-endif()
 
 # ===============================================================================
 ecbuild_bundle_finalize()
