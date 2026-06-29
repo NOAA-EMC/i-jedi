@@ -71,12 +71,13 @@ jobs:
             source /opt/spack-environment/activate.sh
             export jedi_cmake_ROOT=/opt/view
             mkdir -p /build && cd /build
+            ls -l /src
             ecbuild \
               -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
               -DBUILD_JEDI=ON \
               -DCLONE_MIST=OFF \
               -DMPI_ARGS='--map-by :OVERSUBSCRIBE' \
-              ../i-jedi/bundle 
+              /src/i-jedi/bundle 
             make -j\$(nproc) install
             rm -rf /build
           "
