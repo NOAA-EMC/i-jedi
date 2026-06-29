@@ -87,7 +87,7 @@ jobs:
               fi
             done
             
-            make -j$(nproc) install
+            make -j$nproc install
             rm -rf /build
           "
 
