@@ -1,14 +1,18 @@
 #include "ijedi/Increment/Increment.h"
 
+#include <optional>
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <memory>
 
 #include "atlas/field.h"
+#include "atlas/util/Earth.h"
 #include "eckit/config/Configuration.h"
+#include "eckit/exception/Exceptions.h"
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Utilities/PrintHelper.h"
+#include "oops/base/GeometryData.h"
 #include "oops/base/Variables.h"
 #include "oops/util/DateTime.h"
 #include "oops/util/Logger.h"
@@ -20,17 +24,17 @@ namespace ijedi {
 
   Increment::Increment(const Geometry & geom, const oops::Variables & vars,
                        const util::DateTime & time)
-      : mist::base::Increment(geom, vars, time), geom_(geom) {}
+      : mist::Increment(geom, vars, time), geom_(geom) {}
 
   // -----------------------------------------------------------------------------------------------
 
   Increment::Increment(const Geometry & geom, const Increment & other, const bool ad)
-      : mist::base::Increment(geom, other, ad), geom_(geom) {}
+      : mist::Increment(geom, other, ad), geom_(geom) {}
 
   // -----------------------------------------------------------------------------------------------
 
   Increment::Increment(const Increment & other, const bool copy)
-      : mist::base::Increment(other, copy), geom_(other.geom_) {}
+      : mist::Increment(other, copy), geom_(other.geom_) {}
 
   // -----------------------------------------------------------------------------------------------
 
@@ -39,7 +43,7 @@ namespace ijedi {
   // -----------------------------------------------------------------------------------------------
 
   Increment & Increment::operator=(const Increment & rhs) {
-    mist::base::Increment::operator=(rhs);
+    mist::Increment::operator=(rhs);
     return *this;
   }
 
@@ -112,31 +116,61 @@ namespace ijedi {
     DiracParameters params;
     params.deserialize(config);
 
-    // Extract parameters
-    const std::vector<std::string> diracFlds = params.diracFlds;
-    const std::vector<int> diracProc = params.diracProc;
-    const std::vector<int> diracHorx = params.diracHorx;
-    const std::vector<int> diracVert = params.diracVert;
+    // Grid-agnostic lon/lat dirac: the globally-nearest owned grid node is found
+    // via the geometry's shared KD-tree (the same tree used by interpolation).
+    // Validate that all vectors are the same length.
+    const std::vector<double> & lon = params.lon.value();
+    const std::vector<double> & lat = params.lat.value();
+    const std::vector<int> & level = params.level.value();
+    const std::vector<std::string> & vars = params.variable.value();
+    const size_t nDiracs = lon.size();
+    ASSERT_MSG(lat.size() == nDiracs, "Dirac: 'lat' inconsistent length");
+    ASSERT_MSG(level.size() == nDiracs, "Dirac: 'level' inconsistent length");
+    ASSERT_MSG(vars.size() == nDiracs, "Dirac: 'variable' inconsistent length");
 
-    // Assert that all vectors are the same lenght
-    size_t nDiracs = diracFlds.size();
-    ASSERT_MSG(diracProc.size() == nDiracs, "Dirac parameters diracProc incorrect length");
-    ASSERT_MSG(diracHorx.size() == nDiracs, "Dirac parameters diracHorx incorrect length");
-    ASSERT_MSG(diracVert.size() == nDiracs, "Dirac parameters diracVert incorrect length");
+    const auto & comm = this->geom_.comm();
+    const auto & geomData = this->geom_.geometryData();
+    const auto lonlatView = atlas::array::make_view<double, 2>(geomData.functionSpace().lonlat());
 
-    // Set diracs
-    for (size_t i = 0; i < diracFlds.size(); ++i) {
-      const std::string & varName = diracFlds[i];
-      const int proc = diracProc[i];
-      const int horx = diracHorx[i];
-      const int vert = diracVert[i];
+    // Search radius for the nearest owned node. The global tree returns the
+    // closest point within this chord distance (meters); a value larger than
+    // any grid spacing guarantees a hit. Use a quarter of the Earth's
+    // circumference so even the coarsest grids resolve.
+    const double searchRadius = 0.25 * 2.0 * M_PI * atlas::util::Earth::radius();
 
-      if (this->geom_.comm().rank() == proc) {
-        auto field = this->fieldSet().field(varName);
+    // Start from zero so only the requested points are nonzero.
+    this->zero();
+
+    for (size_t jdir = 0; jdir < nDiracs; ++jdir) {
+      atlas::Field field = this->fieldSet().field(vars[jdir]);
+
+      // The MPI task owning the globally-nearest node, then (on that task) the
+      // task-local functionspace index of that node.
+      const int localTask = geomData.closestTask(lat[jdir], lon[jdir]);
+
+      // level input is 1-based -> 0-based array index.
+      const int lev = level[jdir] - 1;
+      double lonDir = 0.0;
+      double latDir = 0.0;
+      if (static_cast<size_t>(localTask) == comm.rank()) {
+        const std::optional<int> index =
+            geomData.closestPointWithinRadius(lat[jdir], lon[jdir], searchRadius);
+        ASSERT_MSG(index.has_value(), "Dirac: no owned grid node found near requested point");
         auto view = atlas::array::make_view<double, 2>(field);
-        view(horx, vert) = 1.0;
+        view(*index, lev) = 1.0;
+        lonDir = lonlatView(*index, 0);
+        latDir = lonlatView(*index, 1);
       }
+
+      // Log the resolved location (sum reduction picks up the owning task's value).
+      comm.allReduceInPlace(lonDir, eckit::mpi::sum());
+      comm.allReduceInPlace(latDir, eckit::mpi::sum());
+      oops::Log::info() << "ijedi::Increment::dirac point #" << jdir << " (" << vars[jdir]
+                        << "): requested " << lon[jdir] << "/" << lat[jdir]
+                        << ", placed at " << lonDir << "/" << latDir
+                        << ", level " << level[jdir] << std::endl;
     }
+
     oops::Log::trace() << "ijedi::Increment::dirac done" << std::endl;
   }
 

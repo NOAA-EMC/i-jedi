@@ -14,8 +14,8 @@ output geometry:
   fms initialization:
     namelist filename: data/fv3/input_c12.nml
     field table filename: data/fv3/field_table
-  npx: 25
-  npy: 25
+  npx: 13
+  npy: 13
   npz: 127
   ntiles: 6
   akbk: gfs_127
@@ -48,8 +48,8 @@ states:
     io:
       filetype: fv3 history
       datapath: data_generated/fv3/
-      atm_file: atmf006_c24.nc
-      sfc_file: sfcf006_c24.nc
+      atm_file: atmf006_out.nc
+      sfc_file: sfcf006_out.nc
       field io names:
         eastward_wind: ugrd
         northward_wind: vgrd

@@ -425,6 +425,7 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lonGlobal,
   atlas::Field fAreaT = addField("areaT");
   atlas::Field fLayerThickness = addField("sea_water_cell_thickness", numLevels_);
   atlas::Field fLayerCenterDepth = addField("sea_water_depth", numLevels_);
+  atlas::Field fVertCoord = addField("vert_coord", numLevels_);
   atlas::Field fMask3d = addField("mask3d", numLevels_);
   atlas::Field fLonU  = addField("lonu");
   atlas::Field fLatU  = addField("latu");
@@ -440,6 +441,7 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lonGlobal,
   auto vAreaT = atlas::array::make_view<double, 2>(fAreaT);
   auto vLayerThickness = atlas::array::make_view<double, 2>(fLayerThickness);
   auto vLayerCenterDepth = atlas::array::make_view<double, 2>(fLayerCenterDepth);
+  auto vVertCoord = atlas::array::make_view<double, 2>(fVertCoord);
   auto vMask3d = atlas::array::make_view<double, 2>(fMask3d);
   auto vLonU  = atlas::array::make_view<double, 2>(fLonU);
   auto vLatU  = atlas::array::make_view<double, 2>(fLatU);
@@ -461,6 +463,7 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lonGlobal,
         const size_t idx3D = static_cast<size_t>(k) * nHoriz + gIdx;
         vLayerThickness(n, k) = layerThicknessGlobal[idx3D];
         vLayerCenterDepth(n, k) = layerCenterDepthGlobal[idx3D];
+        vVertCoord(n, k) = layerCenterDepthGlobal[idx3D];
         vMask3d(n, k) = mask3dGlobal[idx3D];
       }
       vLonU(n, 0)  = lonUGlobal[gIdx];
@@ -529,10 +532,12 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
 
   atlas::Field fLayerThickness;
   atlas::Field fLayerCenterDepth;
+  atlas::Field fVertCoord;
   atlas::Field fMask3d;
   if (buildVerticalGeometry) {
     fLayerThickness = addField("sea_water_cell_thickness", numLevels_);
     fLayerCenterDepth = addField("sea_water_depth", numLevels_);
+    fVertCoord = addField("vert_coord", numLevels_);
     fMask3d = addField("mask3d", numLevels_);
   }
 
@@ -552,6 +557,7 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
   if (buildVerticalGeometry) {
     auto vLayerThickness = atlas::array::make_view<double, 2>(fLayerThickness);
     auto vLayerCenterDepth = atlas::array::make_view<double, 2>(fLayerCenterDepth);
+    auto vVertCoord = atlas::array::make_view<double, 2>(fVertCoord);
     auto vMask3d = atlas::array::make_view<double, 2>(fMask3d);
     for (int n = 0; n < npts; ++n) {
       const int iG   = jediPoints_[n].first;
@@ -568,6 +574,7 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
         const size_t idx3D = static_cast<size_t>(k) * nHoriz + gIdx;
         vLayerThickness(n, k) = layerThicknessGlobal[idx3D];
         vLayerCenterDepth(n, k) = layerCenterDepthGlobal[idx3D];
+        vVertCoord(n, k) = layerCenterDepthGlobal[idx3D];
         vMask3d(n, k) = mask3dGlobal[idx3D];
       }
       vAreaT(n, 0) = areaTGlobal[gIdx];

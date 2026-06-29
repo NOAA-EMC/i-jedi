@@ -1,11 +1,3 @@
-increment test:
-  date: 2020-12-15T00:00:00Z
-  dirac:
-    lon: [180.0, 90.0]
-    lat: [0.0, 45.0]
-    level: [120, 150]
-    variable: [air_temperature, air_temperature]
-  tolerance AD resolution change: 1.0e-13
 geometry:
   fms initialization:
     namelist filename: data/fv3/input_c12.nml
@@ -16,14 +8,11 @@ geometry:
   npz: 127
   ntiles: 6
   akbk: gfs_127
-other geometry:
-  geometry_type: fv3
-  akbk: gfs_127
-  npx: 25
-  npy: 25
-  npz: 127
+  iterator dimension: 3
 inc variables:
 - eastward_wind
 - northward_wind
 - air_temperature
 - air_pressure_thickness
+increment test:
+  date: 2020-12-15T00:00:00Z

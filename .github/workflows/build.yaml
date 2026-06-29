@@ -12,6 +12,14 @@ jobs:
       with:
         path: i-jedi
         submodules: recursive
+        ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
+    # Checkout mist from jcsda-internal
+    - name: checkout-mist
+      uses: actions/checkout@v6
+      with:
+        repository: "JCSDA-internal/mist"
+        path: i-jedi/bundle/mist
+        ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
     - name: Run ecbuild
       shell: bash
       run: |
@@ -21,7 +29,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         mkdir -p Build
         cd Build
-        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle
+        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DCLONE_MIST="OFF" ../i-jedi/bundle
         cd ../i-jedi/bundle
     - name: Cache install of JEDI libraries
       id: cache-jedi

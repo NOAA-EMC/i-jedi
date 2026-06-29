@@ -72,11 +72,13 @@ namespace ijedi
     util::Timer timer(classname(), "write state");
     oops::Log::trace() << classname() << " write state starting" << std::endl;
 
+    // Get geometry info
     const auto modelData = geom_.modelData();
     const int ni = modelData.getInt("ni");
     const int nj = modelData.getInt("nj");
     const int nz = modelData.getInt("nz");
 
+    // Resolve variable names for all fields
     std::vector<std::string> fileVarNames;
     for (const auto & field : x) {
       const std::string jediName = field.name();

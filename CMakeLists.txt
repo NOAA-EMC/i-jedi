@@ -26,7 +26,8 @@ find_package(atlas 0.36.0 REQUIRED)
 
 
 find_package( vader  1.7.0    REQUIRED)
-find_package(oops 1.10.0 REQUIRED)
+find_package( oops 1.10.0     REQUIRED)
+find_package( mist            REQUIRED) # no release number
 find_package( saber  1.10.0   REQUIRED)
 find_package( ioda   2.9.0    REQUIRED)
 find_package( ufo    1.10.0   REQUIRED)

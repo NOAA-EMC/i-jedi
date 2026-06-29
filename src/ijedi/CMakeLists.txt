@@ -103,6 +103,7 @@ if(FMS_FOUND)
     Io/fv3-history/IoFV3History.h
     Io/fv3-restart/IoFV3Restart.cc
     Io/fv3-restart/IoFV3Restart.h
+    Io/fv3-restart/IoFV3Restart.interface.h
   )
   list(APPEND ijedi_fv3_fortran_src_files
     Geometry/fv3/ijedi_fv3_akbk_mod.f90
@@ -116,6 +117,8 @@ if(FMS_FOUND)
     Geometry/fv3/ijedi_fv3_mp_mod.F90
     Geometry/fv3/ijedi_fv3_namelist_mod.f90
     Geometry/fv3/ijedi_fv3_sorted_index.F90
+    Io/fv3-restart/IoFV3Restart.interface.F90
+    Io/fv3-restart/ijedi_fv3_restart_mod.f90
   )
 
   list(APPEND ijedi_fv3_src_files

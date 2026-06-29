@@ -12,6 +12,7 @@ file(CREATE_LINK
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
 
 # Link the directory 'testref' to the test directory of the build
 # ---------------------------------------------------------------
@@ -61,6 +62,35 @@ ecbuild_add_test( TARGET  ijedi_geometry_mom6
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi_test.x>
                   ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata)
+
+# OOPS GeometryIterator interface tests
+ecbuild_add_test( TARGET  ijedi_geometryiterator_fv3
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-fv3.yaml)
+
+ecbuild_add_test( TARGET  ijedi_geometryiterator_mom6
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata)
+
+ecbuild_add_test( TARGET  ijedi_geometryiterator_fv3_3diter
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometryiterator
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-fv3-3diter.yaml)
+
+ecbuild_add_test( TARGET  ijedi_geometryiterator_mom6_3diter
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometryiterator
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6-3diter.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
 
 # MOM6 structured-grid check against SOCA reference gridspec
@@ -138,6 +168,30 @@ ecbuild_add_test( TARGET  ijedi_3dvar_mom6
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata ijedi_diffusion_mom6 ijedi_geometry_cache_mom6)
 
+# 3DVar comparison: FV3 increment with interpolation to gaussian (Variant A) vs
+# native atlas/gaussian increment (Variant B).
+ecbuild_add_test( TARGET  ijedi_3dvar_fv3_interp_gauss
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_interp_gauss.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
+
+ecbuild_add_test( TARGET  ijedi_3dvar_fv3_inc_gauss
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_inc_gauss.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
+
+# Dirac tests
+ecbuild_add_test( TARGET  ijedi_dirac_fv3_interp_gauss
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    errortoolbox ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_dirac-fv3_interp_gauss.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata)
+
 # Convert state tests
 ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_mom6
                   MPI     1
@@ -165,4 +219,11 @@ ecbuild_add_test( TARGET  ijedi_convertstate_fv3_to_fv3
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-fv3_to_fv3.yaml
+                  TEST_DEPENDS ijedi_setup_fv3_testdata)
+
+ecbuild_add_test( TARGET  ijedi_convertstate_fv3-restart_to_fv3-restart
+                  MPI     1
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-fv3-restart_to_fv3-restart.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata)

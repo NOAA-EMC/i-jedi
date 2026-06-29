@@ -8,3 +8,11 @@ geometry:
   npz: 127
   ntiles: 6
   akbk: gfs_127
+  iterator dimension: 2
+inc variables:
+- eastward_wind
+- northward_wind
+- air_temperature
+- air_pressure_thickness
+increment test:
+  date: 2020-12-15T00:00:00Z

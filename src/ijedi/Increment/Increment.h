@@ -36,10 +36,12 @@ namespace ijedi {
   class DiracParameters : public oops::Parameters {
     OOPS_CONCRETE_PARAMETERS(DiracParameters, Parameters)
    public:
-    oops::RequiredParameter<std::vector<std::string>> diracFlds{"dirac fields", this};
-    oops::RequiredParameter<std::vector<int>> diracProc{"dirac processors", this};
-    oops::RequiredParameter<std::vector<int>> diracHorx{"dirac horizontal index", this};
-    oops::RequiredParameter<std::vector<int>> diracVert{"dirac vertical level", this};
+    // lon/lat dirac specification (grid-agnostic: nearest owned node on any
+    // functionspace is found via a KD-tree). Levels are 1-based.
+    oops::RequiredParameter<std::vector<double>> lon{"lon", this};
+    oops::RequiredParameter<std::vector<double>> lat{"lat", this};
+    oops::RequiredParameter<std::vector<int>> level{"level", this};
+    oops::RequiredParameter<std::vector<std::string>> variable{"variable", this};
   };
 
   // -----------------------------------------------------------------------------------------------
@@ -64,7 +66,7 @@ namespace ijedi {
 
   // -----------------------------------------------------------------------------------------------
 
-  class Increment : public mist::base::Increment, private util::ObjectCounter<Increment> {
+  class Increment : public mist::Increment, private util::ObjectCounter<Increment> {
    public:
     static std::string classname() { return "ijedi::Increment"; }
 

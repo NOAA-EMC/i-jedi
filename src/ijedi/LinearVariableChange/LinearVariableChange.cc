@@ -32,7 +32,7 @@ LinearVariableChange::LinearVariableChange(const Geometry & geometry,
   eckit::LocalConfiguration config{};
   config.set(vader::configCookbookKey, configCookbook);
   // Set up model data for cookbook
-  auto configModelData = mist::base::ModelData(geometry).modelData();
+  auto configModelData = mist::ModelData(geometry).modelData();
   config.set(vader::configModelVarsKey, configModelData);
 
   initVaderVariableChange(configCookbook, configModelData);
@@ -46,7 +46,7 @@ void LinearVariableChange::changeVarTraj(const State & xx, const oops::Variables
   // working copy of the trajectory before setting the linearization point.
   State traj(xx);
   addVaderGeometryIngredients(traj.fieldSet(), geom_);
-  mist::base::LinearVariableChange::changeVarTraj(traj, vars);
+  mist::LinearVariableChange::changeVarTraj(traj, vars);
 }
 
 }  // namespace ijedi

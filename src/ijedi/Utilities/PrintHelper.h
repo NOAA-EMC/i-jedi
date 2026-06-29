@@ -19,6 +19,8 @@ class Comm;
 
 namespace ijedi {
 
-std::tuple<double, double, double> fieldMinMaxRMS(const eckit::mpi::Comm &, const atlas::Field &);
+std::tuple<double, double, double> fieldMinMaxRMS(const eckit::mpi::Comm &,
+                                                  const atlas::Field &,
+                                                  const atlas::Field * = nullptr);
 
 }  // namespace ijedi
