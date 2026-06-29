@@ -68,28 +68,28 @@ jobs:
         docker run --name jedi-build \
           -v ${{ github.workspace }}:/src \
           ${{ env.BASE_IMAGE }} \
-          bash -euo pipefail -c "
-            source /opt/spack-environment/activate.sh
-            export jedi_cmake_ROOT=/opt/view
-            mkdir -p /build && cd /build
-            ls -l /src
-            ecbuild \
-              -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
-              -DBUILD_JEDI=ON \
-              -DCLONE_MIST=OFF \
-              -DMPI_ARGS='--map-by :OVERSUBSCRIBE' \
-              /src/i-jedi/bundle 
-            
-            mkdir -p ${{ env.INSTALL_PREFIX }}/etc
-            for d in /src/i-jedi/bundle/*; do
-              if [ -d "\$d/.git" ]; then
-                echo "$(basename "$d") $(git -C "$d" rev-parse HEAD)" >> ${{ env.INSTALL_PREFIX }}/etc/jedi_repo_hashes.txt
-              fi
-            done
-            
-            make -j$(nproc) install
-            rm -rf /build
-          "
+          bash -euo pipefail <<'EOF'
+        source /opt/spack-environment/activate.sh
+        export jedi_cmake_ROOT=/opt/view
+        mkdir -p /build && cd /build
+        ls -l /src
+        ecbuild \
+          -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+          -DBUILD_JEDI=ON \
+          -DCLONE_MIST=OFF \
+          -DMPI_ARGS='--map-by :OVERSUBSCRIBE' \
+          /src/i-jedi/bundle
+
+        mkdir -p ${INSTALL_PREFIX}/etc
+        for d in /src/i-jedi/bundle/*; do
+          if [ -d "$d/.git" ]; then
+            echo "$(basename "$d") $(git -C "$d" rev-parse HEAD)" >> ${INSTALL_PREFIX}/etc/jedi_repo_hashes.txt
+          fi
+        done
+
+        make -j$(nproc) install
+        rm -rf /build
+        EOF
 
     - name: Commit and tag container image
       run: |
