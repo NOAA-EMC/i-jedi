@@ -74,8 +74,8 @@ jobs:
             ecbuild \
               -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
               -DBUILD_JEDI=ON \
-              -DCLONE_MIST="OFF" \
-              -DMPI_ARGS="--map-by :OVERSUBSCRIBE" \
+              -DCLONE_MIST=OFF \
+              -DMPI_ARGS='--map-by :OVERSUBSCRIBE' \
               ../i-jedi/bundle 
             make -j\$(nproc) install
             rm -rf /build
