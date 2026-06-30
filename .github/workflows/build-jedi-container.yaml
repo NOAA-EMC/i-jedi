@@ -77,7 +77,7 @@ jobs:
               -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
               -DBUILD_JEDI=ON \
               -DCLONE_MIST=OFF \
-              -DMPI_ARGS='--map-by :OVERSUBSCRIBE' \
+              -DMPI_ARGS="--map-by :OVERSUBSCRIBE" \
               /src/i-jedi/bundle 
             
             mkdir -p ${{ env.INSTALL_PREFIX }}/etc
