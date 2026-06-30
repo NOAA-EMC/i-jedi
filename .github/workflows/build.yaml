@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v6
       with:
         repository: "JCSDA-internal/mist"
-        ref: "feature/geom_iter" # Specify your branch here
+        ref: "feature/install" # Specify your branch here
         path: i-jedi/bundle/mist
         ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
     - name: Run ecbuild
