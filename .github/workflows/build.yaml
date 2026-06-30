@@ -58,14 +58,14 @@ jobs:
         # Also generate a hash for caching if container doesn't match
         HASH=$(find $GITHUB_WORKSPACE/i-jedi/bundle -maxdepth 2 -name .git -type d | sort | xargs -I {} git -C {}/.. rev-parse HEAD | sha256sum | awk '{print $1}')
         echo "hash=$HASH" >> $GITHUB_OUTPUT
-    - name: Cache install of JEDI libraries
-      if: steps.check-container.outputs.match == 'false'
-      id: cache-jedi
-      uses: actions/cache@v5
-      with:
-        path: |
-          ${{ github.workspace }}/install
-        key: ${{ runner.os }}-jedi-${{ steps.check-container.outputs.hash }}
+    # - name: Cache install of JEDI libraries
+    #   if: steps.check-container.outputs.match == 'false'
+    #   id: cache-jedi
+    #   uses: actions/cache@v5
+    #   with:
+    #     path: |
+    #       ${{ github.workspace }}/install
+    #     key: ${{ runner.os }}-jedi-${{ steps.check-container.outputs.hash }}
     - name: Run coding style checks
       shell: bash
       run: |
@@ -74,8 +74,8 @@ jobs:
         source /opt/spack-environment/activate.sh
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
-    - name: Compile the code without any cache
-      if: steps.check-container.outputs.match == 'false' && steps.cache-jedi.outputs.cache-hit != 'true'
+    - name: Compile the code without using container libraries
+      if: steps.check-container.outputs.match == 'false'
       shell: bash
       run: |
         su - nonroot
@@ -88,22 +88,22 @@ jobs:
         ecbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle 
         make -j4
         make install
-    - name: Compile the code with cache
-      if: steps.check-container.outputs.match == 'false' && steps.cache-jedi.outputs.cache-hit == 'true'
-      shell: bash
-      run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
-        cd $GITHUB_WORKSPACE
-        rm -rf Build
-        chmod +x $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh
-        $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh $GITHUB_WORKSPACE/install $GITHUB_WORKSPACE/i-jedi/bundle/oops
-        mkdir -p Build
-        cd Build
-        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
-        cd ijedi
-        make -j4
+    # - name: Compile the code with cache
+    #   if: steps.check-container.outputs.match == 'false' && steps.cache-jedi.outputs.cache-hit == 'true'
+    #   shell: bash
+    #   run: |
+    #     su - nonroot
+    #     export jedi_cmake_ROOT=/opt/view
+    #     source /opt/spack-environment/activate.sh
+    #     cd $GITHUB_WORKSPACE
+    #     rm -rf Build
+    #     chmod +x $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh
+    #     $GITHUB_WORKSPACE/i-jedi/.github/workflows/fix_circular_dependency.sh $GITHUB_WORKSPACE/install $GITHUB_WORKSPACE/i-jedi/bundle/oops
+    #     mkdir -p Build
+    #     cd Build
+    #     ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=$GITHUB_WORKSPACE/install -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
+    #     cd ijedi
+    #     make -j4
     - name: Compile the code with container libraries
       if: steps.check-container.outputs.match == 'true'
       shell: bash
