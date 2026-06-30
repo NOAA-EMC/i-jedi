@@ -118,6 +118,10 @@ jobs:
         rm -rf Build
         mkdir -p Build
         cd Build
+        ls -l /opt/jedi
+        ls -l /opt/jedi/lib
+        ls -l /opt/jedi/include
+        ls -l /opt/jedi/bin
         ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=/opt/jedi -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
         cd ijedi
         make -j4
