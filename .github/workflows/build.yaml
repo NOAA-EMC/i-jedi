@@ -41,6 +41,9 @@ jobs:
           for d in $GITHUB_WORKSPACE/i-jedi/bundle/*; do
             if [ -d "$d/.git" ]; then
               REPO=$(basename $d)
+              if [[ "$REPO" == "ijedi" || "$REPO" == "mist" ]]; then
+                continue
+              fi
               CURRENT_SHA=$(git -C $d rev-parse HEAD)
               CONTAINER_SHA=$(grep "^$REPO " /opt/jedi/etc/jedi_repo_hashes.txt | cut -d' ' -f2 || true)
               if [ "$CURRENT_SHA" != "$CONTAINER_SHA" ]; then
