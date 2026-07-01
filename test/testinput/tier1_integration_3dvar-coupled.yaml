@@ -1,0 +1,132 @@
+cost function:
+  cost type: 3D-Var
+  jb evaluation: false
+  time window:
+    begin: 2020-12-12T00:00:00Z
+    length: P6D
+  geometry: &geom
+    FV3JEDI:
+      fms initialization:
+        namelist filename: data/fv3/input_c12.nml
+        field table filename: data/fv3/field_table
+      akbk: /scratch3/NCEPDEV/da/Guillaume.Vernieres/sandboxes/i-jedi/bundle/fv3-jedi-data/testinput_tier_1/inputs/fv3files/akbk127.nc4
+      npx: 13
+      npy: 13
+      npz: 127
+      ntiles: 6
+    ocean:
+      geometry_type: mom6
+      ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+      ocean_topog: data_generated/mom6/ocean_topog.nc
+      vertical geometry from: data_generated/mom6/MOM.res.nc
+      coarsen factor: 1
+      has northern fold: true
+      MOM_input:
+        NIGLOBAL: 72
+        NJGLOBAL: 35
+        NZ: 25
+        LAYOUT: [3, 2]
+        MINIMUM_DEPTH: 0.5
+  analysis variables:
+  - eastward_wind
+  - northward_wind
+  - air_temperature
+  - air_pressure_thickness
+  - sea_water_potential_temperature
+  - sea_water_salinity
+  - sea_surface_height_above_geoid
+  background:
+    FV3JEDI:
+      datetime: 2020-12-15T00:00:00Z
+      filetype: cube sphere history
+      provider: ufs
+      datapath: data_generated/fv3/
+      filenames:
+      - atmf006.nc
+      - sfcf006.nc
+      state variables:
+      - eastward_wind
+      - northward_wind
+      - air_temperature
+      - air_pressure_thickness
+      field io names:
+        eastward_wind: ugrd
+        northward_wind: vgrd
+        air_temperature: tmp
+        air_pressure_thickness: dpres
+    ocean:
+      date: 2020-12-15T00:00:00Z
+      state variables:
+      - sea_water_salinity
+      - sea_water_potential_temperature
+      - sea_surface_height_above_geoid
+      - sea_water_depth
+      io:
+        filetype: mom6
+        datapath: data_generated/mom6
+        ocn_file: MOM.res.nc
+        fix_file: mom6_structuredgeometry_cache_grid.nc
+        field io names:
+          sea_water_potential_temperature: Temp
+          sea_water_salinity: Salt
+          sea_surface_height_above_geoid: ave_ssh
+          sea_water_depth: sea_water_depth
+
+  background error:
+    covariance model: SABER coupled
+    FV3JEDI:
+      saber central block:
+        saber block name: ID
+    ocean:
+      saber central block:
+        saber block name: ID
+
+  observations:
+    observers: []
+#    - obs space:
+#        name: SST
+#        obsdatain:
+#          engine:
+#            type: H5File
+#            obsfile: data_generated/obs/sst.nc
+#        simulated variables: [seaSurfaceTemperature]
+#      obs operator:
+#        name: Identity
+#        observation alias file: data/obs/obsop_name_map.yml
+#    - obs space:
+#        name: Aircraft
+#        obsdatain:
+#          engine:
+#            type: H5File
+#            obsfile: data_generated/obs/aircraft.nc
+#        simulated variables:
+#        - windEastward
+#        - windNorthward
+#        - airTemperature
+#      obs operator:
+#        name: Identity
+#        vertical coordinate: air_pressure
+#        observation vertical coordinate: pressure
+#        observation vertical coordinate group: MetaData
+#        interpolation method: log-linear
+
+variational:
+  minimizer:
+    algorithm: DRPCG
+  iterations:
+  - geometry: *geom
+    ninner: 3
+    gradient norm reduction: 1e-8
+    test: on
+
+#output:
+#  io:
+#    filetype: unstructured
+#    filepath: coupled-3dvar-an-unstructured
+
+final j evaluation: false
+
+#test:
+#  reference filename: testref/3dvar-coupled.test
+#  test output filename: 3dvar-coupled.test
+

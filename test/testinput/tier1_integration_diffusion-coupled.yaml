@@ -1,0 +1,83 @@
+geometry: &geom
+  FV3JEDI:
+    fms initialization:
+      namelist filename: data/fv3/input_c12.nml
+      field table filename: data/fv3/field_table
+    npx: 13
+    npy: 13
+    npz: 127
+    ntiles: 6
+    akbk: gfs_127
+  ocean:
+    geometry_type: mom6
+    ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+    ocean_topog: data_generated/mom6/ocean_topog.nc
+    vertical geometry from: data_generated/mom6/MOM.res.nc
+    coarsen factor: 1
+    has northern fold: true
+    MOM_input:
+      NIGLOBAL: 72
+      NJGLOBAL: 35
+      NZ: 25
+      LAYOUT: [2, 1]
+      MINIMUM_DEPTH: 0.5
+
+background:
+  FV3JEDI:
+    datetime: 2020-12-16T00:00:00Z
+    state variables:
+    - eastward_wind
+    - northward_wind
+    - air_temperature
+    - air_pressure_thickness
+    io:
+      filetype: fv3 history
+      datapath: data_generated/fv3/
+      atm_file: atmf006.nc
+      sfc_file: sfcf006.nc
+      field io names:
+        eastward_wind: ugrd
+        northward_wind: vgrd
+        air_temperature: tmp
+        air_pressure_thickness: dpres
+  ocean:
+    date: 2020-12-16T00:00:00Z
+    state variables:
+    - sea_water_salinity
+    - sea_water_potential_temperature
+    - sea_surface_height_above_geoid
+    io:
+      filetype: mom6
+      datapath: data_generated/mom6
+      ocn_file: MOM.res.nc
+      field io names:
+        sea_water_potential_temperature: Temp
+        sea_water_salinity: Salt
+        sea_surface_height_above_geoid: ave_ssh
+
+background error:
+  covariance model: SABER coupled
+  FV3JEDI:
+    saber central block:
+      saber block name: jacobian
+      jacobian blocks:
+      - name: wind_pressure_gradient_lp
+  ocean:
+    saber central block:
+      saber block name: diffusion
+      calibration:
+        normalization:
+          iterations: 1000
+        groups:
+        - horizontal:
+            fixed value: 100000.0    # 100 km Gaussian sigma
+            as gaussian: true
+          write:
+            filepath: diffusion_hz_coupled_mom6
+        - vertical:
+            fixed value: 2.0         # 2 levels Gaussian sigma
+            levels: 25
+            as gaussian: true
+          write:
+            filepath: diffusion_vt_coupled_mom6
+

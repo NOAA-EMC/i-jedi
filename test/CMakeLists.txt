@@ -184,6 +184,13 @@ ecbuild_add_test( TARGET  ijedi_3dvar_fv3_inc_gauss
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_inc_gauss.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
 
+ecbuild_add_test( TARGET  ijedi_fv3_mom6_3dvar_coupled
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_fv3_mom6_coupled.x>
+                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-coupled.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_fv3_testdata ijedi_setup_obs_testdata ijedi_geometry_cache_mom6)
+
 # Dirac tests
 ecbuild_add_test( TARGET  ijedi_dirac_fv3_interp_gauss
                   MPI     6
