@@ -18,12 +18,14 @@
 
 #include "fv3jedi/Utilities/Traits.h"
 
+#include "oops/coupled/GetValuesCoupled.h"
 #include "oops/coupled/TraitCoupled.h"
 
 #include "oops/runs/HofX3D.h"
 #include "oops/runs/Run.h"
 #include "oops/runs/Variational.h"
 
+#include "saber/coupled/instantiateCoupledCovarFactory.h"
 #include "saber/oops/instantiateCovarFactory.h"
 
 #include "ufo/instantiateObsFilterFactory.h"
@@ -43,10 +45,10 @@ int runApp(int argc, char **argv, const std::string appName)
 
   // Instantiate factories.
   ufo::instantiateObsFilterFactory();
-  // The coupled background error covariance is block-per-component, so SABER is
-  // registered for each component trait rather than the coupled trait.
-  saber::instantiateCovarFactory<fv3jedi::Traits>();
-  saber::instantiateCovarFactory<ijedi::TraitsOcn>();
+  // The coupled background error covariance is block-per-component. This registers
+  // the coupled covariance models ("SABER coupled", "Coupled Block Diagonal") as
+  // well as the per-component SABER factories they delegate to.
+  saber::instantiateCoupledCovarFactory<fv3jedi::Traits, ijedi::TraitsOcn>();
 
   // Map from app names to factory lambdas
   std::map<std::string, std::function<std::unique_ptr<oops::Application>()>> apps;

@@ -9,7 +9,7 @@ cost function:
       fms initialization:
         namelist filename: data/fv3/input_c12.nml
         field table filename: data/fv3/field_table
-      akbk: /scratch3/NCEPDEV/da/Guillaume.Vernieres/sandboxes/i-jedi/bundle/fv3-jedi-data/testinput_tier_1/inputs/fv3files/akbk127.nc4
+      akbk: Data/inputs/fv3files/akbk127.nc4
       npx: 13
       npy: 13
       npz: 127
@@ -27,6 +27,18 @@ cost function:
         NZ: 25
         LAYOUT: [3, 2]
         MINIMUM_DEPTH: 0.5
+    # Route the analysis variables to the correct component. The ocean (mist) has an
+    # empty default variable list, so it must be told its variables explicitly. fv3-jedi's
+    # default list is its whole metadata registry (which also contains the ocean fields),
+    # so those must be excluded from the atmosphere to avoid a component-variable overlap.
+    ocean include variables:
+    - sea_water_potential_temperature
+    - sea_water_salinity
+    - sea_surface_height_above_geoid
+    FV3JEDI exclude variables:
+    - sea_water_potential_temperature
+    - sea_water_salinity
+    - sea_surface_height_above_geoid
   analysis variables:
   - eastward_wind
   - northward_wind
@@ -38,22 +50,23 @@ cost function:
   background:
     FV3JEDI:
       datetime: 2020-12-15T00:00:00Z
-      filetype: cube sphere history
-      provider: ufs
-      datapath: data_generated/fv3/
-      filenames:
-      - atmf006.nc
-      - sfcf006.nc
+      filetype: fms restart
+      datapath: Data/inputs/gfs_c12/bkg/
+      filename_core: 20201215.000000.fv_core.res.nc
+      filename_trcr: 20201215.000000.fv_tracer.res.nc
+      filename_sfcd: 20201215.000000.sfc_data.nc
+      filename_sfcw: 20201215.000000.fv_srf_wnd.res.nc
+      filename_cplr: 20201215.000000.coupler.res
       state variables:
       - eastward_wind
       - northward_wind
       - air_temperature
       - air_pressure_thickness
       field io names:
-        eastward_wind: ugrd
-        northward_wind: vgrd
-        air_temperature: tmp
-        air_pressure_thickness: dpres
+        eastward_wind: ua
+        northward_wind: va
+        air_temperature: T
+        air_pressure_thickness: delp
     ocean:
       date: 2020-12-15T00:00:00Z
       state variables:
@@ -82,7 +95,7 @@ cost function:
         saber block name: ID
 
   observations:
-    observers: []
+    observers:
 #    - obs space:
 #        name: SST
 #        obsdatain:
@@ -93,22 +106,22 @@ cost function:
 #      obs operator:
 #        name: Identity
 #        observation alias file: data/obs/obsop_name_map.yml
-#    - obs space:
-#        name: Aircraft
-#        obsdatain:
-#          engine:
-#            type: H5File
-#            obsfile: data_generated/obs/aircraft.nc
-#        simulated variables:
-#        - windEastward
-#        - windNorthward
-#        - airTemperature
-#      obs operator:
-#        name: Identity
-#        vertical coordinate: air_pressure
-#        observation vertical coordinate: pressure
-#        observation vertical coordinate group: MetaData
-#        interpolation method: log-linear
+    - obs space:
+        name: Aircraft
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: data_generated/obs/aircraft.nc
+        simulated variables:
+        - windEastward
+        - windNorthward
+        - airTemperature
+      obs operator:
+        name: Identity
+        vertical coordinate: air_pressure
+        observation vertical coordinate: pressure
+        observation vertical coordinate group: MetaData
+        interpolation method: log-linear
 
 variational:
   minimizer:
