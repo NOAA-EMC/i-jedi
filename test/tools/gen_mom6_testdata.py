@@ -65,6 +65,11 @@ def gen_mom6_restart(outdir):
         lat2d = gs["lat"][0].data           # (nj, ni) actual 2-D latitude
         mask  = gs["mask2d"][0].data        # (nj, ni) 1=ocean 0=land
 
+    # Fill value for land / massless cells.  Deliberately a ridiculous number
+    # (not 0.0) so that any code that fails to mask land blows up loudly
+    # instead of silently consuming a plausible-looking value.
+    LAND_FILL = -1.0e38
+
     # ---- z-level midpoint depths (72x35x25 MOM6 configuration) -------------
     layer_z = np.array([
         2.5, 7.5, 12.505, 17.545, 22.705, 28.170, 34.285, 41.610, 50.990,
@@ -115,7 +120,7 @@ def gen_mom6_restart(outdir):
         (t_surf[np.newaxis, :, :]
          * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 500.0)
          + 2.0),
-        0.0,
+        LAND_FILL,
     )   # shape: (nz, nj, ni)
 
     # ---- Salt: subtropical maximum at surface, nearly uniform with depth -----
@@ -124,7 +129,7 @@ def gen_mom6_restart(outdir):
         h > 1e-5,
         (s_surf[np.newaxis, :, :]
          * (1.0 - 0.02 * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 2000.0))),
-        0.0,
+        LAND_FILL,
     )   # shape: (nz, nj, ni)
 
     # ---- u: surface-trapped zonal flow; grid (Layer, lath, lonq) same shape -
@@ -133,7 +138,7 @@ def gen_mom6_restart(outdir):
         h > 1e-5,
         (u_surf[np.newaxis, :, :]
          * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 200.0)),
-        0.0,
+        LAND_FILL,
     )   # shape: (nz, nj, ni)
 
     # ---- v: weak gyre-like meridional flow with depth decay -----------------
@@ -146,14 +151,14 @@ def gen_mom6_restart(outdir):
         h > 1e-5,
         (v_surf[np.newaxis, :, :]
          * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 250.0)),
-        0.0,
+        LAND_FILL,
     )   # shape: (nz, nj, ni); grid (Layer, latq, lonh)
 
     # ---- ave_ssh: small sinusoidal SSH with zero on land --------------------
     ave_ssh = np.where(
         mask > 0.5,
         0.1 * np.sin(np.deg2rad(lat2d)),
-        0.0,
+        LAND_FILL,
     )   # shape: (nj, ni)
 
     # ---- write NetCDF --------------------------------------------------------
