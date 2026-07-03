@@ -53,7 +53,11 @@ endif()
 ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git"      UPDATE BRANCH develop RECURSIVE )
 if (BUILD_JEDI)
   ecbuild_bundle( PROJECT oops      GIT    "https://github.com/JCSDA/oops.git"          UPDATE BRANCH develop )
-  ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"         UPDATE BRANCH develop)
+  # TEMPORARY: pinned to the commit before vader #355 renamed
+  # GeopotentialHeightAtInterface_A -> _B. ijedi/mist still request _A, so
+  # tracking vader develop breaks the cookbook. Revert to UPDATE BRANCH develop
+  # once ijedi (and mist) adopt the _B recipe name.
+  ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"         TAG 57f602d)
   if (CLONE_MIST)
     ecbuild_bundle( PROJECT mist      GIT    "https://github.com/JCSDA-internal/mist.git" UPDATE BRANCH feature/geom_iter )
   else()
