@@ -8,6 +8,7 @@ cost function:
     geometry_type: mom6
     ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
     ocean_topog: data_generated/mom6/ocean_topog.nc
+    vertical geometry from: data_generated/mom6/MOM.res.nc
     coarsen factor: 1
     has northern fold: true
     MOM_input:
@@ -26,14 +27,17 @@ cost function:
     - sea_water_salinity
     - sea_water_potential_temperature
     - sea_surface_height_above_geoid
+    - sea_water_depth
     io:
       filetype: mom6
       datapath: data_generated/mom6
       ocn_file: MOM.res.nc
+      fix_file: mom6_structuredgeometry_cache_grid.nc
       field io names:
         sea_water_potential_temperature: Temp
         sea_water_salinity: Salt
         sea_surface_height_above_geoid: ave_ssh
+        sea_water_depth: sea_water_depth
 
   background error:
     covariance model: SABER
@@ -64,6 +68,37 @@ cost function:
       obs operator:
         name: Identity
         observation alias file: data/obs/obsop_name_map.yml
+    # TODO: re-enable the insitu temperature obs space once the vader insitu
+    # (GSW ocean) recipe PR is merged. Until then the required vader variable
+    # change is unavailable, so it is disabled.
+    # - obs space:
+    #     name: InsituTemperature
+    #     obsdatain:
+    #       engine:
+    #         type: H5File
+    #         obsfile: data_generated/obs/insitu_temp_profile_argo_3prof.nc
+    #     simulated variables: [waterTemperature]
+    #   obs operator:
+    #     name: VertInterp
+    #     observation alias file: ./data/obs/obsop_name_map.yml
+    #     vertical coordinate: sea_water_depth
+    #     observation vertical coordinate: depth
+    #     interpolation method: linear
+    #     covariance model: diagonal
+    - obs space:
+        name: InsituSalinity
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: data_generated/obs/insitu_salt_profile_argo_3prof.nc
+        simulated variables: [salinity]
+      obs operator:
+        name: VertInterp
+        observation alias file: ./data/obs/obsop_name_map.yml
+        vertical coordinate: sea_water_depth
+        observation vertical coordinate: depth
+        interpolation method: linear
+        covariance model: diagonal
 
 variational:
   minimizer:
@@ -81,6 +116,6 @@ output:
 
 final j evaluation: false
 
-#TODO: not passing in CI with the specified reference
-#test:
-#  reference filename: testref/3dvar-mom6.test
+test:
+  reference filename: testref/3dvar-mom6.test
+  test output filename: 3dvar-mom6.test

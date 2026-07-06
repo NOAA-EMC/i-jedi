@@ -65,6 +65,8 @@ list(APPEND ijedi_src_files
   VariableChange/SeaSurfaceTemperature_A.cc
   VariableChange/VaderCookbook.cc
   VariableChange/VaderCookbook.h
+  VariableChange/VaderIngredients.cc
+  VariableChange/VaderIngredients.h
   VariableChange/VariableChange.cc
   VariableChange/VariableChange.h
 

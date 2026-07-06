@@ -37,7 +37,7 @@ class VariableChange : public util::Printable {
 
  private:
   void print(std::ostream &) const override;
-
+  const Geometry & geom_;
   std::unique_ptr<mist::VaderVariableChange> varchange_;
 };
 

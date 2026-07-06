@@ -10,16 +10,18 @@
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
 #include "ijedi/VariableChange/VaderCookbook.h"
+#include "ijedi/VariableChange/VaderIngredients.h"
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/State/State.h"
 #include "mist/base/ModelData.h"
+#include "oops/base/Variables.h"
 #include "oops/util/Logger.h"
 #include "vader/vader.h"
 
 namespace ijedi {
 
 VariableChange::VariableChange(const eckit::Configuration & varchangeConfig,
-                               const Geometry & geometry) {
+                               const Geometry & geometry) : geom_(geometry) {
   oops::Log::trace() << "ijedi::VariableChange::VariableChange starting" << std::endl;
   eckit::LocalConfiguration configCookbook{};
   // If config has "vader cookbook" then use that, else use default
@@ -43,6 +45,18 @@ VariableChange::VariableChange(const eckit::Configuration & varchangeConfig,
 
 void VariableChange::changeVar(State & xx, const oops::Variables & vars) const {
   oops::Log::trace() << "ijedi::VariableChange::changeVar starting" << std::endl;
+
+  // Several Vader recipes (e.g. SeaWaterTemperature_A) require geometry-sourced
+  // ingredient fields (latitude, longitude, sea_area_fraction) that are not
+  // state variables. Inject them transiently into the working FieldSet;
+  // mist::utils::VariableChange filters its output back down to the requested
+  // variables, so they do not persist in xx. Skip injection when no transform
+  // is needed (mist returns early in that case, which would otherwise leave the
+  // fields in the state).
+  if (!(vars == xx.variables())) {
+    addVaderGeometryIngredients(xx.fieldSet(), geom_);
+  }
+
   varchange_->changeVar(xx, vars);
   xx.setAtlasFieldMetadata();
   oops::Log::trace() << "ijedi::VariableChange::changeVar done" << std::endl;
