@@ -223,6 +223,17 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
   }
 
   // --- 4. Scatter all global fields to distributed ranks (collective). ---
+  // Zero the distributed fields first. atlas::createField leaves memory
+  // uninitialised, and scatter only writes nodes whose global index is present
+  // in the gathered global field. With the northern-fold / periodic mesh, some
+  // owned nodes are not covered by the gather/scatter round-trip; without this
+  // they would retain heap garbage, which is then summed by reductions
+  // (e.g. normField over exclude_halo) and makes results non-reproducible.
+  for (auto & field : x) {
+    auto v = atlas::array::make_view<double, 2>(field);
+    v.assign(0.0);
+  }
+
   int fi = 0;
   for (auto & field : x) {
     fs.scatter(globalFields[fi], field);
