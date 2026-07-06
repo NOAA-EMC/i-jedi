@@ -16,7 +16,8 @@ namespace ijedi
   namespace {
   eckit::LocalConfiguration makeRuntimeConfig(const IoFV3Restart::Parameters_ &params,
                                               const Geometry &geom,
-                                              const atlas::FieldSet &x)
+                                              const atlas::FieldSet &x,
+                                              const eckit::LocalConfiguration &fileioscaling)
   {
     eckit::LocalConfiguration runtime(params.toConfiguration());
 
@@ -36,6 +37,10 @@ namespace ijedi
 
     runtime.set("active fields", activeFields);
     runtime.set("tracer fields", tracerFields);
+    // Tell the Fortran layer whether any scaling factors were configured. When the
+    // 'field io scaling' yaml section is absent the config is an empty map, which cannot
+    // be safely probed per-field from Fortran, so the scaling step is skipped entirely.
+    runtime.set("field io scaling present", !fileioscaling.keys().empty());
     return runtime;
   }
   }  // namespace
@@ -64,7 +69,8 @@ namespace ijedi
     util::Timer timer(classname(), "read state");
     oops::Log::trace() << classname() << " read state starting" << std::endl;
 
-    const eckit::LocalConfiguration runtimeConfig = makeRuntimeConfig(parameters_, geom_, x);
+    const eckit::LocalConfiguration runtimeConfig =
+        makeRuntimeConfig(parameters_, geom_, x, fileioscaling);
     ijedi_io_fv3_restart_read_f90(runtimeConfig, geom_.modelData(), x.get(),
                                   fileionames, fileioscaling);
 
@@ -78,7 +84,8 @@ namespace ijedi
     util::Timer timer(classname(), "write state");
     oops::Log::trace() << classname() << " write state starting" << std::endl;
 
-    const eckit::LocalConfiguration runtimeConfig = makeRuntimeConfig(parameters_, geom_, x);
+    const eckit::LocalConfiguration runtimeConfig =
+        makeRuntimeConfig(parameters_, geom_, x, fileioscaling);
     ijedi_io_fv3_restart_write_f90(runtimeConfig, geom_.modelData(), x.get(),
                                    fileionames, fileioscaling);
 

@@ -59,7 +59,7 @@ character(len=128) :: prefix
 character(len=256) :: io_name
 logical :: rstflag(numfiles)
 logical :: ps_in_file, skip_coupler, prepend_date, has_prefix, ignore_checksum
-logical :: have_delp, want_ps
+logical :: have_delp, want_ps, has_scaling
 integer :: n, npx, npy, npz, isc, iec, jsc, jec, isd, ied, jsd, jed, ntile, ntiles, ngrid
 integer :: layout_x, layout_y, indexrst, ifield, nbuf, ibuf
 real(kind=kind_real) :: ptop
@@ -74,6 +74,8 @@ call load_geom(geom_conf, npx, npy, npz, isc, iec, jsc, jec, isd, ied, jsd, jed,
                ntiles, ngrid, layout_x, layout_y, ptop)
 call conf%get_or_die('active fields', active_fields)
 call conf%get_or_die('tracer fields', tracer_fields)
+has_scaling = .false.
+if (conf%has('field io scaling present')) call conf%get_or_die('field io scaling present', has_scaling)
 
 call fv3_geom_setup_domain(domain, npx-1, npy-1, ntiles, (/layout_x, layout_y/), (/1, 1/), 3)
 
@@ -427,7 +429,11 @@ type(fckit_configuration), intent(in)    :: field_io_scaling
 real(kind=kind_real) :: scale
 
 scale = 1.0_kind_real
-if (field_io_scaling%has(trim(field_name))) call field_io_scaling%get_or_die(trim(field_name), scale)
+if (field_io_scaling%has(trim(field_name))) then
+  write(*,'(a,i0,3a)') 'DIAG scale_array pe=', mpp_pe(), &
+    ' reading scaling for field="', trim(field_name), '"'
+  call field_io_scaling%get_or_die(trim(field_name), scale)
+end if
 array = scale * array
 
 end subroutine scale_array
