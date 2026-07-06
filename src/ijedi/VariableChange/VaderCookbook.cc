@@ -38,13 +38,13 @@ static std::map<std::string, std::vector<std::string>> cookbook() {
       // qsat: from t, and es
       {"saturation_water_vapor_mixing_ratio_wrt_moist_air", {"SaturationSpecificHumidity_A"}},
       // phi_e from phi tv ln(p) and ln(pe)
-      {"geopotential_levels",                  {"GeopotentialAtInterface_A"}},
+      {"geopotential_levels",                  {"GeopotentialLevels_A"}},
       // z: from phi
       {"geopotential_height",                  {"GeopotentialHeight_A"}},
       // z_surf: from phi_surf
       {"geopotential_height_at_surface",       {"GeopotentialHeightAtSurface_A"}},
       // ze: from phi_e
-      {"geopotential_height_levels",           {"GeopotentialHeightAtInterface_A"}},
+      {"geopotential_height_levels",           {"GeopotentialHeightLevels_A"}},
       // h_amsl: from z_surf
       {"height_above_mean_sea_level_at_surface",  {"HeightAboveMeanSeaLevelAtSurface_A"}},
       // pt: from t and pkz, from t and ps
