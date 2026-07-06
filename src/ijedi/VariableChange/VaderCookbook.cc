@@ -58,7 +58,7 @@ static std::map<std::string, std::vector<std::string>> cookbook() {
       //           (SeaWaterTemperature_A); TL/AD via linearized TEOS-10 Jacobian
       //           (SeaWaterTemperature_B). Both are needed so the variable change
       //           works in the variational inner loop as well as the NL observer.
-      // TODO: re-enable once the vader insitu (GSW ocean) recipe PR is merged.
+      // TODO(guillaumevernieres): re-enable once the vader insitu (GSW ocean) recipe PR is merged.
       // {"sea_water_temperature",                  {"SeaWaterTemperature_A",
       //                                             "SeaWaterTemperature_B"}},
   };
