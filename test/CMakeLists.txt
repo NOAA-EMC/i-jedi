@@ -9,6 +9,20 @@ file(CREATE_LINK
     "${CMAKE_CURRENT_BINARY_DIR}/data"
     SYMBOLIC
 )
+# Link the fv3-jedi-data inputs into the test directory as 'Data/inputs', but only
+# when fv3-jedi is built as part of the bundle and the data repository is present.
+# --------------------------------------------------------------------------------
+set(_fv3jedi_data_inputs
+    "${CMAKE_CURRENT_SOURCE_DIR}/../bundle/fv3-jedi-data/testinput_tier_1/inputs")
+if(fv3jedi_FOUND AND EXISTS "${_fv3jedi_data_inputs}")
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data)
+  file(CREATE_LINK
+      "${_fv3jedi_data_inputs}"
+      "${CMAKE_CURRENT_BINARY_DIR}/Data/inputs"
+      SYMBOLIC
+  )
+endif()
+
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
@@ -183,6 +197,17 @@ ecbuild_add_test( TARGET  ijedi_3dvar_fv3_inc_gauss
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_inc_gauss.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
+
+# fv3 (atmosphere) + mom6 (ocean) coupled 3DVar. Registered only when the
+# coupled driver was built (fv3-jedi available); otherwise the target is absent.
+if(fv3jedi_FOUND)
+  ecbuild_add_test( TARGET  ijedi_fv3_mom6_3dvar_coupled
+                    MPI     6
+                    OMP     1
+                    COMMAND $<TARGET_FILE:ijedi_fv3_mom6_coupled.x>
+                    ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-coupled.yaml
+                    TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_fv3_testdata ijedi_setup_obs_testdata ijedi_geometry_cache_mom6)
+endif()
 
 # LETKF tests
 ecbuild_add_test( TARGET  ijedi_letkf_observer_fv3
