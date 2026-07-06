@@ -128,6 +128,7 @@ void applyBoundaryConditions(atlas::FieldSet & x,
 
     oops::Log::info() << "applyBoundaryConditions: " << fname
                       << " Neumann (flood fill) on " << nFilled
+                      << " masked nodes, vertical fallback on " << nVertical
                       << " masked nodes (" << nlev << " levels)" << std::endl;
   }
 }
