@@ -35,10 +35,12 @@ cost function:
     - sea_water_potential_temperature
     - sea_water_salinity
     - sea_surface_height_above_geoid
+    - sea_surface_temperature
     FV3JEDI exclude variables:
     - sea_water_potential_temperature
     - sea_water_salinity
     - sea_surface_height_above_geoid
+    - sea_surface_temperature
   analysis variables:
   - eastward_wind
   - northward_wind
@@ -96,16 +98,16 @@ cost function:
 
   observations:
     observers:
-#    - obs space:
-#        name: SST
-#        obsdatain:
-#          engine:
-#            type: H5File
-#            obsfile: data_generated/obs/sst.nc
-#        simulated variables: [seaSurfaceTemperature]
-#      obs operator:
-#        name: Identity
-#        observation alias file: data/obs/obsop_name_map.yml
+    - obs space:
+        name: SST
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: data_generated/obs/sst.nc
+        simulated variables: [seaSurfaceTemperature]
+      obs operator:
+        name: Identity
+        observation alias file: data/obs/obsop_name_map.yml
     - obs space:
         name: Aircraft
         obsdatain:
