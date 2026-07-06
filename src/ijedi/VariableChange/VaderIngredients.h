@@ -9,15 +9,15 @@ namespace ijedi {
 class Geometry;
 
 /// \brief Inject geometry-sourced ingredient fields required by several Vader
-///        ocean recipes (e.g. SeaWaterTemperature_A/_B) that are not state
-///        variables.
+///        recipes (e.g. SeaWaterTemperature_A/_B) that are not state variables.
 ///
-/// \details The fields are cloned from the (already built) geometry, so no grid
-///          is regenerated. They are added only if not already present:
-///            - latitude          <- geometry "lat"  (single level)
-///            - longitude         <- geometry "lon"  (single level)
-///            - sea_area_fraction <- geometry "mask2d", broadcast across all
-///              model levels (SeaWaterTemperature_B indexes it per level)
+/// \details Added only if not already present, and split by responsibility:
+///            - latitude / longitude: derived generically from the function
+///              space (atlas lonlat()), so this works for any model regardless
+///              of how its geometry names coordinate fields.
+///            - model-specific ingredients (e.g. sea_area_fraction for the
+///              ocean): delegated to Geometry::addModelVaderIngredients, keeping
+///              model-specific logic out of this shared code.
 void addVaderGeometryIngredients(atlas::FieldSet & fset, const Geometry & geom);
 
 }  // namespace ijedi

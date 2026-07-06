@@ -29,6 +29,8 @@ namespace ijedi
                  atlas::FieldSet &, bool &, int &);
     void print(std::ostream &) const override;
     std::vector<double> verticalCoord(std::string &) const override;
+    void addVaderIngredients(const atlas::FieldSet & geomFields,
+                             atlas::FieldSet & fset, int nlevels) const override;
 
     // Accessors for MOM6-specific (structured) decomposition.
     // Used by ModelMOM6 for state injection — not exposed via GeometryBase.
