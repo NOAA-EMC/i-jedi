@@ -32,6 +32,7 @@ NPZ = 127         # number of full levels
 NTILES = 6
 NX = NPX - 1      # 12
 NY = NPY - 1      # 12
+NMEMS = 3
 HALO = 3
 
 # GFS L127 ak/bk (interface pressures: p_half = ak + bk * ps)
@@ -717,36 +718,44 @@ def main():
     outdir = sys.argv[1]
     os.makedirs(outdir, exist_ok=True)
 
-    # Fixed seed for reproducibility
-    rng = np.random.default_rng(seed=20201215)
+    # Generate test data for deterministic (imem == 0) and ensemble members (imem > 0)
+    seed = 20201215
+    for imem in range(0, NMEMS+1):
+        rng = np.random.default_rng(seed=seed)
+        suffix = ''
+        if imem > 0:
+            memstr = str(imem).zfill(3)
+            suffix = f'_mem{memstr}'
 
-    atm_path = os.path.join(outdir, "atmf006.nc")
-    generate_atmf(atm_path, rng)
-    print(f"  {atm_path}")
+        atm_path = os.path.join(outdir, f"atmf006{suffix}.nc")
+        generate_atmf(atm_path, rng)
+        print(f"  {atm_path}")
 
-    sfc_path = os.path.join(outdir, "sfcf006.nc")
-    generate_sfcf(sfc_path, rng)
-    print(f"  {sfc_path}")
+        sfc_path = os.path.join(outdir, f"sfcf006{suffix}.nc")
+        generate_sfcf(sfc_path, rng)
+        print(f"  {sfc_path}")
 
-    coupler_path = os.path.join(outdir, "coupler.res")
+        core_path = os.path.join(outdir, f"fv_core.res{suffix}.nc")
+        generate_fv_core_res(core_path)
+        print(f"  {core_path}")
+
+        core_tile_path = os.path.join(outdir, f"fv_core.res.tile1{suffix}.nc")
+        generate_fv_core_res_tile1(core_tile_path, rng)
+        print(f"  {core_tile_path}")
+
+        trcr_tile_path = os.path.join(outdir, f"fv_tracer.res.tile1{suffix}.nc")
+        generate_fv_tracer_res_tile1(trcr_tile_path, rng)
+        print(f"  {trcr_tile_path}")
+
+        sfcw_tile_path = os.path.join(outdir, f"fv_srf_wnd.res.tile1{suffix}.nc")
+        generate_fv_srf_wnd_res_tile1(sfcw_tile_path, rng)
+        print(f"  {sfcw_tile_path}")
+        
+        seed += 1
+
+    coupler_path = os.path.join(outdir, f"coupler.res")
     _write_restart_coupler(coupler_path)
     print(f"  {coupler_path}")
-
-    core_path = os.path.join(outdir, "fv_core.res.nc")
-    generate_fv_core_res(core_path)
-    print(f"  {core_path}")
-
-    core_tile_path = os.path.join(outdir, "fv_core.res.tile1.nc")
-    generate_fv_core_res_tile1(core_tile_path, rng)
-    print(f"  {core_tile_path}")
-
-    trcr_tile_path = os.path.join(outdir, "fv_tracer.res.tile1.nc")
-    generate_fv_tracer_res_tile1(trcr_tile_path, rng)
-    print(f"  {trcr_tile_path}")
-
-    sfcw_tile_path = os.path.join(outdir, "fv_srf_wnd.res.tile1.nc")
-    generate_fv_srf_wnd_res_tile1(sfcw_tile_path, rng)
-    print(f"  {sfcw_tile_path}")
 
     # Write FV3 grid metadata into a top-level INPUT directory
     # (sibling of data_generated/) so FMS can find it via INPUT paths.

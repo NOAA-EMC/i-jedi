@@ -4,6 +4,7 @@
 #include "ijedi/Applications/GeometryCache.h"
 #include "ijedi/Traits.h"
 
+#include "oops/runs/LocalEnsembleDA.h"
 #include "oops/runs/Run.h"
 #include "oops/runs/HofX3D.h"
 #include "oops/runs/Variational.h"
@@ -12,6 +13,8 @@
 #include "saber/oops/instantiateCovarFactory.h"
 #include "saber/oops/ErrorCovarianceToolbox.h"
 
+#include "ufo/obslocalization/ObsLocalization.h"
+#include "ufo/instantiateObsLocFactory.h"
 #include "ufo/instantiateObsFilterFactory.h"
 #include "ufo/ObsTraits.h"
 
@@ -27,6 +30,7 @@ int runApp(int argc, char **argv, const std::string appName)
 
   // Intantiate factories
   ufo::instantiateObsFilterFactory();
+  ufo::instantiateObsLocFactory<ijedi::Traits::GeometryIterator>();
   saber::instantiateCovarFactory<ijedi::Traits>();
 
   // Define a map from app names to lambda functions that create unique_ptr to Applications
@@ -37,6 +41,9 @@ int runApp(int argc, char **argv, const std::string appName)
   };
   apps["var"] = []() {
     return std::make_unique<oops::Variational<ijedi::Traits, ufo::ObsTraits>>();
+  };
+  apps["letkf"] = []() {
+    return std::make_unique<oops::LocalEnsembleDA<ijedi::Traits, ufo::ObsTraits>>();
   };
   apps["convertstate"] = []() {
     return std::make_unique<oops::ConvertState<ijedi::Traits>>();
@@ -73,7 +80,7 @@ int main(int argc, char **argv)
   // Check that the application is recognized
   // ----------------------------------------
   const std::set<std::string> validApps = {
-      "hofx3d", "var", "errortoolbox", "convertstate", "geometry_cache"
+      "hofx3d", "var", "letkf", "errortoolbox", "convertstate", "geometry_cache"
   };
   ASSERT_MSG(validApps.find(appName) != validApps.end(), "Application not recognized: " + appName);
 

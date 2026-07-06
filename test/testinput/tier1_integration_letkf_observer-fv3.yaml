@@ -1,0 +1,85 @@
+geometry: &geom
+  geometry_type: fv3
+  fms initialization:
+    namelist filename: data/fv3/input_c12.nml
+    field table filename: data/fv3/field_table
+  npx: 13
+  npy: 13
+  npz: 127
+  ntiles: 6
+  akbk: gfs_127
+
+time window:
+  begin: 2020-12-14T21:00:00Z
+  length: PT6H
+
+local ensemble DA:
+  solver: Deterministic LETKF
+  use linear observer: true
+  inflation:
+    rtps: 0.95
+    rtpp: 0.0
+    mult: 1.0
+
+driver:
+  update obs config with geometry info: false
+  do test prints: false
+  read HX from disk: false
+  run as observer only: true
+  save posterior mean: true
+  save prior mean: true
+
+analysis variables:
+  - air_temperature
+
+background:
+  date: 2020-12-15T00:00:00Z
+  members from template:
+    template:
+      date: 2020-12-15T00:00:00Z
+      state variables:
+        - air_temperature
+      io:
+        filetype: fv3 history
+        datapath: data_generated/fv3/
+        atm_file: atmf006_mem%mem%.nc
+        sfc_file: sfcf006_mem%mem%.nc
+        field io names:
+         air_temperature: tmp
+    pattern: '%mem%'
+    nmembers: 3
+    zero padding: 3
+
+observations:
+  observers:
+    - obs space:
+        name: Aircraft
+        obsdatain:
+         engine:
+           type: H5File
+           obsfile: data_generated/obs/aircraft.nc
+        obsdataout:
+         engine:
+           type: H5File
+           obsfile: data_generated/obs/jdiag_aircraft.nc
+        simulated variables:
+         - airTemperature
+        distribution:
+          name: RoundRobin
+          halo size: 2000e3
+      obs operator:
+        name: Identity
+        observation alias file: data/obs/obsop_name_map.yml
+      obs localizations: 
+      - localization method: Horizontal Gaspari-Cohn
+        lengthscale: 2000e3
+
+output:
+  io:
+    filetype: unstructured
+    filepath: letkf-fv3-an
+
+output mean prior:
+  io:
+    filetype: unstructured
+    filepath: letkf-fv3-bg
