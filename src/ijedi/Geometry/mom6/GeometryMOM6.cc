@@ -504,11 +504,17 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
     return f;
   };
 
-  // "owned": 1 for owned nodes, 0 for ghost nodes
+  // "owned": 1 for owned nodes, 0 for ghost nodes. The functionspace spans
+  // more nodes than jediPoints_ (build_halo appends periodic / northern-fold
+  // halo nodes), so initialise the whole field to 0 first - otherwise those
+  // extra halo nodes carry uninitialised "owned" flags, which is both a
+  // correctness hazard and a source of non-reproducible reductions.
   atlas::Field fOwned = functionSpace_.createField<int>(
       atlas::option::name("owned") | atlas::option::levels(1));
   auto vOwned = atlas::array::make_view<int, 2>(fOwned);
-  for (int n = 0; n < npts; ++n) vOwned(n, 0) = (n < ownedCount_) ? 1 : 0;
+  const int nOwnedField = static_cast<int>(fOwned.shape(0));
+  for (int n = 0; n < nOwnedField; ++n)
+    vOwned(n, 0) = (n < ownedCount_) ? 1 : 0;
   fields_.add(fOwned);
 
   atlas::Field fLon   = addField("lon");
@@ -527,12 +533,14 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
   atlas::Field fLayerThickness;
   atlas::Field fLayerCenterDepth;
   atlas::Field fVertCoord;
-  atlas::Field fMask3d;
+  // mask3d is always registered: the masked-cell flood fill depends on it, and
+  // mask3dGlobal is computed whether or not vertical geometry is read (without
+  // it, the surface wet mask is simply extruded to all levels).
+  atlas::Field fMask3d = addField("mask3d", numLevels_);
   if (buildVerticalGeometry) {
     fLayerThickness = addField("sea_water_cell_thickness", numLevels_);
     fLayerCenterDepth = addField("sea_water_depth", numLevels_);
     fVertCoord = addField("vert_coord", numLevels_);
-    fMask3d = addField("mask3d", numLevels_);
   }
 
   auto vLon   = atlas::array::make_view<double, 2>(fLon);
@@ -552,7 +560,6 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
     auto vLayerThickness = atlas::array::make_view<double, 2>(fLayerThickness);
     auto vLayerCenterDepth = atlas::array::make_view<double, 2>(fLayerCenterDepth);
     auto vVertCoord = atlas::array::make_view<double, 2>(fVertCoord);
-    auto vMask3d = atlas::array::make_view<double, 2>(fMask3d);
     for (int n = 0; n < npts; ++n) {
       const int iG   = jediPoints_[n].first;
       const int jG   = jediPoints_[n].second;
@@ -569,7 +576,6 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
         vLayerThickness(n, k) = layerThicknessGlobal[idx3D];
         vLayerCenterDepth(n, k) = layerCenterDepthGlobal[idx3D];
         vVertCoord(n, k) = layerCenterDepthGlobal[idx3D];
-        vMask3d(n, k) = mask3dGlobal[idx3D];
       }
       vAreaT(n, 0) = areaTGlobal[gIdx];
       vLonU(n, 0)  = lonUGlobal[gIdx];
@@ -597,9 +603,41 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
     }
   }
 
-  if (buildVerticalGeometry) {
-    buildDistFromCoast(lonGlobal, latGlobal, wetGlobal, mask3dGlobal);
+  // Fill mask3d unconditionally (registered above regardless of vertical
+  // geometry) so the masked-cell flood fill always has a per-level mask.
+  {
+    auto vMask3d = atlas::array::make_view<double, 2>(fMask3d);
+    for (int n = 0; n < npts; ++n) {
+      const int iG   = jediPoints_[n].first;
+      const int jG   = jediPoints_[n].second;
+      const int gIdx = jG * niEff_ + iG;
+      for (int k = 0; k < numLevels_; ++k) {
+        const size_t idx3D = static_cast<size_t>(k) * nHoriz + gIdx;
+        vMask3d(n, k) = mask3dGlobal[idx3D];
+      }
+    }
   }
+
+  // Halo-exchange the geometry fields so that the periodic / northern-fold halo
+  // nodes added by build_halo (which the jediPoints_ loop above does not cover)
+  // carry valid owner values. Without this, downstream consumers that iterate
+  // every functionspace node - notably the land-mask flood fill, which seeds on
+  // mask3d - read uninitialised halo memory, giving non-reproducible results
+  // run to run. "owned" is excluded: it must stay 1 on owned / 0 on ghost.
+  {
+    atlas::functionspace::NodeColumns fsHalo(functionSpace_);
+    for (auto & f : fields_) {
+      if (f.name() == "owned") continue;
+      fsHalo.haloExchange(f);
+    }
+  }
+
+  // TODO(guillaumevernieres): buildDistFromCoast is too slow at high resolution.
+  // Make it optional (config-gated) and/or optimize the distance-to-coast
+  // computation before re-enabling it here.
+  // if (buildVerticalGeometry) {
+  //   buildDistFromCoast(lonGlobal, latGlobal, wetGlobal, mask3dGlobal);
+  // }
 }
 
 // ---------------------------------------------------------------------------

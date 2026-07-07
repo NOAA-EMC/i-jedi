@@ -33,12 +33,14 @@ namespace ijedi
     std::string getDataKind() const { return dataKind_; }
     std::string getVectType() const { return VectType_; }
     std::string getVarUnits() const { return varUnits_; }
+    std::string getBcType() const { return bcType_; }
 
     // Set functions (strings)
     // -----------------------
     void setDataKind(std::string dataKind) { dataKind_ = dataKind; }
     void setVectType(std::string VectType) { VectType_ = VectType; }
     void setVarUnits(std::string varUnits) { varUnits_ = varUnits; }
+    void setBcType(std::string bcType) { bcType_ = bcType; }
 
     // Set number of levels
     // --------------------
@@ -80,20 +82,23 @@ namespace ijedi
     }
 
     // Validity macro
-    void validateVariable(std::vector<std::string> validOptions, std::string choice) const
+    void validateVariable(std::string property, std::vector<std::string> validOptions,
+                          std::string choice) const
     {
       auto result = std::find(validOptions.begin(), validOptions.end(), choice);
       if (result == std::end(validOptions))
       {
-        ABORT("FieldMetadata::validate For long name " + longName_ + " invalid kind: " + choice);
+        ABORT("FieldMetadata::validate For long name " + longName_ +
+              " invalid " + property + ": \"" + choice + "\"");
       }
     }
 
     // Check validity of choices
     void validate() const
     {
-      this->validateVariable(ValidDataKind_, dataKind_);
-      this->validateVariable(ValidVectType_, VectType_);
+      this->validateVariable("kind", ValidDataKind_, dataKind_);
+      this->validateVariable("vector type", ValidVectType_, VectType_);
+      this->validateVariable("bctype", ValidBcType_, bcType_);
     }
 
    private:
@@ -104,6 +109,12 @@ namespace ijedi
     std::string VectType_;
     bool isTracer_;
 
+    // Boundary-condition treatment for masked (land / below-bottom) cells:
+    //   "extrapolate" - nearest-ocean flood fill (Neumann / zero-gradient)
+    //   "zero"        - set masked cells to 0 (no-flux / no-slip)
+    //   "none"        - leave the field untouched
+    std::string bcType_ = "none";
+
     // Picked up from both default and override file
     std::string varUnits_;
 
@@ -113,6 +124,7 @@ namespace ijedi
     // Valid choices
     const std::vector<std::string> ValidDataKind_ = {"double", "integer"};
     const std::vector<std::string> ValidVectType_ = {"vector", "magnitude", "direction"};
+    const std::vector<std::string> ValidBcType_ = {"extrapolate", "zero", "none"};
 
     // Print method
     void print(std::ostream &os) const
@@ -129,6 +141,8 @@ namespace ijedi
          << "   Vector type: " << VectType_;
       os << std::endl
          << "   Tracer: " << isTracer_;
+      os << std::endl
+         << "   BC type: " << bcType_;
     }
   };
 
