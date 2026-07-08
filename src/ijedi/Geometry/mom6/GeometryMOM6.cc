@@ -1534,25 +1534,15 @@ std::vector<double> GeometryMOM6::verticalCoord(std::string &) const
 }
 
 // ---------------------------------------------------------------------------
-void GeometryMOM6::addVaderIngredients(const atlas::FieldSet & geomFields,
-                                       atlas::FieldSet & fset, int nlevels) const
+void GeometryMOM6::addModelVaderIngredients(const atlas::FieldSet & geomFields,
+                                            atlas::FieldSet & fset, int nlevels) const
 {
-  // sea_area_fraction: required by SeaWaterTemperature_B's Jacobian, which
-  // indexes it per level. The geometry carries only a 2D land/sea mask, so
-  // broadcast it across all model levels to keep the column access in bounds.
-  if (!fset.has("sea_area_fraction") && geomFields.has("mask2d")) {
-    const atlas::Field & mask2d = geomFields.field("mask2d");
-    atlas::Field saf = mask2d.functionspace().createField<double>(
-        atlas::option::name("sea_area_fraction") | atlas::option::levels(nlevels));
-    const auto maskView = atlas::array::make_view<double, 2>(mask2d);
-    auto safView = atlas::array::make_view<double, 2>(saf);
-    for (atlas::idx_t n = 0; n < saf.shape(0); ++n) {
-      for (int k = 0; k < nlevels; ++k) {
-        safView(n, k) = maskView(n, 0);
-      }
-    }
-    fset.add(saf);
-  }
+  // Ingredients for the SeaWaterTemperature_A/_B recipes:
+  //  - latitude/longitude, from the fieldset's own function space;
+  //  - sea_area_fraction, indexed per level by the _B Jacobian, so broadcast
+  //    the 2D land/sea mask across all levels.
+  addLonLatIngredients(fset);
+  addBroadcastIngredient(geomFields, "mask2d", "sea_area_fraction", nlevels, fset);
 }
 
 // ---------------------------------------------------------------------------

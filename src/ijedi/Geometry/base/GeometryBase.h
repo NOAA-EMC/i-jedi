@@ -33,13 +33,28 @@ namespace ijedi
     virtual void print(std::ostream &) const = 0;
     virtual std::vector<double> verticalCoord(std::string &) const = 0;
 
-    /// \brief Add model-specific Vader ingredient fields (e.g. masks, area
-    ///        fractions) to \p fset, sourced from the already-built geometry
-    ///        fields \p geomFields. Coordinates (latitude/longitude) are handled
-    ///        generically by the caller and are not the responsibility of models.
-    ///        Default: no-op (models without ocean-style ingredients need nothing).
-    virtual void addVaderIngredients(const atlas::FieldSet & geomFields,
-                                     atlas::FieldSet & fset, int nlevels) const {}
+    /// \brief Hook for models to add Vader ingredient fields that are not state
+    ///        variables (e.g. coordinates, masks, area fractions) to \p fset,
+    ///        sourced from the already-built geometry fields \p geomFields or
+    ///        the helpers below. Default: no-op.
+    virtual void addModelVaderIngredients(const atlas::FieldSet & geomFields,
+                                          atlas::FieldSet & fset, int nlevels) const {}
+
+   protected:
+    /// \brief Add single-level "longitude"/"latitude" ingredient fields to
+    ///        \p fset, sourced from its own function space, so any model can
+    ///        opt in regardless of how its geometry names coordinate fields.
+    ///        Fields already present are kept.
+    static void addLonLatIngredients(atlas::FieldSet & fset);
+
+    /// \brief Add geometry field \p geomName to \p fset under \p ingredientName,
+    ///        broadcasting the single-level source across \p nlevels (Vader
+    ///        recipes index ingredient fields per level). No-op if the ingredient
+    ///        is already present or the source field is missing.
+    static void addBroadcastIngredient(const atlas::FieldSet & geomFields,
+                                       const std::string & geomName,
+                                       const std::string & ingredientName,
+                                       int nlevels, atlas::FieldSet & fset);
   };
 
 }  // namespace ijedi

@@ -10,7 +10,6 @@
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/State/State.h"
 #include "ijedi/VariableChange/VaderCookbook.h"
-#include "ijedi/VariableChange/VaderIngredients.h"
 #include "mist/base/ModelData.h"
 #include "oops/base/Variables.h"
 
@@ -39,13 +38,11 @@ LinearVariableChange::LinearVariableChange(const Geometry & geometry,
 }
 
 void LinearVariableChange::changeVarTraj(const State & xx, const oops::Variables & vars) {
-  // SeaWaterTemperature_B's Jacobian needs latitude, longitude and
-  // sea_area_fraction in the trajectory fieldset (vader then computes the
-  // trajectory sea_water_temperature itself via the NL recipe). These are
-  // geometry coordinates/masks, not state variables, so inject them into a
-  // working copy of the trajectory before setting the linearization point.
+  // Some Vader recipes need geometry-sourced ingredient fields that are not
+  // state variables; inject them into a working copy of the trajectory before
+  // setting the linearization point.
   State traj(xx);
-  addVaderGeometryIngredients(traj.fieldSet(), geom_);
+  geom_.addVaderIngredients(traj.fieldSet());
   mist::LinearVariableChange::changeVarTraj(traj, vars);
 }
 

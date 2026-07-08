@@ -52,11 +52,11 @@ namespace ijedi
     // Function to access field metadata
     const FieldsMetadata &getFieldMetadata() const { return *fieldsMeta_; }
 
-    // Add model-specific Vader ingredient fields (masks, area fractions, ...)
-    // to fset, sourced from the built geometry fields. Coordinates are handled
-    // generically by the caller (see addVaderGeometryIngredients).
-    void addModelVaderIngredients(atlas::FieldSet &fset) const
-      { geometryImpl_->addVaderIngredients(fields(), fset, numberLevels_); }
+    // Add ingredient fields required by some Vader recipes that are not state
+    // variables. All sourcing is model-specific, via the per-model hook
+    // GeometryBase::addModelVaderIngredients (default no-op).
+    void addVaderIngredients(atlas::FieldSet &fset) const
+      { geometryImpl_->addModelVaderIngredients(fields(), fset, numberLevels_); }
 
    private:
     Geometry &operator=(const Geometry &);

@@ -10,7 +10,6 @@
 #include "eckit/config/Configuration.h"
 #include "eckit/config/LocalConfiguration.h"
 #include "ijedi/VariableChange/VaderCookbook.h"
-#include "ijedi/VariableChange/VaderIngredients.h"
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/State/State.h"
 #include "mist/base/ModelData.h"
@@ -54,7 +53,7 @@ void VariableChange::changeVar(State & xx, const oops::Variables & vars) const {
   // is needed (mist returns early in that case, which would otherwise leave the
   // fields in the state).
   if (!(vars == xx.variables())) {
-    addVaderGeometryIngredients(xx.fieldSet(), geom_);
+    geom_.addVaderIngredients(xx.fieldSet());
   }
 
   varchange_->changeVar(xx, vars);
