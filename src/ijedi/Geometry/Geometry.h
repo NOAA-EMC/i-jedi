@@ -52,6 +52,12 @@ namespace ijedi
     // Function to access field metadata
     const FieldsMetadata &getFieldMetadata() const { return *fieldsMeta_; }
 
+    // Add ingredient fields required by some Vader recipes that are not state
+    // variables. All sourcing is model-specific, via the per-model hook
+    // GeometryBase::addModelVaderIngredients (default no-op).
+    void addVaderIngredients(atlas::FieldSet &fset) const
+      { geometryImpl_->addModelVaderIngredients(fields(), fset, numberLevels_); }
+
    private:
     Geometry &operator=(const Geometry &);
     void print(std::ostream &) const;

@@ -1534,4 +1534,16 @@ std::vector<double> GeometryMOM6::verticalCoord(std::string &) const
 }
 
 // ---------------------------------------------------------------------------
+void GeometryMOM6::addModelVaderIngredients(const atlas::FieldSet & geomFields,
+                                            atlas::FieldSet & fset, int nlevels) const
+{
+  // Ingredients for the SeaWaterTemperature_A/_B recipes:
+  //  - latitude/longitude, from the fieldset's own function space;
+  //  - sea_area_fraction, indexed per level by the _B Jacobian, so broadcast
+  //    the 2D land/sea mask across all levels.
+  addLonLatIngredients(fset);
+  addBroadcastIngredient(geomFields, "mask2d", "sea_area_fraction", nlevels, fset);
+}
+
+// ---------------------------------------------------------------------------
 }  // namespace ijedi
