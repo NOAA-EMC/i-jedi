@@ -59,6 +59,8 @@ list(APPEND ijedi_src_files
   Io/mom6/WriteMOM6Netcdf.h
   Io/unstructured/IoUnstructured.cc
   Io/unstructured/IoUnstructured.h
+  Io/StructuredGrid/IOStructuredGrid.cc
+  Io/StructuredGrid/IOStructuredGrid.h
 
   # Variable change
   VariableChange/SeaSurfaceTemperature.h
