@@ -189,8 +189,8 @@ namespace ijedi
       } else {
         lc.set("type", "linear");
         lc.set("N", nlons);
-        lc.set("interval", std::vector<double>{{0.0, 360.0}});   //359.0625}}); 
-        lc.set("endpoint", lendp);
+        lc.set("interval", std::vector<double>{{0.0, 360.0}});    //359.0625}}); //    
+        lc.set("endpoint", lendp);   //false);
       }
       return lc;
     };

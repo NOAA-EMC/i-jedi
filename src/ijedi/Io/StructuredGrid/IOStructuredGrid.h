@@ -107,7 +107,7 @@ class IOStructuredGridParameters : public IoParametersBase {
 // -------------------------------------------------------------------------------------------------
 class IOStructuredGrid : public IoBase, private util::ObjectCounter<IOStructuredGrid> {
  public:
-  static const std::string classname() {return "fv3jedi::IOStructuredGrid";}
+  static const std::string classname() {return "ijedi::IOStructuredGrid";}
 
   typedef IOStructuredGridParameters Parameters_;
 
