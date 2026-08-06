@@ -67,16 +67,34 @@ class GeometryLandVector : public GeometryBase {
 
   
  private:
+
+  void readLatLonElevFromFile(const std::string, const std::string, const std::string, const std::string,
+    std::vector<double> &, std::vector<double> &, std::vector<double> &);
+    
   const eckit::mpi::Comm & comm_;
   atlas::FunctionSpace functionSpace_;
-  atlas::FunctionSpace global_functionSpace_
   atlas::FieldSet fields_;
+ 
+  atlas::Grid grid_;
 
   int numLevels_ = 1;
 
   // Atlas field containers for coordinates
-  atlas::Field lonlatField_;
+  //atlas::Field lonlatField_;
+  //atlas::Field globalIndexField_;
   atlas::Field elevationField_;
+  atlas::Field lat_;
+  atlas::Field lon_;
+
+  atlas::Field lonlat_;
+  atlas::Field partition_; 
+  mutable atlas::Field ghost_;
+  atlas::Field global_index_;
+  mutable atlas::Field remote_index_;
+  atlas::Field owned_;
+  atlas::Field area_;
+  atlas::Field vertical_;
+
 };
 
 }  // namespace ijedi

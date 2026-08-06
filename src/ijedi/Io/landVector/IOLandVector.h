@@ -46,8 +46,8 @@ class IOLandVectorParameters : public IoParametersBase {
                                                               "names of the files to be read",
                                                               this};
   // Filename of output
-  oops::OptionalParameter<std::string> filename{"filename", "filename", this}; 
-                                        //"cube_to_geometric_%Y%m%dT%H%M%S.nc4", this};
+  oops::Parameter<std::string> filename{"filename", "filename", 
+                                        "landVector_%Y%m%dT%H%M%S.nc4", this};
 
   // Filename of geom input (for reading lat/lon/elevation from a NetCDF file)
   oops::OptionalParameter<std::string> geomfilename{"geom filename",
@@ -112,11 +112,13 @@ class IOLandVector : public IoBase, private util::ObjectCounter<IOLandVector> {
   void writeVector(const T & obj, const std::string & label,
                       const eckit::LocalConfiguration & fileionames,
                       const eckit::LocalConfiguration & fileioscaling) const;
-  void writeVectorFields(const atlas::FieldSet &, const util::DateTime &,
+  void writeVectorFields(const atlas::FieldSet &, //const util::DateTime &,
+                             size_t num_points,
                              const eckit::LocalConfiguration &,
                              const eckit::LocalConfiguration &) const;
   void readVectorFields(std::string pathFile,
                             atlas::FieldSet &, const util::DateTime &,
+                            size_t, size_t,
                             const eckit::LocalConfiguration &,
                             const eckit::LocalConfiguration &) const;
 

@@ -55,7 +55,7 @@ namespace ijedi
       return std::make_shared<GeometryGsibec>(geomConf, comm, geomVars, functionSpace, fieldSet,
                                               levelsAreTopDown, numLevels);
     }
-    if (type == "land_vector")
+    if (type == "landVector")
     {
       return std::make_shared<GeometryLandVector>(geomConf, comm, geomVars, functionSpace, fieldSet,
                                               levelsAreTopDown, numLevels);
