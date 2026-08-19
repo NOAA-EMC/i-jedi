@@ -23,9 +23,9 @@ VariableChange::VariableChange(const eckit::Configuration & varchangeConfig,
                                const Geometry & geometry) : geom_(geometry) {
   oops::Log::trace() << "ijedi::VariableChange::VariableChange starting" << std::endl;
   eckit::LocalConfiguration configCookbook{};
-  // If config has "vader cookbook" then use that, else use default
-  if (varchangeConfig.has("vader cookbook")) {
-    configCookbook = varchangeConfig.getSubConfiguration("vader cookbook");
+  // If config has "vader custom cookbook" then use that, else use default
+  if (varchangeConfig.has("vader custom cookbook")) {
+    configCookbook = varchangeConfig.getSubConfiguration("vader custom cookbook");
   } else {
     const auto cb = ijedi::vaderDefaultCookbook();
     for (const auto & [key, val] : cb) {

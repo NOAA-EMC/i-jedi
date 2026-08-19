@@ -19,9 +19,9 @@ LinearVariableChange::LinearVariableChange(const Geometry & geometry,
                                            const eckit::Configuration & varchangeConfig)
     : geom_(geometry) {
   eckit::LocalConfiguration configCookbook{};
-  // If config has "vader cookbook" then use that, else use default
-  if (varchangeConfig.has("vader cookbook")) {
-    configCookbook = varchangeConfig.getSubConfiguration("vader cookbook");
+  // If config has "vader custom cookbook" then use that, else use default
+  if (varchangeConfig.has("vader custom cookbook")) {
+    configCookbook = varchangeConfig.getSubConfiguration("vader custom cookbook");
   } else {
     const auto cb = ijedi::vaderDefaultCookbook();
     for (const auto & [key, val] : cb) {
