@@ -47,18 +47,34 @@ namespace ijedi
     // Expose vertical ordering to downstream components such as Vader recipes.
     modelData_.set("levels_are_top_down", levelsAreTopDown_);
 
-    // Reference pressure column used by vertical localization. Prefer one published by
-    // the model geometry (which can follow that model's own mid-layer convention, see
-    // GeometryFV3), then mist's generic hybrid-sigma version, then level indices.
-    if (modelData_.has("vertical_coordinate_reference_pressure")) {
+    // Reference pressure column used by vertical localization, now chosen by "vertical
+    // coordinate source". The default prefers one published by the model geometry (which can
+    // follow that model's own mid-layer convention, see GeometryFV3), then mist's generic
+    // hybrid-sigma version, then level indices.
+    const std::string vertCoordSource =
+        geomConf.getString("vertical coordinate source", "model");
+    if (vertCoordSource != "model" && vertCoordSource != "hybrid sigma" &&
+        vertCoordSource != "level index") {
+      throw eckit::BadValue("ijedi::Geometry: 'vertical coordinate source' must be 'model', "
+                            "'hybrid sigma' or 'level index'", Here());
+    }
+
+    const bool hasModelColumn = modelData_.has("vertical_coordinate_reference_pressure");
+    const bool hasHybridCoeffs =
+        modelData_.has("sigma_pressure_hybrid_coordinate_a_coefficient") &&
+        modelData_.has("sigma_pressure_hybrid_coordinate_b_coefficient");
+
+    if (vertCoordSource == "model" && hasModelColumn) {
       verticalCoord_ = modelData_.getDoubleVector("vertical_coordinate_reference_pressure");
-    } else if (modelData_.has("sigma_pressure_hybrid_coordinate_a_coefficient") &&
-               modelData_.has("sigma_pressure_hybrid_coordinate_b_coefficient")) {
+    } else if (vertCoordSource != "level index" && hasHybridCoeffs) {
       const std::vector<double> ak =
           modelData_.getDoubleVector("sigma_pressure_hybrid_coordinate_a_coefficient");
       const std::vector<double> bk =
           modelData_.getDoubleVector("sigma_pressure_hybrid_coordinate_b_coefficient");
       verticalCoord_ = std::get<0>(mist::setupReferencePressure(functionspace_, ak, bk));
+    } else if (vertCoordSource == "hybrid sigma") {
+      throw eckit::BadValue("ijedi::Geometry: 'vertical coordinate source: hybrid sigma' needs "
+                            "the hybrid-sigma ak/bk coefficients in the model data", Here());
     } else {
       verticalCoord_.resize(numberLevels_);
       std::iota(verticalCoord_.begin(), verticalCoord_.end(), 0.0);
