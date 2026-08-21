@@ -285,6 +285,19 @@ namespace ijedi
       throw eckit::BadValue("FV3 surface_geopotential size does not match ngrid", Here());
     }
 
+    // Reference pressure column for vertical localization, using FV3's own Philips
+    // mid-layer convention at psurf = 1e5 to match fv3-jedi's verticalCoord("logp").
+    // mist's generic arithmetic mid-layer instead perturbs GETKF increments by ~0.2%.
+    {
+      constexpr double referenceSurfacePressure = 1.0e5;
+      std::vector<double> edgePressure(ak.size());
+      for (size_t k = 0; k < edgePressure.size(); ++k) {
+        edgePressure[k] = ak[k] + bk[k] * referenceSurfacePressure;
+      }
+      geomVariables.set("vertical_coordinate_reference_pressure",
+                        fv3MidlayerPressurePhilips(edgePressure, getConstant("kappa")));
+    }
+
     const std::string vertCoordType = params.vertCoord;
     if (vertCoordType != "sigma" && vertCoordType != "logp" && vertCoordType != "orography") {
       throw eckit::BadValue("Unsupported FV3 vertical coordinate type for vert_coord: "
