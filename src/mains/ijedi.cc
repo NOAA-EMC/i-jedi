@@ -4,6 +4,7 @@
 #include "ijedi/Applications/GeometryCache.h"
 #include "ijedi/Traits.h"
 
+#include "oops/runs/Forecast.h"
 #include "oops/runs/LocalEnsembleDA.h"
 #include "oops/runs/Run.h"
 #include "oops/runs/HofX3D.h"
@@ -36,6 +37,9 @@ int runApp(int argc, char **argv, const std::string appName)
   // Define a map from app names to lambda functions that create unique_ptr to Applications
   std::map<std::string, std::function<std::unique_ptr<oops::Application>()>> apps;
 
+  apps["forecast"] = []() {
+    return std::make_unique<oops::Forecast<ijedi::Traits>>();
+  };
   apps["hofx3d"] = []() {
     return std::make_unique<oops::HofX3D<ijedi::Traits, ufo::ObsTraits>>();
   };
@@ -80,7 +84,7 @@ int main(int argc, char **argv)
   // Check that the application is recognized
   // ----------------------------------------
   const std::set<std::string> validApps = {
-      "hofx3d", "var", "letkf", "errortoolbox", "convertstate", "geometry_cache"
+      "forecast", "hofx3d", "var", "letkf", "errortoolbox", "convertstate", "geometry_cache"
   };
   ASSERT_MSG(validApps.find(appName) != validApps.end(), "Application not recognized: " + appName);
 

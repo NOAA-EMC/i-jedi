@@ -1,0 +1,69 @@
+# The oops linear-model battery against i-jedi's persistence linear model.
+#
+# This exercises i-jedi's LinearModel plumbing - the factory, the dispatcher, the increment
+# handling and the forward and backward clock - without involving Python. The identity model
+# is its own adjoint, so it passes the dot-product test trivially and is exactly linear, which
+# is what makes it a clean check of everything around it.
+geometry: &geom
+  geometry_type: atlas
+  function space: StructuredColumns
+  grid:
+    type: regular_gaussian
+    N: 32
+  levels are top down: true
+  vertical levels: &levels [100, 200, 300, 500, 700, 1000, 2000, 3000, 5000, 7000,
+                    10000, 12500, 15000, 17500, 20000, 22500, 25000, 30000,
+                    35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000,
+                    75000, 77500, 80000, 82500, 85000, 87500, 90000, 92500,
+                    95000, 97500, 100000]
+
+analysis variables: &vars
+- eastward_wind
+- northward_wind
+- air_temperature
+
+model:
+  name: PythonModel
+  adapter: stub-persistence
+  backend: stub
+  time step: PT1H
+  declaration:
+    description: stub persistence model on the ERA5 pressure levels
+    timestep: PT1H
+    levels: *levels
+    input variables:
+      u_component_of_wind: eastward_wind
+      v_component_of_wind: northward_wind
+      temperature: air_temperature
+
+linear model:
+  name: Persistence
+  time step: PT1H
+
+initial condition:
+  date: 2026-01-01T00:00:00Z
+  state variables: *vars
+  io:
+    filetype: structured netcdf
+    filepath: data_generated/aimodel/aimodel_n32_l37.nc
+    field io names:
+      eastward_wind: u_component_of_wind
+      northward_wind: v_component_of_wind
+      air_temperature: temperature
+
+model aux control: {}
+model aux error: {}
+
+background error:
+  # mist's own covariance: identity, with randomize drawing white noise. The test only needs
+  # a source of random increments, and a spectral SABER covariance would additionally require
+  # the geometry to be partitioned with atlas's TransPartitioner rather than the default
+  # equal_regions.
+  covariance model: ijediError
+
+linear model test:
+  forecast length: PT3H
+  tolerance AD: 1.0e-11
+  tolerance TL: 1.0e-11
+  iterations TL: 3
+  first multiplier TL: 1.0e-2

@@ -1,0 +1,28 @@
+Input state: 
+  Valid time: 2026-01-01T00:00:00Z, nFields = 5
+eastward_wind           : Min=-4.9985175133e+00, Max=1.8363069534e+01, RMS=5.6419398065e+00
+northward_wind          : Min=-7.9952564240e+00, Max=7.9952564240e+00, RMS=3.4776765604e+00
+air_temperature         : Min=2.1707084656e+02, Max=2.9295761108e+02, RMS=2.3554554277e+02
+geopotential            : Min=2.9646837711e-01, Max=4.9613075000e+05, RMS=1.9268330523e+05
+sea_surface_temperature : Min=2.7137115479e+02, Max=3.0297286987e+02, RMS=2.8454224995e+02
+Output state: 
+  Valid time: 2026-01-01T00:00:00Z, nFields = 5
+eastward_wind           : Min=-4.9985175133e+00, Max=1.8363069534e+01, RMS=5.6419398065e+00
+northward_wind          : Min=-7.9952564240e+00, Max=7.9952564240e+00, RMS=3.4776765604e+00
+air_temperature         : Min=2.1707084656e+02, Max=2.9295761108e+02, RMS=2.3554554277e+02
+geopotential            : Min=2.9646837711e-01, Max=4.9613075000e+05, RMS=1.9268330523e+05
+sea_surface_temperature : Min=2.7137115479e+02, Max=3.0297286987e+02, RMS=2.8454224995e+02
+Input state: 
+  Valid time: 2026-01-01T00:00:00Z, nFields = 5
+eastward_wind           : Min=-4.9985175133e+00, Max=1.8363069534e+01, RMS=5.6419398065e+00
+northward_wind          : Min=-7.9952564240e+00, Max=7.9952564240e+00, RMS=3.4776765604e+00
+air_temperature         : Min=2.1707084656e+02, Max=2.9295761108e+02, RMS=2.3554554277e+02
+geopotential            : Min=2.9646837711e-01, Max=4.9613075000e+05, RMS=1.9268330523e+05
+sea_surface_temperature : Min=2.7137115479e+02, Max=3.0297286987e+02, RMS=2.8454224995e+02
+Output state: 
+  Valid time: 2026-01-01T00:00:00Z, nFields = 5
+eastward_wind           : Min=-4.9985175133e+00, Max=1.8363069534e+01, RMS=5.6419398065e+00
+northward_wind          : Min=-7.9952564240e+00, Max=7.9952564240e+00, RMS=3.4776765604e+00
+air_temperature         : Min=2.1707084656e+02, Max=2.9295761108e+02, RMS=2.3554554277e+02
+geopotential            : Min=2.9646837711e-01, Max=4.9613075000e+05, RMS=1.9268330523e+05
+sea_surface_temperature : Min=2.7137115479e+02, Max=3.0297286987e+02, RMS=2.8454224995e+02

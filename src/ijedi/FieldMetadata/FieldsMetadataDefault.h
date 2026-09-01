@@ -703,6 +703,14 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "geopotential";
+    md.units = "m+2s-2";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "geopotential_height";
     md.units = "m";
     md.kind = "double";

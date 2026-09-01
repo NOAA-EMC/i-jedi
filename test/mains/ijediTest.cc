@@ -7,6 +7,7 @@
 #include "oops/test/interface/Geometry.h"
 #include "oops/test/interface/GeometryIterator.h"
 #include "oops/test/interface/Increment.h"
+#include "oops/test/interface/LinearModel.h"
 #include "oops/test/interface/State.h"
 
 // -------------------------------------------------------------------------------------------------
@@ -38,6 +39,14 @@ int runApp(int argc, char **argv, const std::string testName)
   {
     return std::make_unique<test::GeometryIterator<ijedi::Traits>>();
   };
+  tests["linearmodel"] = []()
+  {
+    // test::LinearModel instantiates the oops model, linear model and covariance factories
+    // itself. Instantiating any of them again here would register every maker a second time
+    // and abort with "already registered", because those functions loop over names() on
+    // every call while their maker vector is a function-local static.
+    return std::make_unique<test::LinearModel<ijedi::Traits>>();
+  };
 
   // Create application object and point to it
   auto it = tests.find(testName);
@@ -68,6 +77,7 @@ int main(int argc, char **argv)
       "geometryiterator",
       "state",
       "increment",
+      "linearmodel",
   };
   ASSERT_MSG(validtests.find(testApp) != validtests.end(), "Test not recognized: " + testApp);
 

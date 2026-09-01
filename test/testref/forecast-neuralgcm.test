@@ -1,0 +1,22 @@
+Initial state: 
+  Valid time: 1959-01-02T00:00:00Z, nFields = 9
+eastward_wind                          : Min=-1.1007260132e+02, Max=1.5275094604e+02, RMS=2.0039255103e+01
+northward_wind                         : Min=-7.5852348328e+01, Max=7.7485771179e+01, RMS=8.7310574646e+00
+air_temperature                        : Min=1.8314347839e+02, Max=3.0641070557e+02, RMS=2.4827104926e+02
+geopotential                           : Min=-2.2901359863e+03, Max=4.9775053125e+05, RMS=1.7995031471e+05
+water_vapor_mixing_ratio_wrt_moist_air : Min=1.3826963823e-06, Max=1.8543967977e-02, RMS=3.6961303796e-03
+cloud_liquid_water                     : Min=-1.1641532183e-10, Max=3.0611534021e-04, RMS=1.3438387146e-05
+cloud_liquid_ice                       : Min=-1.4551915228e-11, Max=1.7459795345e-04, RMS=5.3049626993e-06
+sea_surface_temperature                : Min=2.7146044922e+02, Max=3.0383050537e+02, RMS=2.8482007738e+02
+sea_ice_area_fraction                  : Min=0.0000000000e+00, Max=1.0000000000e+00, RMS=4.5524045876e-01
+Final state: 
+  Valid time: 1959-01-02T06:00:00Z, nFields = 9
+eastward_wind                          : Min=-3.9351951599e+01, Max=7.3301475525e+01, RMS=1.5561384769e+01
+northward_wind                         : Min=-5.4858940125e+01, Max=4.8074890137e+01, RMS=8.0706561767e+00
+air_temperature                        : Min=1.6977793884e+02, Max=3.1446109009e+02, RMS=2.4271003005e+02
+geopotential                           : Min=-2.3942573242e+03, Max=3.4606121875e+05, RMS=1.5282151852e+05
+water_vapor_mixing_ratio_wrt_moist_air : Min=-8.5641106125e-04, Max=1.9494691864e-02, RMS=3.7033584016e-03
+cloud_liquid_water                     : Min=-6.9309520768e-05, Max=3.2569398172e-04, RMS=1.4999951512e-05
+cloud_liquid_ice                       : Min=-3.2364234357e-05, Max=1.5696036280e-04, RMS=5.8578251284e-06
+sea_surface_temperature                : Min=2.7146044922e+02, Max=3.0383050537e+02, RMS=2.8482007738e+02
+sea_ice_area_fraction                  : Min=0.0000000000e+00, Max=1.0000000000e+00, RMS=4.5524045876e-01

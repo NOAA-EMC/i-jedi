@@ -1,0 +1,27 @@
+# NeuralGCM's native grid: the regular Gaussian grid the pretrained pressure-level models are
+# defined on (N=32 gives 128 longitudes x 64 latitudes, matching TL63), and the 37 ERA5
+# pressure levels as the vertical coordinate.
+#
+# "vertical levels" fixes the level count, publishes the reference pressure column that
+# vertical localization reads, and builds the vert_coord field that "iterator dimension: 3"
+# needs - so this input exercises all three of those paths.
+geometry:
+  geometry_type: atlas
+  function space: StructuredColumns
+  grid:
+    type: regular_gaussian
+    N: 32
+  levels are top down: true
+  vertical levels: [100, 200, 300, 500, 700, 1000, 2000, 3000, 5000, 7000,
+                    10000, 12500, 15000, 17500, 20000, 22500, 25000, 30000,
+                    35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000,
+                    75000, 77500, 80000, 82500, 85000, 87500, 90000, 92500,
+                    95000, 97500, 100000]
+  iterator dimension: 3
+inc variables:
+- eastward_wind
+- northward_wind
+- air_temperature
+- geopotential
+increment test:
+  date: 2026-01-01T00:00:00Z

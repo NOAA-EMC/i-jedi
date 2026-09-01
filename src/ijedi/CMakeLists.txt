@@ -57,6 +57,10 @@ list(APPEND ijedi_src_files
   Io/mom6/ReadMOM6Netcdf.h
   Io/mom6/WriteMOM6Netcdf.cc
   Io/mom6/WriteMOM6Netcdf.h
+  Io/structured/IoStructuredNetcdf.cc
+  Io/structured/IoStructuredNetcdf.h
+  Io/structured/StructuredGridLayout.cc
+  Io/structured/StructuredGridLayout.h
   Io/unstructured/IoUnstructured.cc
   Io/unstructured/IoUnstructured.h
 
@@ -72,9 +76,33 @@ list(APPEND ijedi_src_files
   LinearVariableChange/LinearVariableChange.cc
   LinearVariableChange/LinearVariableChange.h
 
-  # Model and LinearModel (persistence and identity)
+  # Model
+  Model/Model.cc
   Model/Model.h
+  Model/base/ModelBase.cc
+  Model/base/ModelBase.h
+  Model/persistence/ModelPersistence.cc
+  Model/persistence/ModelPersistence.h
+  Model/python/FieldExchange.cc
+  Model/python/FieldExchange.h
+  Model/python/ModelPython.cc
+  Model/python/ModelPython.h
+  Model/python/PyModelBridge.cc
+  Model/python/PyModelBridge.h
+  Model/python/StubPyModelBridge.cc
+  Model/python/StubPyModelBridge.h
+  Model/python/SubprocessPyModelBridge.cc
+  Model/python/SubprocessPyModelBridge.h
+
+  # LinearModel
+  LinearModel/LinearModel.cc
   LinearModel/LinearModel.h
+  LinearModel/base/LinearModelBase.cc
+  LinearModel/base/LinearModelBase.h
+  LinearModel/persistence/LinearModelPersistence.cc
+  LinearModel/persistence/LinearModelPersistence.h
+  LinearModel/python/LinearModelPython.cc
+  LinearModel/python/LinearModelPython.h
 
   # Utilities
   Utilities/Constants.cc
@@ -160,6 +188,16 @@ ecbuild_add_library(TARGET ${PROJECT_NAME}
   INSTALL_HEADERS LISTED
   LINKER_LANGUAGE CXX
 )
+
+# The out-of-process model transport execs this directory's server script. Bake the source
+# location in as the default; an installed deployment overrides it with 'server script' in
+# the yaml.
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE IJEDI_PYTHON_MODULE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/Model/python")
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/Model/python/
+        DESTINATION share/${PROJECT_NAME}/python
+        FILES_MATCHING PATTERN "*.py")
 
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)

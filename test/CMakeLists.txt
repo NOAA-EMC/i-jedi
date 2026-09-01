@@ -13,6 +13,29 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/aimodel)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/neuralgcm)
+
+# ###############################################################################
+# NeuralGCM tests
+#
+# NeuralGCM runs in its own python virtual environment, deliberately outside the JEDI build:
+# it needs numpy 2.x where spack-stack provides 1.26, so the two cannot be merged. Create the
+# environment with tools/setup_python_model_env.sh and point IJEDI_PYTHON_ENV at it, either
+# here or in the environment at test time. Without it these tests report as skipped rather
+# than failed - a build on a machine with no model environment is not broken.
+# ###############################################################################
+set(IJEDI_PYTHON_ENV "$ENV{IJEDI_PYTHON_ENV}" CACHE PATH
+    "Virtual environment holding the python forecast models (NeuralGCM and friends)")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tools/run_if_neuralgcm.sh
+               ${CMAKE_CURRENT_BINARY_DIR}/run_if_neuralgcm.sh @ONLY)
+
+if(NOT IJEDI_PYTHON_ENV)
+  message(STATUS "IJEDI_PYTHON_ENV is not set: the NeuralGCM tests will report as skipped")
+else()
+  message(STATUS "NeuralGCM python environment: ${IJEDI_PYTHON_ENV}")
+endif()
 
 # Link the directory 'testref' to the test directory of the build
 # ---------------------------------------------------------------
@@ -33,10 +56,24 @@ ecbuild_add_test(TARGET  ijedi_setup_obs_testdata
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_obs_testdata.py
                  ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/data/obs ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 
+ecbuild_add_test(TARGET  ijedi_setup_aimodel_testdata
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_aimodel_testdata.py
+                 ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/aimodel)
+
 ecbuild_add_test(TARGET ijedi_setup_fv3_testdata
                  TYPE SCRIPT
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_fv3_testdata.py
                  ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+
+ecbuild_add_test(TARGET  ijedi_setup_neuralgcm_testdata
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_BINARY_DIR}/run_if_neuralgcm.sh
+                 ARGS    PYTHON
+                         ${CMAKE_CURRENT_SOURCE_DIR}/../tools/stage_neuralgcm_data.py
+                         ${CMAKE_CURRENT_BINARY_DIR}/data_generated/neuralgcm
+                         --hours 6 --seed 0)
+set_tests_properties(ijedi_setup_neuralgcm_testdata PROPERTIES SKIP_RETURN_CODE 77)
 
 # Geometry tests
 ecbuild_add_test( TARGET  ijedi_geometry_fv3
@@ -50,6 +87,13 @@ ecbuild_add_test( TARGET  ijedi_geometry_atlas
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi_test.x>
                   ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-atlas.yaml)
+
+ecbuild_add_test( TARGET  ijedi_geometry_neuralgcm
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometry
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-neuralgcm.yaml)
 
 ecbuild_add_test( TARGET  ijedi_geometry_gsibec
                   MPI     2
@@ -77,6 +121,13 @@ ecbuild_add_test( TARGET  ijedi_geometryiterator_mom6
                   COMMAND $<TARGET_FILE:ijedi_test.x>
                   ARGS    geometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
+
+ecbuild_add_test( TARGET  ijedi_geometryiterator_neuralgcm_3diter
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometryiterator
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-neuralgcm.yaml)
 
 ecbuild_add_test( TARGET  ijedi_geometryiterator_fv3_3diter
                   MPI     6
@@ -235,6 +286,67 @@ ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_fv3
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_fv3.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_fv3_testdata)
+
+# A NeuralGCM forecast, on NeuralGCM's own native grid, checked field by field against a
+# rollout that ran entirely in Python and never went through the bridge.
+ecbuild_add_test( TARGET  ijedi_forecast_neuralgcm
+                  MPI     2
+                  OMP     1
+                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/run_if_neuralgcm.sh
+                  ARGS    $<TARGET_FILE:ijedi.x> forecast
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_forecast-neuralgcm.yaml
+                  TEST_DEPENDS ijedi_setup_neuralgcm_testdata)
+set_tests_properties(ijedi_forecast_neuralgcm PROPERTIES SKIP_RETURN_CODE 77)
+
+ecbuild_add_test( TARGET  ijedi_check_neuralgcm_forecast
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/run_if_neuralgcm.sh
+                  ARGS    PYTHON
+                          ${CMAKE_CURRENT_SOURCE_DIR}/tools/compare_neuralgcm_forecast.py
+                          ${CMAKE_CURRENT_BINARY_DIR}/forecast-neuralgcm-tl63.nc
+                          ${CMAKE_CURRENT_BINARY_DIR}/data_generated/neuralgcm/neuralgcm_ref_tl63.nc
+                  TEST_DEPENDS ijedi_forecast_neuralgcm)
+set_tests_properties(ijedi_check_neuralgcm_forecast PROPERTIES SKIP_RETURN_CODE 77)
+
+# Linear model: the oops battery against i-jedi's persistence linear model. Exercises the
+# LinearModel factory, dispatcher, increment handling and the forward and backward clock,
+# with no python involved. Persistence is exactly linear and its own adjoint, so both the
+# TL and AD cases should hold to machine precision.
+ecbuild_add_test( TARGET  ijedi_linearmodel_persistence
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    linearmodel
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_linearmodel-persistence.yaml
+                  TEST_DEPENDS ijedi_setup_aimodel_testdata)
+
+# NeuralGCM's tangent linear and adjoint, checked against each other by the dot-product
+# identity. Derived by automatic differentiation, so this should hold to rounding.
+ecbuild_add_test( TARGET  ijedi_tlad_neuralgcm
+                  TYPE    SCRIPT
+                  COMMAND ${CMAKE_CURRENT_BINARY_DIR}/run_if_neuralgcm.sh
+                  ARGS    PYTHON
+                          ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_neuralgcm_tlad.py
+                          ${CMAKE_CURRENT_BINARY_DIR}/data_generated/neuralgcm/neuralgcm_ic_tl63.nc
+                  TEST_DEPENDS ijedi_setup_neuralgcm_testdata)
+set_tests_properties(ijedi_tlad_neuralgcm PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 1800)
+
+# Python-model interface, exercised with the stub backend (no Python required)
+ecbuild_add_test( TARGET  ijedi_forecast_python_stub
+                  MPI     4
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    forecast
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_forecast-python-stub.yaml
+                  TEST_DEPENDS ijedi_setup_aimodel_testdata)
+
+ecbuild_add_test( TARGET  ijedi_convertstate_aimodel
+                  MPI     4
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    convertstate
+                          ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-aimodel.yaml
+                  TEST_DEPENDS ijedi_setup_aimodel_testdata)
 
 ecbuild_add_test( TARGET  ijedi_convertstate_fv3_to_atlas
                   MPI     6

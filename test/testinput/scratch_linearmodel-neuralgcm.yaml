@@ -1,0 +1,91 @@
+# The oops linear-model battery against NeuralGCM's tangent linear and adjoint.
+# NOT registered as a ctest: see the report in the linear model notes. The adjoint
+# case should hold to rounding; the TL approximation case is a scientific question
+# about the model, not a property of the interface, and is measured rather than gated.
+#
+# This exercises i-jedi's LinearModel plumbing - the factory, the dispatcher, the increment
+# handling and the forward and backward clock - without involving Python. The identity model
+# is its own adjoint, so it passes the dot-product test trivially and is exactly linear, which
+# is what makes it a clean check of everything around it.
+geometry: &geom
+  geometry_type: atlas
+  function space: StructuredColumns
+  grid:
+    type: regular_gaussian
+    N: 32
+  levels are top down: true
+  vertical levels: &levels [100, 200, 300, 500, 700, 1000, 2000, 3000, 5000, 7000,
+                    10000, 12500, 15000, 17500, 20000, 22500, 25000, 30000,
+                    35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000,
+                    75000, 77500, 80000, 82500, 85000, 87500, 90000, 92500,
+                    95000, 97500, 100000]
+
+analysis variables: &vars
+- eastward_wind
+- northward_wind
+- air_temperature
+- geopotential
+- water_vapor_mixing_ratio_wrt_moist_air
+- cloud_liquid_water
+- cloud_liquid_ice
+
+model:
+  name: PythonModel
+  adapter: neuralgcm
+  backend: subprocess
+  time step: PT1H
+  adapter config:
+    checkpoint: demo
+    rng seed: 0
+
+linear model:
+  name: PythonModel
+  adapter: neuralgcm
+  backend: subprocess
+  time step: PT1H
+  adapter config:
+    checkpoint: demo
+    rng seed: 0
+
+initial condition:
+  date: 1959-01-02T00:00:00Z
+  state variables:
+  - eastward_wind
+  - northward_wind
+  - air_temperature
+  - geopotential
+  - water_vapor_mixing_ratio_wrt_moist_air
+  - cloud_liquid_water
+  - cloud_liquid_ice
+  - sea_surface_temperature
+  - sea_ice_area_fraction
+  io:
+    filetype: structured netcdf
+    filepath: data_generated/neuralgcm/neuralgcm_ic_tl63.nc
+    field io names:
+      eastward_wind: u_component_of_wind
+      northward_wind: v_component_of_wind
+      air_temperature: temperature
+      geopotential: geopotential
+      water_vapor_mixing_ratio_wrt_moist_air: specific_humidity
+      cloud_liquid_water: specific_cloud_liquid_water_content
+      cloud_liquid_ice: specific_cloud_ice_water_content
+      sea_surface_temperature: sea_surface_temperature
+      sea_ice_area_fraction: sea_ice_cover
+
+model aux control: {}
+model aux error: {}
+
+background error:
+  # mist's own covariance: identity, with randomize drawing white noise. The test only needs
+  # a source of random increments, and a spectral SABER covariance would additionally require
+  # the geometry to be partitioned with atlas's TransPartitioner rather than the default
+  # equal_regions.
+  covariance model: ijediError
+
+linear model test:
+  forecast length: PT1H
+  tolerance AD: 1.0e-5
+  tolerance TL: 1.0e-1
+  iterations TL: 3
+  first multiplier TL: 1.0e-4

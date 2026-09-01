@@ -7,14 +7,20 @@
 
 #pragma once
 
+#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>
 
-#include "oops/base/Variables.h"
 #include "oops/util/Duration.h"
 #include "oops/util/ObjectCounter.h"
 #include "oops/util/Printable.h"
+
+#include "ijedi/LinearModel/base/LinearModelBase.h"
+
+namespace eckit {
+class Configuration;
+}  // namespace eckit
 
 namespace mist {
 class ModelAuxControl;
@@ -27,36 +33,40 @@ class Geometry;
 class Increment;
 class State;
 
-// An identity linear model.
+// -------------------------------------------------------------------------------------------------
+
+/// \brief The MODEL-specific linear model oops sees, dispatching to one of i-jedi's
+///        implementations. The same arrangement as ijedi::Model, and for the same reasons.
 class LinearModel : public util::Printable, private util::ObjectCounter<LinearModel> {
  public:
-  static const std::string classname() { return "ijedi::Model"; }
-  static std::vector<std::string> names() { return {}; }
+  static const std::string classname() { return "ijedi::LinearModel"; }
+  static std::vector<std::string> names() { return LinearModelFactory::getMakerNames(); }
 
-  LinearModel(const Geometry &, const eckit::Configuration & config):
-    tstep_(config.getString("time step")) {}
+  LinearModel(const Geometry &, const eckit::Configuration &);
   ~LinearModel() = default;
 
-  /// Model trajectory computation
-  void setTrajectory(const State &, State &, const mist::ModelAuxControl &) {}
+  void setTrajectory(const State & xx, State & xtraj, const mist::ModelAuxControl & maux)
+    { model_->setTrajectory(xx, xtraj, maux); }
 
-/// Run TLM and its adjoint
-  void initializeTL(Increment &) const {}
-  void stepTL(Increment &, const mist::ModelAuxIncrement &) const {}
-  void finalizeTL(Increment &) const {}
+  void initializeTL(Increment & dx) const { model_->initializeTL(dx); }
+  void stepTL(Increment & dx, const mist::ModelAuxIncrement & maux) const
+    { model_->stepTL(dx, maux); }
+  void finalizeTL(Increment & dx) const { model_->finalizeTL(dx); }
 
-  void initializeAD(Increment &) const {}
-  void stepAD(Increment &, mist::ModelAuxIncrement &) const {}
-  void finalizeAD(Increment &) const {}
+  void initializeAD(Increment & dx) const { model_->initializeAD(dx); }
+  void stepAD(Increment & dx, mist::ModelAuxIncrement & maux) const
+    { model_->stepAD(dx, maux); }
+  void finalizeAD(Increment & dx) const { model_->finalizeAD(dx); }
 
-/// Other utilities
-  const util::Duration & timeResolution() const {return tstep_;}
-  const util::Duration & stepTrajectory() const {return tstep_;}
+  const util::Duration & timeResolution() const { return model_->timeResolution(); }
+  const util::Duration & stepTrajectory() const { return model_->stepTrajectory(); }
 
  private:
-  void print(std::ostream &) const override {}
+  void print(std::ostream & os) const override { os << *model_; }
 
-  util::Duration tstep_;
+  std::unique_ptr<LinearModelBase> model_;
 };
+
+// -------------------------------------------------------------------------------------------------
 
 }  // namespace ijedi

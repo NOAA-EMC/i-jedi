@@ -1,0 +1,71 @@
+# Exercise the whole C++ side of the Python-model boundary without any Python behind it.
+#
+# The 'stub' backend declares itself from this yaml exactly as a real adapter would declare
+# itself from its checkpoint, so this covers the declaration contract, the level and variable
+# checks, the gather and scatter across tasks, and the forecast lifecycle. Its dynamics are
+# persistence, so the final state must equal the initial one - which is what makes it a
+# meaningful check that the round trip through the boundary preserves the state exactly.
+geometry:
+  geometry_type: atlas
+  function space: StructuredColumns
+  grid:
+    type: regular_gaussian
+    N: 32
+  levels are top down: true
+  vertical levels: &levels [100, 200, 300, 500, 700, 1000, 2000, 3000, 5000, 7000,
+                    10000, 12500, 15000, 17500, 20000, 22500, 25000, 30000,
+                    35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000,
+                    75000, 77500, 80000, 82500, 85000, 87500, 90000, 92500,
+                    95000, 97500, 100000]
+
+model:
+  name: PythonModel
+  adapter: stub-persistence
+  backend: stub
+  time step: PT6H
+  declaration:
+    description: stub persistence model on the ERA5 pressure levels
+    timestep: PT30M
+    levels: *levels
+    input variables:
+      u_component_of_wind: eastward_wind
+      v_component_of_wind: northward_wind
+      temperature: air_temperature
+      geopotential: geopotential
+    forcing variables:
+      sea_surface_temperature: sea_surface_temperature
+
+initial condition:
+  date: 2026-01-01T00:00:00Z
+  state variables: [eastward_wind, northward_wind, air_temperature, geopotential,
+                    sea_surface_temperature]
+  io:
+    filetype: structured netcdf
+    filepath: data_generated/aimodel/aimodel_n32_l37.nc
+    field io names:
+      eastward_wind: u_component_of_wind
+      northward_wind: v_component_of_wind
+      air_temperature: temperature
+      geopotential: geopotential
+      sea_surface_temperature: sea_surface_temperature
+
+model aux control: {}
+forecast length: PT12H
+
+prints:
+  frequency: PT6H
+
+output:
+  frequency: PT6H
+  io:
+    filetype: structured netcdf
+    filepath: forecast-python-stub.nc
+    field io names:
+      eastward_wind: u_component_of_wind
+      northward_wind: v_component_of_wind
+      air_temperature: temperature
+      geopotential: geopotential
+      sea_surface_temperature: sea_surface_temperature
+
+test:
+  reference filename: testref/forecast-python-stub.test

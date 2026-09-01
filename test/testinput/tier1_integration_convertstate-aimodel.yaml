@@ -1,0 +1,74 @@
+# Round-trip the AI-model io backend on NeuralGCM's native grid.
+#
+# The same data is read twice, once from a file with latitude ascending (the ARCO-ERA5 and
+# WeatherBench-2 convention) and once from a file with latitude descending. The reader detects
+# the ordering from the file, so both states must come out identical - if the axis handling
+# were wrong the two would differ, which is the failure this test exists to catch.
+input geometry: &grid
+  geometry_type: atlas
+  function space: StructuredColumns
+  grid:
+    type: regular_gaussian
+    N: 32
+  levels are top down: true
+  vertical levels: [100, 200, 300, 500, 700, 1000, 2000, 3000, 5000, 7000,
+                    10000, 12500, 15000, 17500, 20000, 22500, 25000, 30000,
+                    35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000,
+                    75000, 77500, 80000, 82500, 85000, 87500, 90000, 92500,
+                    95000, 97500, 100000]
+
+output geometry: *grid
+
+states:
+- input: &aivars
+    date: 2026-01-01T00:00:00Z
+    state variables:
+    - eastward_wind
+    - northward_wind
+    - air_temperature
+    - geopotential
+    - sea_surface_temperature
+    io:
+      filetype: structured netcdf
+      filepath: data_generated/aimodel/aimodel_n32_l37.nc
+      field io names: &ainames
+        eastward_wind: u_component_of_wind
+        northward_wind: v_component_of_wind
+        air_temperature: temperature
+        geopotential: geopotential
+        sea_surface_temperature: sea_surface_temperature
+  output:
+    date: 2026-01-01T00:00:00Z
+    state variables:
+    - eastward_wind
+    - northward_wind
+    - air_temperature
+    - geopotential
+    - sea_surface_temperature
+    io:
+      filetype: structured netcdf
+      filepath: convertstate-aimodel-roundtrip.nc
+      datetime: 2026-01-01T00:00:00Z
+      field io names: *ainames
+
+- input:
+    <<: *aivars
+    io:
+      filetype: structured netcdf
+      filepath: data_generated/aimodel/aimodel_n32_l37_latrev.nc
+      field io names: *ainames
+  output:
+    date: 2026-01-01T00:00:00Z
+    state variables:
+    - eastward_wind
+    - northward_wind
+    - air_temperature
+    - geopotential
+    - sea_surface_temperature
+    io:
+      filetype: structured netcdf
+      filepath: convertstate-aimodel-latrev.nc
+      field io names: *ainames
+
+test:
+  reference filename: testref/convertstate-aimodel.test
