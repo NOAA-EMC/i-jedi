@@ -10,6 +10,8 @@
 
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Geometry/base/GeometryBase.h"
+#include "mist/utils/Geometry.h"
+#include "mist/utils/IterationUnit.h"
 
 // -------------------------------------------------------------------------------------------------
 namespace ijedi
@@ -45,20 +47,50 @@ namespace ijedi
     // Expose vertical ordering to downstream components such as Vader recipes.
     modelData_.set("levels_are_top_down", levelsAreTopDown_);
 
+    // Reference pressure column used by vertical localization, now chosen by "vertical
+    // coordinate source". The default prefers one published by the model geometry (which can
+    // follow that model's own mid-layer convention, see GeometryFV3), then mist's generic
+    // hybrid-sigma version, then level indices.
+    const std::string vertCoordSource =
+        geomConf.getString("vertical coordinate source", "model");
+    if (vertCoordSource != "model" && vertCoordSource != "hybrid sigma" &&
+        vertCoordSource != "level index") {
+      throw eckit::BadValue("ijedi::Geometry: 'vertical coordinate source' must be 'model', "
+                            "'hybrid sigma' or 'level index'", Here());
+    }
+
+    const bool hasModelColumn = modelData_.has("vertical_coordinate_reference_pressure");
+    const bool hasHybridCoeffs =
+        modelData_.has("sigma_pressure_hybrid_coordinate_a_coefficient") &&
+        modelData_.has("sigma_pressure_hybrid_coordinate_b_coefficient");
+
+    if (vertCoordSource == "model" && hasModelColumn) {
+      verticalCoord_ = modelData_.getDoubleVector("vertical_coordinate_reference_pressure");
+    } else if (vertCoordSource != "level index" && hasHybridCoeffs) {
+      const std::vector<double> ak =
+          modelData_.getDoubleVector("sigma_pressure_hybrid_coordinate_a_coefficient");
+      const std::vector<double> bk =
+          modelData_.getDoubleVector("sigma_pressure_hybrid_coordinate_b_coefficient");
+      verticalCoord_ = std::get<0>(mist::setupReferencePressure(functionspace_, ak, bk));
+    } else if (vertCoordSource == "hybrid sigma") {
+      throw eckit::BadValue("ijedi::Geometry: 'vertical coordinate source: hybrid sigma' needs "
+                            "the hybrid-sigma ak/bk coefficients in the model data", Here());
+    } else {
+      verticalCoord_.resize(numberLevels_);
+      std::iota(verticalCoord_.begin(), verticalCoord_.end(), 0.0);
+    }
+
     // Build GeometryData
     geomData_.reset(new oops::GeometryData(functionspace_, fields_, levelsAreTopDown_, comm));
 
-    // Populate the mist::Geometry iterator support members now that
-    // functionspace_ is ready.  verticalCoord_ uses simple level indices since
-    // ijedi constructs its geometry without the ak/bk config path.
-    iteratorDimension_ = geomConf.getInt("iterator dimension", iteratorDimension_);
-    if (iteratorDimension_ != 2 && iteratorDimension_ != 3) {
+    // Enable grid-point iteration. Default of 2 (whole columns) is what
+    // oops::VerticalLocEV relies on when populating its eigenvectors.
+    const int iteratorDimension = geomConf.getInt("iterator dimension", 2);
+    if (iteratorDimension != 2 && iteratorDimension != 3) {
       throw eckit::BadValue("ijedi::Geometry: 'iterator dimension' must be 2 or 3", Here());
     }
-    iteratorVerticalCoord_ = util::missingValue<double>();
-    buildOwnedNodeIndices();
-    verticalCoord_.resize(numberLevels_);
-    std::iota(verticalCoord_.begin(), verticalCoord_.end(), 0.0);
+    initIteratorSupport(iteratorDimension == 2 ? mist::IterationUnit::Column
+                                                : mist::IterationUnit::Point);
 
     // Trace
     oops::Log::trace() << "Geometry constructor finished" << std::endl;
