@@ -197,7 +197,7 @@ namespace ijedi
     md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
-  
+
     md.longName = "air_upward_absolute_vorticity";
     md.units = "m+2s";
     md.kind = "double";
