@@ -1227,7 +1227,7 @@ namespace ijedi
     md.units = "meters";
     md.kind = "double";
     md.tracer = "true";
-    md.levels = "full";
+    md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
