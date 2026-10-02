@@ -112,7 +112,8 @@ namespace ijedi
     void buildDistFromCoast(const std::vector<double> & lonGlobal,
                             const std::vector<double> & latGlobal,
                             const std::vector<double> & wetGlobal,
-                            const std::vector<double> & mask3dGlobal);
+                            const std::vector<double> & mask3dGlobal,
+                            bool perLevel);
 
     // --- Scatter map & exchange plan ---
     void buildScatterMap();

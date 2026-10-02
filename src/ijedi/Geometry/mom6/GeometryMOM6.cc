@@ -632,22 +632,20 @@ void GeometryMOM6::buildFields(const std::vector<double> & lonGlobal,
     }
   }
 
-  // TODO(guillaumevernieres): buildDistFromCoast is too slow at high resolution.
-  // Make it optional (config-gated) and/or optimize the distance-to-coast
-  // computation before re-enabling it here.
-  // if (buildVerticalGeometry) {
-  //   buildDistFromCoast(lonGlobal, latGlobal, wetGlobal, mask3dGlobal);
-  // }
+  // The distance to the coast is built by the constructor, only when requested
+  // ("distance from coast"); the per-level variant is too slow at high resolution.
 }
 
 // ---------------------------------------------------------------------------
 // Compute great-circle distance (metres) from each JEDI point to the
 // nearest land cell.  lonGlobal/latGlobal/wetGlobal are full global arrays
-// (all ranks have them), so no MPI needed.
+// (all ranks have them), so no MPI needed.  The per-level distance
+// (dist_from_coast3d, one KD-tree per level) is only built when perLevel is set.
 void GeometryMOM6::buildDistFromCoast(const std::vector<double> & lonGlobal,
                                        const std::vector<double> & latGlobal,
                                        const std::vector<double> & wetGlobal,
-                                       const std::vector<double> & mask3dGlobal)
+                                       const std::vector<double> & mask3dGlobal,
+                                       bool perLevel)
 {
   const int nGlobal = static_cast<int>(wetGlobal.size());
   const int npts    = static_cast<int>(jediPoints_.size());
@@ -674,8 +672,11 @@ void GeometryMOM6::buildDistFromCoast(const std::vector<double> & lonGlobal,
       vDist(n, 0) = atlas::util::Earth::distance(
           pt, atlas::PointLonLat{lonGlobal[landK], latGlobal[landK]});
     }
+    // Only owned points were filled above: give the halo nodes their owners' values
+    atlas::functionspace::NodeColumns(functionSpace_).haloExchange(fDist);
     fields_.add(fDist);
   }
+  if (!perLevel) return;
 
   // --- 3-D per-layer distance (one KD-tree per level from mask3d land points) ---
   atlas::Field fDist3d = functionSpace_.createField<double>(
@@ -701,6 +702,7 @@ void GeometryMOM6::buildDistFromCoast(const std::vector<double> & lonGlobal,
           pt, atlas::PointLonLat{lonGlobal[landK], latGlobal[landK]});
     }
   }
+  atlas::functionspace::NodeColumns(functionSpace_).haloExchange(fDist3d);
   fields_.add(fDist3d);
 }
 
@@ -1122,6 +1124,15 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
                 mask3d, dxT, dyT, areaT, lonU, latU, lonV, latV,
                 buildVerticalGeometry);
   }
+  // Optional geometry-derived fields used by the marine observation filters
+  if (conf.getBool("distance from coast", false)) {
+    util::Timer timer("ijedi::GeometryMOM6", "buildDistFromCoast");
+    buildDistFromCoast(lon, lat, wet, mask3d, false);
+  }
+  if (conf.has("rossby radius file")) {
+    fields_.add(mom6::readNcAndInterp(conf.getString("rossby radius file"),
+                                      {"rossby_radius"}, functionSpace_).field("rossby_radius"));
+  }
 
   // Release temporary global arrays now that local fieldsets are built.
   auto release = [](std::vector<double> & v) {
@@ -1535,14 +1546,50 @@ std::vector<double> GeometryMOM6::verticalCoord(std::string &) const
 
 // ---------------------------------------------------------------------------
 void GeometryMOM6::addModelVaderIngredients(const atlas::FieldSet & geomFields,
-                                            atlas::FieldSet & fset, int nlevels) const
+                                            atlas::FieldSet & fset, int /*nlevels*/) const
 {
-  // Ingredients for the SeaWaterTemperature_A/_B recipes:
-  //  - latitude/longitude, from the fieldset's own function space;
-  //  - sea_area_fraction, indexed per level by the _B Jacobian, so broadcast
-  //    the 2D land/sea mask across all levels.
+  // Ingredients for the SeaWaterTemperature_A recipe: latitude/longitude, from the
+  // fieldset's own function space.
   addLonLatIngredients(fset);
-  addBroadcastIngredient(geomFields, "mask2d", "sea_area_fraction", nlevels, fset);
+
+  // Single-level geometry fields that the marine observation filters request as
+  // GeoVaLs (as soca's Model2GeoVaLs provides them). Only those requested are kept.
+  // sea_area_fraction is single-level, as in soca: the SeaWaterTemperature_B
+  // Jacobian (not in the default cookbook yet) will have to broadcast it per level.
+  addBroadcastIngredient(geomFields, "mask2d", "sea_area_fraction", 1, fset);
+  addBroadcastIngredient(geomFields, "dist_from_coast", "distance_from_coast", 1, fset);
+
+  const auto addDerived = [&](const std::string & name, auto && value) {
+    if (fset.has(name)) return;
+    atlas::Field f = geomFields.field("mask2d").functionspace().createField<double>(
+        atlas::option::name(name) | atlas::option::levels(1));
+    auto view = atlas::array::make_view<double, 2>(f);
+    for (atlas::idx_t n = 0; n < f.shape(0); ++n) view(n, 0) = value(n);
+    fset.add(f);
+  };
+  const auto mask = atlas::array::make_view<double, 2>(geomFields.field("mask2d"));
+
+  // Water column depth: sum of the layer thicknesses (soca sums the state's h),
+  // or the topography when no vertical geometry was read
+  if (geomFields.has("sea_water_cell_thickness")) {
+    const auto h = atlas::array::make_view<double, 2>(geomFields.field("sea_water_cell_thickness"));
+    addDerived("sea_floor_depth_below_sea_surface", [&](atlas::idx_t n) {
+      double depth = 0.0;
+      for (atlas::idx_t k = 0; k < h.shape(1); ++k) depth += h(n, k);
+      return depth;
+    });
+  } else {
+    addBroadcastIngredient(geomFields, "depth", "sea_floor_depth_below_sea_surface", 1, fset);
+  }
+
+  // Mesoscale representation error dx / R, as in soca
+  if (geomFields.has("rossby_radius")) {
+    const auto area = atlas::array::make_view<double, 2>(geomFields.field("area"));
+    const auto rossby = atlas::array::make_view<double, 2>(geomFields.field("rossby_radius"));
+    addDerived("mesoscale_representation_error", [&](atlas::idx_t n) {
+      return mask(n, 0) * std::sqrt(area(n, 0)) / rossby(n, 0);
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
