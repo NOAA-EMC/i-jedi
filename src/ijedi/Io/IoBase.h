@@ -26,27 +26,32 @@ namespace ijedi
   class IoBase : public util::Printable, private boost::noncopyable
   {
    public:
-    explicit IoBase(const Geometry &, const eckit::LocalConfiguration &);
-    virtual ~IoBase() {}
-    void readBase(atlas::FieldSet &) const;
-    void writeBase(const atlas::FieldSet &) const;
+     explicit IoBase(const Geometry &, const eckit::LocalConfiguration &);
+     virtual ~IoBase() {}
+     void readBase(atlas::FieldSet &) const;
+     void writeBase(const atlas::FieldSet &) const;
+     void writeBaseWithConfig(const atlas::FieldSet &, const eckit::LocalConfiguration &) const;
 
-   private:
-    // Child read/write methods
-    virtual void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
-                      const eckit::LocalConfiguration &) const = 0;
-    virtual void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
+    private:
+     // Child read/write methods
+     virtual void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
                        const eckit::LocalConfiguration &) const = 0;
+     
+     // Single virtual write method — child classes override this
+     // config parameter is optional (passed as empty config if not needed)
+     virtual void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
+                        const eckit::LocalConfiguration &, 
+                        const eckit::LocalConfiguration & config = eckit::LocalConfiguration()) const = 0;
 
-    // Child print method
-    virtual void print(std::ostream &) const = 0;
+     // Child print method
+     virtual void print(std::ostream &) const = 0;
 
-    // Configuration holding the field names as used in the files
-    eckit::LocalConfiguration fieldIoNames_;
-    // Configuration holding scaling factors used to transition units between forecast model
-    // and JEDI
-    eckit::LocalConfiguration fieldIoScaling_;
-  };
+     // Configuration holding the field names as used in the files
+     eckit::LocalConfiguration fieldIoNames_;
+     // Configuration holding scaling factors used to transition units between forecast model
+     // and JEDI
+     eckit::LocalConfiguration fieldIoScaling_;
+   };
 
   // -------------------------------------------------------------------------------------------------
 
