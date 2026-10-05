@@ -1582,6 +1582,12 @@ void GeometryMOM6::addModelVaderIngredients(const atlas::FieldSet & geomFields,
     addBroadcastIngredient(geomFields, "depth", "sea_floor_depth_below_sea_surface", 1, fset);
   }
 
+  // Layer-centre depth, the vertical coordinate of the in-situ profile operators (InsituTemperature,
+  // VertInterp), from the vertical geometry (soca computes it from the state's layer thicknesses)
+  if (geomFields.has("sea_water_depth") && !fset.has("sea_water_depth")) {
+    fset.add(geomFields.field("sea_water_depth").clone());
+  }
+
   // Mesoscale representation error dx / R, as in soca
   if (geomFields.has("rossby_radius")) {
     const auto area = atlas::array::make_view<double, 2>(geomFields.field("area"));
