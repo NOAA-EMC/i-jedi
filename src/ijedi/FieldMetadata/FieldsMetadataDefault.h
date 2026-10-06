@@ -1466,7 +1466,25 @@ namespace ijedi
     md.bctype = "extrapolate";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "sea_ice_snow_volume";
+    md.units = "meters";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    md.bctype = "extrapolate";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "sea_ice_thickness";
+    md.units = "meters";
+    md.kind = "double";
+    md.tracer = "true";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    md.bctype = "extrapolate";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "sea_ice_volume";
     md.units = "meters";
     md.kind = "double";
     md.tracer = "true";

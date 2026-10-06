@@ -54,6 +54,9 @@ static std::map<std::string, std::vector<std::string>> cookbook() {
       {"virtual_temperature",                     {"AirVirtualTemperature_A"}},
       // sst: from t
       {"sea_surface_temperature",                 {"SeaSurfaceTemperature_A"}},
+      // sea-ice and snow thickness per ice area: from the per-cell volumes and the ice fraction
+      {"sea_ice_thickness",                       {"SeaIceThickness_A"}},
+      {"sea_ice_snow_thickness",                  {"SeaIceSnowThickness_A"}},
       // t_insitu: NL from thetao (sea_water_potential_temperature), salinity, depth, lat/lon
       //           (SeaWaterTemperature_A); TL/AD via linearized TEOS-10 Jacobian
       //           (SeaWaterTemperature_B). Both are needed so the variable change

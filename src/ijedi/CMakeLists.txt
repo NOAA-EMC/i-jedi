@@ -61,6 +61,8 @@ list(APPEND ijedi_src_files
   Io/unstructured/IoUnstructured.h
 
   # Variable change
+  VariableChange/SeaIceThickness.h
+  VariableChange/SeaIceThickness_A.cc
   VariableChange/SeaSurfaceTemperature.h
   VariableChange/SeaSurfaceTemperature_A.cc
   VariableChange/VaderCookbook.cc

@@ -2,6 +2,7 @@
 
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "mist/base/State.h"
 #include "oops/util/ObjectCounter.h"
@@ -56,6 +57,9 @@ namespace ijedi
     oops::OptionalParameter<AnalyticICParameters> analytic{"analytic init", this};
     // Io parameters wrapper for polymorphic IO parameters (nested under "io" key)
     oops::OptionalParameter<IoParametersWrapper> io{"io", this};
+    // State variables computed after reading (vader cookbook) from the other state variables and
+    // from any extra variables listed in the io "field io names", instead of being read
+    oops::OptionalParameter<std::vector<std::string>> derivedVariables{"derived variables", this};
   };
 
   // -----------------------------------------------------------------------------------------------

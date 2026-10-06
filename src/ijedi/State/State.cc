@@ -7,12 +7,14 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "atlas/field.h"
 #include "eckit/config/Configuration.h"
 #include "eckit/exception/Exceptions.h"
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Utilities/PrintHelper.h"
+#include "ijedi/VariableChange/VariableChange.h"
 #include "oops/base/Variables.h"
 #include "oops/util/DateTime.h"
 #include "oops/util/Logger.h"
@@ -119,7 +121,42 @@ namespace ijedi {
 
     // Call read method of child
     // -------------------------
-    io->readBase(this->fieldSet());
+    const std::vector<std::string> derived =
+        params.derivedVariables.value().value_or(std::vector<std::string>{});
+    if (derived.empty()) {
+      io->readBase(this->fieldSet());
+      oops::Log::trace() << "ijedi::State::read done" << std::endl;
+      return;
+    }
+
+    // Read the state variables that are not derived, plus the other variables the file names,
+    // then compute the derived ones with the vader cookbook
+    const oops::Variables derivedVars(derived);
+    oops::Variables readVars;
+    for (const auto & var : this->variables()) {
+      if (!derivedVars.has(var)) readVars.push_back(var);
+    }
+    for (const auto & var : derivedVars) {
+      ASSERT_MSG(this->variables().has(var),
+                 "ijedi::State::read: derived variable " + var.name() + " is not a state variable");
+    }
+    const eckit::LocalConfiguration ioConf = ioParams.toConfiguration();
+    if (ioConf.has("field io names")) {
+      for (const std::string & name : ioConf.getSubConfiguration("field io names").keys()) {
+        if (!this->variables().has(name) && !readVars.has(name)) {
+          readVars.push_back(oops::Variable(name));
+        }
+      }
+    }
+    State ingredients(geom_, readVars, this->validTime());
+    io->readBase(ingredients.fieldSet());
+    VariableChange(eckit::LocalConfiguration(), geom_).changeVar(ingredients, this->variables());
+    for (auto & field : this->fieldSet()) {
+      ASSERT_MSG(ingredients.fieldSet().has(field.name()),
+                 "ijedi::State::read: could not derive " + field.name());
+      auto view = atlas::array::make_view<double, 2>(field);
+      view.assign(atlas::array::make_view<const double, 2>(ingredients.fieldSet()[field.name()]));
+    }
 
     oops::Log::trace() << "ijedi::State::read done" << std::endl;
   }
