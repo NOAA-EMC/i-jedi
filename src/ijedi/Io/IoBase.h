@@ -29,16 +29,16 @@ namespace ijedi
      explicit IoBase(const Geometry &, const eckit::LocalConfiguration &);
      virtual ~IoBase() {}
      void readBase(atlas::FieldSet &) const;
-     void writeBase(const atlas::FieldSet &) const;
-     void writeBaseWithConfig(const atlas::FieldSet &, const eckit::LocalConfiguration &) const;
+     void writeBase(const atlas::FieldSet &, 
+                    const eckit::LocalConfiguration & config = eckit::LocalConfiguration()) const;
 
     private:
      // Child read/write methods
      virtual void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
                        const eckit::LocalConfiguration &) const = 0;
      
-     // Single virtual write method — child classes override this
-     // config parameter is optional (passed as empty config if not needed)
+     // Single virtual write method with optional config parameter
+     // config is empty by default (backward compatible), but can contain ensemble member info
      virtual void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
                         const eckit::LocalConfiguration &, 
                         const eckit::LocalConfiguration & config = eckit::LocalConfiguration()) const = 0;
