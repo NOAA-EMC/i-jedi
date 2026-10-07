@@ -64,6 +64,11 @@ namespace ijedi
 
   // -------------------------------------------------------------------------------------------------
 
+  // Replace %{member}% in the io strings with the top-level member that OOPS sets
+  eckit::LocalConfiguration swapIoMember(const eckit::Configuration &);
+
+  // -------------------------------------------------------------------------------------------------
+
   class IoParametersWrapper : public oops::Parameters
   {
     OOPS_CONCRETE_PARAMETERS(IoParametersWrapper, Parameters)
