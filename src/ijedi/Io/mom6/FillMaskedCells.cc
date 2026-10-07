@@ -1,50 +1,78 @@
 #include "ijedi/Io/mom6/FillMaskedCells.h"
 
 #include <algorithm>
+#include <array>
 #include <queue>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "atlas/array.h"
-#include "atlas/functionspace/NodeColumns.h"
-#include "atlas/mesh/Mesh.h"
-#include "atlas/mesh/HybridElements.h"
+
+#include "eckit/exception/Exceptions.h"
 
 #include "oops/util/Logger.h"
 
 namespace ijedi {
 
-void applyBoundaryConditions(atlas::FieldSet & x,
+void applyBoundaryConditions(std::vector<atlas::Field> & fields,
                              const atlas::Field & mask3d,
+                             const std::vector<atlas::gidx_t> & gidx,
+                             const int ni, const int nj, const bool hasFold,
                              const FieldsMetadata & meta) {
   const auto & longNames = meta.getLongNames();
   const std::unordered_set<std::string> knownNames(longNames.begin(), longNames.end());
 
-  const auto fs   = atlas::functionspace::NodeColumns(mask3d.functionspace());
   const int npts  = static_cast<int>(mask3d.shape(0));
   const int nmask = static_cast<int>(mask3d.shape(1));
-  auto maskView   = atlas::array::make_view<double, 2>(mask3d);
+  ASSERT(static_cast<int>(gidx.size()) == npts);
+  auto maskView   = atlas::array::make_view<const double, 2>(mask3d);
 
-  // Build node-to-node adjacency from cell-node connectivity (once, reused per field).
-  const auto & conn   = fs.mesh().cells().node_connectivity();
-  const int    nCells = static_cast<int>(conn.rows());
+  // Rows in global index order, and the row of each global node
+  std::vector<int> order(npts);
+  for (int n = 0; n < npts; ++n) order[n] = n;
+  std::sort(order.begin(), order.end(), [&](int a, int b) { return gidx[a] < gidx[b]; });
+  std::unordered_map<atlas::gidx_t, int> rowOf;
+  for (int n = 0; n < npts; ++n) rowOf[gidx[n]] = n;
+  const auto row = [&](int i, int j) {
+    const auto it = rowOf.find(static_cast<atlas::gidx_t>(j) * ni + i + 1);
+    return it == rowOf.end() ? -1 : it->second;
+  };
+
+  // Cells of the geometry's mesh (GeometryMOM6): quads whose four corners are mesh nodes,
+  // periodic in i, then the tripolar fold quads on the last row
+  std::vector<std::array<int, 4>> cells;
+  for (const int n : order) {
+    const int i = static_cast<int>((gidx[n] - 1) % ni);
+    const int j = static_cast<int>((gidx[n] - 1) / ni);
+    if (j + 1 >= nj) continue;
+    const int i1 = (i + 1) % ni;
+    const std::array<int, 4> c = {n, row(i1, j), row(i1, j + 1), row(i, j + 1)};
+    if (std::min({c[1], c[2], c[3]}) >= 0) cells.push_back(c);
+  }
+  if (hasFold) {
+    for (const int n : order) {
+      const int i = static_cast<int>((gidx[n] - 1) % ni);
+      const int j = static_cast<int>((gidx[n] - 1) / ni);
+      if (j != nj - 1 || 2 * (i + 1) >= ni || ni - 2 - i < 0) continue;
+      const std::array<int, 4> c = {n, row(i + 1, j), row(ni - 2 - i, j), row(ni - 1 - i, j)};
+      if (std::min({c[1], c[2], c[3]}) >= 0) cells.push_back(c);
+    }
+  }
+
+  // Node-to-node adjacency: every pair of corners of a cell
   std::vector<std::vector<int>> adj(npts);
-  for (int c = 0; c < nCells; ++c) {
-    const int nv = static_cast<int>(conn.cols(c));
-    for (int a = 0; a < nv; ++a) {
-      for (int b = a + 1; b < nv; ++b) {
-        const int na = static_cast<int>(conn(c, a));
-        const int nb = static_cast<int>(conn(c, b));
-        if (na < npts && nb < npts) {
-          adj[na].push_back(nb);
-          adj[nb].push_back(na);
-        }
+  for (const auto & c : cells) {
+    for (int a = 0; a < 4; ++a) {
+      for (int b = a + 1; b < 4; ++b) {
+        adj[c[a]].push_back(c[b]);
+        adj[c[b]].push_back(c[a]);
       }
     }
   }
 
-  for (auto & field : x) {
+  for (auto & field : fields) {
     const std::string & fname = field.name();
     if (!knownNames.count(fname)) {
       oops::Log::warning() << "applyBoundaryConditions: '" << fname
@@ -86,9 +114,6 @@ void applyBoundaryConditions(atlas::FieldSet & x,
 
     // "extrapolate": flood-fill each level independently from ocean seeds at that
     // level (Neumann / zero-gradient boundary condition).
-    // Ghost ocean nodes are included as seeds — they carry valid values from the
-    // scatter + halo exchange in readMOM6Netcdf.
-    //
     // Levels are processed top-down so that any node the horizontal flood cannot
     // reach (a mesh component with no wet node at this level, e.g. below-bottom
     // layers) can fall back to the value directly above it, which is guaranteed
@@ -100,7 +125,7 @@ void applyBoundaryConditions(atlas::FieldSet & x,
       const int km = std::min(k, nmask - 1);
       std::vector<bool> filled(npts, false);
       std::queue<int>   q;
-      for (int n = 0; n < npts; ++n) {
+      for (const int n : order) {
         if (maskView(n, km) > 0.5) { filled[n] = true; q.push(n); }
       }
       while (!q.empty()) {
@@ -122,9 +147,6 @@ void applyBoundaryConditions(atlas::FieldSet & x,
         }
       }
     }
-
-    // Propagate flooded owned-node values into ghost copies on neighbouring ranks.
-    fs.haloExchange(field);
 
     oops::Log::info() << "applyBoundaryConditions: " << fname
                       << " Neumann (flood fill) on " << nFilled

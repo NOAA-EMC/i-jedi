@@ -14,6 +14,8 @@
 
 #include "oops/util/Logger.h"
 
+#include "ijedi/Io/mom6/FillMaskedCells.h"
+
 namespace ijedi {
 
 namespace {
@@ -48,6 +50,9 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
                     atlas::FieldSet & x,
                     const std::vector<std::string> & fileVarNames,
                     const std::vector<double> & scalings,
+                    const atlas::Field & mask3d,
+                    const FieldsMetadata & meta,
+                    const int ni, const int nj, const bool hasFold,
                     const eckit::mpi::Comm & comm) {
   const bool isRoot = (comm.rank() == 0);
   const auto fs =
@@ -80,6 +85,12 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
         | atlas::option::levels(field.shape(1))
         | atlas::option::global()));
   }
+
+  // Mask for the boundary conditions of masked cells, on root (collective)
+  atlas::Field globalMask = fs.createField<double>(
+      atlas::option::name("mask3d") | atlas::option::levels(mask3d.shape(1))
+      | atlas::option::global());
+  fs.gather(mask3d, globalMask);
 
   // --- 3. Root reads each file in order; a later file may overwrite an
   //        earlier one, but in practice variables don't overlap. ---
@@ -220,6 +231,12 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
 
       nc_close(ncid);
     }
+
+    // Boundary conditions of masked (land) cells on the global fields, so that the
+    // filled values do not depend on the decomposition
+    std::vector<atlas::gidx_t> gidx(nGlobal);
+    for (int n = 0; n < nGlobal; ++n) gidx[n] = static_cast<atlas::gidx_t>(gIdx(n, 0));
+    applyBoundaryConditions(globalFields, globalMask, gidx, ni, nj, hasFold, meta);
   }
 
   // --- 4. Scatter all global fields to distributed ranks (collective). ---

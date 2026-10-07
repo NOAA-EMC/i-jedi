@@ -1,6 +1,9 @@
 #pragma once
 
-#include "atlas/field/FieldSet.h"
+#include <vector>
+
+#include "atlas/field/Field.h"
+#include "atlas/library/config.h"
 
 #include "ijedi/FieldMetadata/FieldsMetadata.h"
 
@@ -25,14 +28,23 @@ namespace ijedi {
 /// Both 2-D (nLevels == 1) and 3-D fields are processed uniformly; fields
 /// absent from the metadata registry are skipped.
 ///
-/// The node adjacency graph is built once from the mesh connectivity and
-/// reused across all fields. The per-level mask from mask3d drives the fill.
+/// The fill works on fields gathered on one task (one row per global node, as
+/// readMOM6Netcdf holds them before the scatter). The node graph is the one of
+/// the geometry's mesh cells, rebuilt from the global indices: quads whose four
+/// corners are mesh nodes (periodic in i) plus, on tripolar grids, the fold
+/// quads along the last row. Seeds, cells and neighbours are taken in global
+/// index order, so the filled values do not depend on the MPI decomposition.
 ///
-/// @param x      FieldSet to fill in-place (NodeColumns function space).
-/// @param mask3d Geometry 3-D mask field (1 = ocean, 0 = masked/land).
-/// @param meta   Field metadata registry providing the per-field bctype.
-void applyBoundaryConditions(atlas::FieldSet & x,
+/// @param fields   Global fields (rows = global nodes), filled in place.
+/// @param mask3d   Global 3-D mask (1 = ocean, 0 = masked/land), same rows.
+/// @param gidx     1-based global index (j * ni + i + 1) of each row.
+/// @param ni, nj   Global grid dimensions.
+/// @param hasFold  True for a tripolar grid with a northern fold.
+/// @param meta     Field metadata registry providing the per-field bctype.
+void applyBoundaryConditions(std::vector<atlas::Field> & fields,
                              const atlas::Field & mask3d,
+                             const std::vector<atlas::gidx_t> & gidx,
+                             const int ni, const int nj, const bool hasFold,
                              const FieldsMetadata & meta);
 
 }  // namespace ijedi

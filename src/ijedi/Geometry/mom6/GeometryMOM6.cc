@@ -1207,6 +1207,7 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
     geomVariables.set("ni", niEff_);
     geomVariables.set("nj", njEff_);
     geomVariables.set("nz", numLevels_);
+    geomVariables.set("has_northern_fold", hasFold_);
   }
 
   oops::Log::trace() << "GeometryMOM6 constructor done" << std::endl;

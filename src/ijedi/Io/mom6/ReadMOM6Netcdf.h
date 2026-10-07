@@ -3,9 +3,12 @@
 #include <string>
 #include <vector>
 
+#include "atlas/field/Field.h"
 #include "atlas/field/FieldSet.h"
 
 #include "eckit/mpi/Comm.h"
+
+#include "ijedi/FieldMetadata/FieldsMetadata.h"
 
 namespace ijedi {
 
@@ -15,18 +18,26 @@ namespace ijedi {
 /// the root maps the structured grid into Atlas global fields via gathered
 /// global indices; a later file may overwrite fields from an earlier one, but
 /// in practice each variable lives in exactly one file.  After all files are
-/// processed a single collective scatter distributes data to all ranks,
-/// followed by a halo exchange on ghost nodes.
+/// processed, the boundary conditions of masked cells are applied on root (see
+/// applyBoundaryConditions), then a single collective scatter distributes data
+/// to all ranks, followed by a halo exchange on ghost nodes.
 ///
 /// @param filepaths    Ordered list of input NetCDF paths (rank 0 reads).
 /// @param x            Distributed FieldSet to populate.
 /// @param fileVarNames Per-field file variable name (empty => skip field).
 /// @param scalings     Per-field scaling factor (0 => no scaling).
+/// @param mask3d       Geometry 3-D mask (1 = ocean, 0 = masked/land).
+/// @param meta         Field metadata registry providing the per-field bctype.
+/// @param ni, nj       Global grid dimensions.
+/// @param hasFold      True for a tripolar grid with a northern fold.
 /// @param comm         MPI communicator.
 void readMOM6Netcdf(const std::vector<std::string> & filepaths,
                     atlas::FieldSet & x,
                     const std::vector<std::string> & fileVarNames,
                     const std::vector<double> & scalings,
+                    const atlas::Field & mask3d,
+                    const FieldsMetadata & meta,
+                    const int ni, const int nj, const bool hasFold,
                     const eckit::mpi::Comm & comm);
 
 }  // namespace ijedi

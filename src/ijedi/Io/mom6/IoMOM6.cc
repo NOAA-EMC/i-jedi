@@ -6,7 +6,6 @@
 #include "oops/util/Timer.h"
 
 #include "ijedi/Geometry/Geometry.h"
-#include "ijedi/Io/mom6/FillMaskedCells.h"
 #include "ijedi/Io/mom6/IoMOM6.h"
 #include "ijedi/Io/mom6/ReadMOM6Netcdf.h"
 #include "ijedi/Io/mom6/WriteMOM6Netcdf.h"
@@ -55,13 +54,14 @@ namespace ijedi
                          ? fileioscaling.getDouble(jediName) : 0.0);
     }
 
-    // Delegate to the NetCDF reader (root reads, scatter, halo exchange)
-    readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings, geom_.getComm());
-
-    // Apply boundary conditions to masked (land) cells: nearest-neighbour
-    // extrapolation for tracers, zero for non-tracers.
-    applyBoundaryConditions(x, geom_.fields().field("mask3d"),
-                          geom_.getFieldMetadata());
+    // Delegate to the NetCDF reader (root reads, applies the boundary conditions of
+    // masked (land) cells: nearest-neighbour extrapolation for tracers, zero for
+    // non-tracers; then scatter, halo exchange)
+    const auto modelData = geom_.modelData();
+    readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings,
+                   geom_.fields().field("mask3d"), geom_.getFieldMetadata(),
+                   modelData.getInt("ni"), modelData.getInt("nj"),
+                   modelData.getBool("has_northern_fold", false), geom_.getComm());
 
     oops::Log::trace() << classname() << " read state done" << std::endl;
   }
