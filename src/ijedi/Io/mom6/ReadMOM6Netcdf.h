@@ -31,6 +31,8 @@ namespace ijedi {
 /// @param ni, nj       Global grid dimensions.
 /// @param hasFold      True for a tripolar grid with a northern fold.
 /// @param comm         MPI communicator.
+/// @param levelDimNames Candidate names of the level dimension of multi-level
+///                     fields (MOM6 layers by default; "ncat" for CICE restarts).
 void readMOM6Netcdf(const std::vector<std::string> & filepaths,
                     atlas::FieldSet & x,
                     const std::vector<std::string> & fileVarNames,
@@ -38,6 +40,8 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
                     const atlas::Field & mask3d,
                     const FieldsMetadata & meta,
                     const int ni, const int nj, const bool hasFold,
-                    const eckit::mpi::Comm & comm);
+                    const eckit::mpi::Comm & comm,
+                    const std::vector<std::string> & levelDimNames =
+                      {"Layer", "z_l", "zaxis_1", "nz"});
 
 }  // namespace ijedi

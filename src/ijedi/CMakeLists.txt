@@ -47,6 +47,10 @@ list(APPEND ijedi_src_files
   # IO
   Io/IoBase.cc
   Io/IoBase.h
+  Io/cice/IoCICE.cc
+  Io/cice/IoCICE.h
+  Io/cice/UpdateCICENetcdf.cc
+  Io/cice/UpdateCICENetcdf.h
   Io/gmsh/IoGmsh.cc
   Io/gmsh/IoGmsh.h
   Io/mom6/FillMaskedCells.cc

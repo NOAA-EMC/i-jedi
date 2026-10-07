@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "ijedi/FieldMetadata/FieldsMetadata.h"
 
@@ -1441,13 +1442,44 @@ namespace ijedi
     md.bctype = "extrapolate";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    // CICE per-category fields, one level per ice thickness category (5 in the GFS CICE
+    // configuration); masked cells keep the values of the file (CICE restarts, io "cice")
     md.longName = "sea_ice_category_area_fraction";
     md.units = "none";
     md.kind = "double";
     md.tracer = "false";
-    md.levels = "1";
+    md.levels = "5";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
+
+    {
+      const std::vector<std::pair<std::string, std::string>> categoryFields = {
+        {"sea_ice_category_volume", "m"},
+        {"sea_ice_snow_category_volume", "m"},
+        {"sea_ice_category_surface_temperature", "degC"},
+        {"sea_ice_category_pond_area_fraction", "none"},
+        {"sea_ice_category_pond_depth", "m"},
+        {"sea_ice_category_pond_lid_thickness", "m"}};
+      std::vector<std::pair<std::string, std::string>> layerFields;
+      // ice (7) and snow (1) thermodynamic layers of the GFS CICE configuration
+      for (int layer = 1; layer <= 7; ++layer) {
+        const std::string l = std::to_string(layer);
+        layerFields.push_back({"sea_ice_category_layer" + l + "_enthalpy", "J m-3"});
+        layerFields.push_back({"sea_ice_category_layer" + l + "_ice_salinity", "ppt"});
+      }
+      layerFields.push_back({"sea_ice_snow_category_layer1_enthalpy", "J m-3"});
+      for (const auto & fields : {categoryFields, layerFields}) {
+        for (const auto & nameUnits : fields) {
+          md.longName = nameUnits.first;
+          md.units = nameUnits.second;
+          md.kind = "double";
+          md.tracer = "false";
+          md.levels = "5";
+          md.vtype = "magnitude";
+          addFieldMetadata(fieldsmetadata, nlev, md);
+        }
+      }
+    }
 
     md.longName = "sea_ice_category_thickness";
     md.units = "none";

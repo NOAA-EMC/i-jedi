@@ -53,7 +53,8 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
                     const atlas::Field & mask3d,
                     const FieldsMetadata & meta,
                     const int ni, const int nj, const bool hasFold,
-                    const eckit::mpi::Comm & comm) {
+                    const eckit::mpi::Comm & comm,
+                    const std::vector<std::string> & levelDimNames) {
   const bool isRoot = (comm.rank() == 0);
   const auto fs =
       atlas::functionspace::NodeColumns(x.field(0).functionspace());
@@ -106,9 +107,9 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
       const std::string dimY =
         findDimName(ncid, "y (latitude)", {"lath", "yh", "yaxis_1", "ny", "nj"}, &dimNj);
 
-      // z dimension is optional: 2D files (sea ice, fix) may not have one
+      // level dimension is optional: 2D files (sea ice, fix) may not have one
       bool hasZDim = false;
-      for (const auto & zName : std::vector<std::string>{"Layer", "z_l", "zaxis_1", "nz"}) {
+      for (const auto & zName : levelDimNames) {
         int dimid;
         if (nc_inq_dimid(ncid, zName.c_str(), &dimid) == NC_NOERR) {
           nc_inq_dimlen(ncid, dimid, &dimNz);
