@@ -57,6 +57,8 @@ list(APPEND ijedi_src_files
   Io/mom6/ReadMOM6Netcdf.h
   Io/mom6/WriteMOM6Netcdf.cc
   Io/mom6/WriteMOM6Netcdf.h
+  Io/sqg/IoSQG.cc
+  Io/sqg/IoSQG.h
   Io/unstructured/IoUnstructured.cc
   Io/unstructured/IoUnstructured.h
 
@@ -72,8 +74,13 @@ list(APPEND ijedi_src_files
   LinearVariableChange/LinearVariableChange.cc
   LinearVariableChange/LinearVariableChange.h
 
-  # Model and LinearModel (persistence and identity)
+  # Model (dispatches to ModelFactory implementations) and LinearModel (identity)
   Model/Model.h
+  Model/ModelBase.h
+  Model/sqg/ModelSQG.cc
+  Model/sqg/ModelSQG.h
+  Model/sqg/SQGGrid.h
+  Model/sqg/sqg.hpp
   LinearModel/LinearModel.h
 
   # Utilities
@@ -183,4 +190,22 @@ endif()
 
 if(OpenMP_CXX_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
+# Single-precision FFTW for the SQG model (Model/sqg): Intel MKL's FFTW3 interface when
+# MKLROOT is set (e.g. the Ursa modulefile loads intel-oneapi-mkl), else FFTW3 itself.
+if(DEFINED ENV{MKLROOT})
+  set(MKLROOT $ENV{MKLROOT})
+  target_include_directories(${PROJECT_NAME} PRIVATE ${MKLROOT}/include/fftw)
+  find_library(MKL_INTEL_LP64 mkl_intel_lp64 HINTS ${MKLROOT}/lib REQUIRED)
+  find_library(MKL_SEQUENTIAL mkl_sequential HINTS ${MKLROOT}/lib REQUIRED)
+  find_library(MKL_CORE mkl_core HINTS ${MKLROOT}/lib REQUIRED)
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${MKL_INTEL_LP64} ${MKL_SEQUENTIAL} ${MKL_CORE})
+  message(STATUS "ijedi: SQG model uses MKL FFTW interface from ${MKLROOT}")
+else()
+  find_path(FFTW3_INCLUDE_DIR fftw3.h REQUIRED)
+  find_library(FFTW3F_LIB fftw3f REQUIRED)
+  find_library(FFTW3F_OMP_LIB fftw3f_omp REQUIRED)
+  target_include_directories(${PROJECT_NAME} PRIVATE ${FFTW3_INCLUDE_DIR})
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${FFTW3F_OMP_LIB} ${FFTW3F_LIB})
 endif()

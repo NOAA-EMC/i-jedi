@@ -9,6 +9,7 @@
 #include "oops/runs/HofX3D.h"
 #include "oops/runs/Variational.h"
 #include "oops/runs/ConvertState.h"
+#include "oops/runs/Forecast.h"
 
 #include "saber/oops/instantiateCovarFactory.h"
 #include "saber/oops/ErrorCovarianceToolbox.h"
@@ -45,6 +46,9 @@ int runApp(int argc, char **argv, const std::string appName)
   apps["letkf"] = []() {
     return std::make_unique<oops::LocalEnsembleDA<ijedi::Traits, ufo::ObsTraits>>();
   };
+  apps["forecast"] = []() {
+    return std::make_unique<oops::Forecast<ijedi::Traits>>();
+  };
   apps["convertstate"] = []() {
     return std::make_unique<oops::ConvertState<ijedi::Traits>>();
   };
@@ -80,7 +84,7 @@ int main(int argc, char **argv)
   // Check that the application is recognized
   // ----------------------------------------
   const std::set<std::string> validApps = {
-      "hofx3d", "var", "letkf", "errortoolbox", "convertstate", "geometry_cache"
+      "hofx3d", "var", "letkf", "errortoolbox", "convertstate", "forecast", "geometry_cache"
   };
   ASSERT_MSG(validApps.find(appName) != validApps.end(), "Application not recognized: " + appName);
 

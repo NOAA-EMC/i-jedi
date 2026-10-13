@@ -11,6 +11,7 @@
 
 #include "oops/base/Variables.h"
 #include "oops/util/AssociativeContainers.h"
+#include "oops/util/DateTime.h"
 #include "oops/util/parameters/OptionalParameter.h"
 #include "oops/util/parameters/OptionalPolymorphicParameter.h"
 #include "oops/util/parameters/Parameter.h"
@@ -31,7 +32,18 @@ namespace ijedi
     void readBase(atlas::FieldSet &) const;
     void writeBase(const atlas::FieldSet &) const;
 
+    // Valid time of the fields being read or written, set by State/Increment before
+    // readBase/writeBase (e.g. for writers that put the time in the file name).
+    void setValidTime(const util::DateTime & time) { validTime_ = time; hasValidTime_ = true; }
+
+   protected:
+    bool hasValidTime() const { return hasValidTime_; }
+    const util::DateTime & validTime() const { return validTime_; }
+
    private:
+    util::DateTime validTime_;
+    bool hasValidTime_ = false;
+
     // Child read/write methods
     virtual void read(atlas::FieldSet &, const eckit::LocalConfiguration &,
                       const eckit::LocalConfiguration &) const = 0;

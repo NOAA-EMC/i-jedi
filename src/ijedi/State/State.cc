@@ -114,6 +114,7 @@ namespace ijedi {
     // Create the IO object to use
     // ---------------------------
     std::unique_ptr<IoBase> io(IoFactory::create(geom_, ioParams));
+    io->setValidTime(this->validTime());
 
     // Call read method of child
     // -------------------------
@@ -145,6 +146,7 @@ namespace ijedi {
     // Create the IO object to use
     // ---------------------------
     std::unique_ptr<IoBase> io(IoFactory::create(geom_, ioParams));
+    io->setValidTime(this->validTime());
 
     // Call write method of child
     // --------------------------
