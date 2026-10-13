@@ -74,14 +74,18 @@ list(APPEND ijedi_src_files
   LinearVariableChange/LinearVariableChange.cc
   LinearVariableChange/LinearVariableChange.h
 
-  # Model (dispatches to ModelFactory implementations) and LinearModel (identity)
+  # Model and LinearModel (dispatch to ModelFactory / LinearModelFactory implementations)
   Model/Model.h
   Model/ModelBase.h
+  Model/sqg/LinearModelSQG.cc
+  Model/sqg/LinearModelSQG.h
   Model/sqg/ModelSQG.cc
   Model/sqg/ModelSQG.h
   Model/sqg/SQGGrid.h
   Model/sqg/sqg.hpp
+  Model/sqg/sqg_tl.hpp
   LinearModel/LinearModel.h
+  LinearModel/LinearModelBase.h
 
   # Utilities
   Utilities/Constants.cc
@@ -192,8 +196,9 @@ if(OpenMP_CXX_FOUND)
   target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
-# Single-precision FFTW for the SQG model (Model/sqg): Intel MKL's FFTW3 interface when
-# MKLROOT is set (e.g. the Ursa modulefile loads intel-oneapi-mkl), else FFTW3 itself.
+# FFTW for the SQG model (Model/sqg; single precision for the model, double for its TL/AD):
+# Intel MKL's FFTW3 interface when MKLROOT is set (e.g. the Ursa modulefile loads
+# intel-oneapi-mkl), else FFTW3 itself.
 if(DEFINED ENV{MKLROOT})
   set(MKLROOT $ENV{MKLROOT})
   target_include_directories(${PROJECT_NAME} PRIVATE ${MKLROOT}/include/fftw)
@@ -206,6 +211,7 @@ else()
   find_path(FFTW3_INCLUDE_DIR fftw3.h REQUIRED)
   find_library(FFTW3F_LIB fftw3f REQUIRED)
   find_library(FFTW3F_OMP_LIB fftw3f_omp REQUIRED)
+  find_library(FFTW3_LIB fftw3 REQUIRED)
   target_include_directories(${PROJECT_NAME} PRIVATE ${FFTW3_INCLUDE_DIR})
-  target_link_libraries(${PROJECT_NAME} PRIVATE ${FFTW3F_OMP_LIB} ${FFTW3F_LIB})
+  target_link_libraries(${PROJECT_NAME} PRIVATE ${FFTW3F_OMP_LIB} ${FFTW3F_LIB} ${FFTW3_LIB})
 endif()

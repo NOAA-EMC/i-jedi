@@ -7,7 +7,10 @@
 #include "oops/test/interface/Geometry.h"
 #include "oops/test/interface/GeometryIterator.h"
 #include "oops/test/interface/Increment.h"
+#include "oops/test/interface/LinearModel.h"
 #include "oops/test/interface/State.h"
+
+#include "saber/oops/instantiateCovarFactory.h"
 
 // -------------------------------------------------------------------------------------------------
 
@@ -18,6 +21,9 @@ int runApp(int argc, char **argv, const std::string testName)
 
   // Test application pointer
   std::unique_ptr<oops::Application> app;
+
+  // SABER covariances (e.g. for the random perturbations of the linear model test)
+  saber::instantiateCovarFactory<ijedi::Traits>();
 
   // Define a map from app names to lambda functions that create unique_ptr to Applications
   std::map<std::string, std::function<std::unique_ptr<oops::Application>()>> tests;
@@ -33,6 +39,10 @@ int runApp(int argc, char **argv, const std::string testName)
   tests["increment"] = []()
   {
     return std::make_unique<test::Increment<ijedi::Traits>>();
+  };
+  tests["linearmodel"] = []()
+  {
+    return std::make_unique<test::LinearModel<ijedi::Traits>>();
   };
   tests["geometryiterator"] = []()
   {
@@ -68,6 +78,7 @@ int main(int argc, char **argv)
       "geometryiterator",
       "state",
       "increment",
+      "linearmodel",
   };
   ASSERT_MSG(validtests.find(testApp) != validtests.end(), "Test not recognized: " + testApp);
 

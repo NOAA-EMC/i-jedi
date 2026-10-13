@@ -151,6 +151,14 @@ ecbuild_add_test( TARGET  ijedi_hofx3d_coupled
                   ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
 
+# Linear model (TL/AD) tests
+ecbuild_add_test( TARGET  ijedi_linearmodel_sqg
+                  MPI     1
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    linearmodel ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_linearmodel-sqg.yaml
+                  TEST_DEPENDS ijedi_setup_sqg_testdata)
+
 # Forecast tests
 ecbuild_add_test( TARGET  ijedi_forecast_sqg
                   MPI     1

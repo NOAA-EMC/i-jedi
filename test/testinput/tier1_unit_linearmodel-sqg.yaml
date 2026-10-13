@@ -1,0 +1,65 @@
+# oops LinearModel interface tests (tangent linear accuracy, linearity, adjoint) for the
+# SQG model: 1-day window (4 PT6H steps) about a forecast from a 64x64 turbulent SQG state,
+# on the 64x64 equatorial-patch geometry (see tier1_integration_forecast-sqg.yaml).
+geometry:
+  geometry_type: atlas
+  nlevels: 2
+  levels are top down: false
+  vertical coordinate source: level index
+  function space: StructuredColumns
+  partitioner: checkerboard
+  grid:
+    type: regional
+    nx: 64
+    ny: 64
+    west: 0.0
+    east: 31.5
+    south: -15.75
+    north: 15.75
+    y_numbering: 1
+
+model:
+  name: SQG
+  time step: PT6H
+  dt: 1800
+
+linear model:
+  name: SQG
+  time step: PT6H
+  dt: 1800
+
+initial condition:
+  date: 2015-01-01T00:00:00Z
+  state variables: [air_potential_temperature]
+  io:
+    filetype: sqg
+    filename: data_generated/sqg/sqg_ic.nc
+    time index: 0
+
+analysis variables: [air_potential_temperature]
+
+model aux control: {}
+model aux error: {}
+
+# Random perturbations from a bi-Fourier (doubly periodic) covariance, as in
+# tier1_integration_3dvar-atlas_bifourier.yaml. Length-scales are in metres on the patch:
+# 0.5 deg = 55.6 km there corresponds to one SQG grid length (312.5 km), so 300 km is
+# ~5.4 grid lengths (~1700 km in SQG units).
+background error:
+  covariance model: SABER
+  saber central block:
+    saber block name: BifourierCovariance
+    profiles:
+    - variable: air_potential_temperature
+      horizontal length-scales: [300.0e3, 300.0e3]  # GC99 support (m)
+      vertical length-scale: 1.0  # in levels
+      standard-deviation: [1.0, 1.0]
+  saber outer blocks:
+  - saber block name: BifourierSpectralToGrid
+
+linear model test:
+  forecast length: P1D
+  first multiplier TL: 1.0e-1
+  iterations TL: 5
+  tolerance TL: 1.0e-2
+  tolerance AD: 1.0e-12
