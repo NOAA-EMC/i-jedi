@@ -44,6 +44,12 @@ ecbuild_add_test(TARGET  ijedi_setup_sqg_testdata
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_sqg_testdata.py
                  ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/data/sqg ${CMAKE_CURRENT_BINARY_DIR}/data_generated/sqg)
 
+ecbuild_add_test(TARGET  ijedi_setup_sqg_3dvar_testdata
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_sqg_3dvar_testdata.py
+                 ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/sqg
+                 TEST_DEPENDS ijedi_setup_sqg_testdata)
+
 # Geometry tests
 ecbuild_add_test( TARGET  ijedi_geometry_fv3
                   MPI     6
@@ -205,6 +211,14 @@ ecbuild_add_test( TARGET  ijedi_3dvar_fv3_inc_gauss
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_inc_gauss.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
+
+# 3DVar with the SQG model state and bi-Fourier correlations on its doubly periodic domain
+ecbuild_add_test( TARGET  ijedi_3dvar_sqg
+                  MPI     1
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-sqg.yaml
+                  TEST_DEPENDS ijedi_setup_sqg_3dvar_testdata)
 
 # LETKF tests
 ecbuild_add_test( TARGET  ijedi_letkf_observer_fv3

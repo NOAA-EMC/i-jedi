@@ -1,0 +1,28 @@
+CostJo   : Nonlinear Jo(SQGLowerBoundary) = 5.0665935357273423e+02, nobs = 200, Jo/n = 2.5332967678636713e+00, err = 5.0000000000000000e-01
+CostJo   : Nonlinear Jo(SQGLid) = 3.9548542949737526e+02, nobs = 200, Jo/n = 1.9774271474868763e+00, err = 5.0000000000000000e-01
+- Regional grid size: 64x64
+- Cell sizes: 5.5598932457469729e+01 km x 5.5599461724272899e+01 km
+- Mean latitude: 0.0000000000000000e+00 deg
+- Spectral sizes: 33x33
+- Truncation parameters MxN: 31x31
+- Maximum total wave number: 31
+- Spectral array global size: 3001
+- Direct-inverse test passed
+- Inverse-direct test passed
+- Parseval identity test passed
+- Adjoint test (forward) passed
+- Adjoint test (inverse) passed
+- Derivatives / direct Laplacian consistency test passed
+Covariance norms: 
+- air_potential_temperature: 
+  + correlation square-root: 1.8113325248380169e-01
+  + standard-deviation:      1.4142135623730951e+00
+  + horizontal spectral std: 7.6311545976487716e-01
+CostFunction: Nonlinear J = 9.0214478307010950e+02
+DRPCGMinimizer: reduction in residual norm = 4.6136304014320612e-06
+CostFunction::addIncrement: Analysis: 
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7119189645e+01, Max=1.9156074522e+01, RMS=7.0499739274e+00
+CostJo   : Nonlinear Jo(SQGLowerBoundary) = 3.4079674384e+01, nobs = 200, Jo/n = 1.7039837192e-01, err = 5.0000000000e-01
+CostJo   : Nonlinear Jo(SQGLid) = 2.6786963929e+01, nobs = 200, Jo/n = 1.3393481965e-01, err = 5.0000000000e-01
+CostFunction: Nonlinear J = 6.0866638313e+01
