@@ -44,9 +44,9 @@ ecbuild_add_test(TARGET  ijedi_setup_sqg_testdata
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_sqg_testdata.py
                  ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/data/sqg ${CMAKE_CURRENT_BINARY_DIR}/data_generated/sqg)
 
-ecbuild_add_test(TARGET  ijedi_setup_sqg_3dvar_testdata
+ecbuild_add_test(TARGET  ijedi_setup_sqg_da_testdata
                  TYPE    SCRIPT
-                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_sqg_3dvar_testdata.py
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_sqg_da_testdata.py
                  ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/sqg
                  TEST_DEPENDS ijedi_setup_sqg_testdata)
 
@@ -218,7 +218,7 @@ ecbuild_add_test( TARGET  ijedi_3dvar_sqg
                   OMP     1
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-sqg.yaml
-                  TEST_DEPENDS ijedi_setup_sqg_3dvar_testdata)
+                  TEST_DEPENDS ijedi_setup_sqg_da_testdata)
 
 # LETKF tests
 ecbuild_add_test( TARGET  ijedi_letkf_observer_fv3
@@ -248,6 +248,14 @@ ecbuild_add_test( TARGET  ijedi_letkf_solver_fv3-restart
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    letkf ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_letkf_solver-fv3-restart.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata ijedi_letkf_observer_fv3-restart)
+
+# LETKF with the SQG model state and periodic horizontal localization
+ecbuild_add_test( TARGET  ijedi_letkf_sqg
+                  MPI     1
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    letkf ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_letkf-sqg.yaml
+                  TEST_DEPENDS ijedi_setup_sqg_da_testdata)
 
 # Dirac tests
 ecbuild_add_test( TARGET  ijedi_dirac_fv3_interp_gauss

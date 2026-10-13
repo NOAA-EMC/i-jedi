@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Generate a truth and observations for the SQG 3DVar test.
+Generate a truth, observations and an ensemble for the SQG data assimilation tests.
 
 The SQG domain is the doubly periodic 64x64 equatorial lon/lat patch of the SQG tests
 (0.5 deg spacing, x -> lon 0..31.5E, y -> lat 15.75S..15.75N); the constants below must match
-the `grid:` block of tier1_integration_3dvar-sqg.yaml.
+the `grid:` block of tier1_integration_3dvar-sqg.yaml and tier1_integration_letkf-sqg.yaml.
 
 Outputs (in <data_dir>, which must contain sqg_ic.nc from gen_sqg_testdata.py):
     1) sqg_truth.nc: the initial condition plus a random perturbation on each boundary, drawn
@@ -13,10 +13,12 @@ Outputs (in <data_dir>, which must contain sqg_ic.nc from gen_sqg_testdata.py):
     2) obs_sqg_bottom.nc and obs_sqg_lid.nc: IODA potentialTemperature observations of the
        truth plus random noise, at NOBS randomly selected grid points on the lower boundary
        and on the lid
+    3) ens_memNNN.nc: NENS ensemble members, the initial condition plus random perturbations
+       drawn like the truth perturbation and recentred on the initial condition; SQG layout
 
 The random seeds are fixed so the output is reproducible.
 
-Usage: python3 gen_sqg_3dvar_testdata.py <data_dir>
+Usage: python3 gen_sqg_da_testdata.py <data_dir>
 """
 
 import calendar
@@ -49,6 +51,10 @@ OBS_ERROR = 0.5       # K
 OBS_DATE = datetime.datetime(2015, 1, 1, 0, 0, 0)
 SEED = 20261014
 
+# Ensemble (perturbations drawn with their own seed, so the truth and obs do not depend on it)
+NENS = 10
+ENS_SEED = 20261015
+
 
 def gc99(r):
     r = np.abs(r)
@@ -68,6 +74,20 @@ def periodic_gc99_sqrt_spectrum():
     dist = np.hypot(i[None, :] * DX, i[:, None] * DX)
     spectrum = np.fft.fft2(gc99(dist / PERT_SUPPORT)).real
     return np.sqrt(np.maximum(spectrum, 0.0))
+
+
+def write_sqg(path, ic, theta, comment):
+    scale = float(ic["pv"].getncattr("scale_to_K"))
+    ds = nc.Dataset(path, "w", format="NETCDF4")
+    for name in ("t", "z", "y", "x"):
+        ds.createDimension(name, None if name == "t" else len(ic.dimensions[name]))
+    v = ds.createVariable("pv", "f4", ("t", "z", "y", "x"))
+    v.units = "m/s"
+    v.scale_to_K = np.float32(scale)
+    v[0] = (theta / scale).astype(np.float32)
+    ds.setncatts({a: ic.getncattr(a) for a in ic.ncattrs() if a != "comment"})
+    ds.comment = comment
+    ds.close()
 
 
 def write_obs(path, rng, truth_level):
@@ -128,17 +148,8 @@ def main():
         truth[k] += PERT_STD * np.fft.ifft2(sqrt_spectrum * np.fft.fft2(noise)).real
 
     path = os.path.join(datadir, "sqg_truth.nc")
-    ds = nc.Dataset(path, "w", format="NETCDF4")
-    for name in ("t", "z", "y", "x"):
-        ds.createDimension(name, None if name == "t" else len(ic.dimensions[name]))
-    v = ds.createVariable("pv", "f4", ("t", "z", "y", "x"))
-    v.units = "m/s"
-    v.scale_to_K = np.float32(scale)
-    v[0] = (truth / scale).astype(np.float32)
-    ds.setncatts({a: ic.getncattr(a) for a in ic.ncattrs() if a != "comment"})
-    ds.comment = "Truth for the ijedi SQG 3DVar test: sqg_ic.nc plus random perturbations"
-    ds.close()
-    ic.close()
+    write_sqg(path, ic, truth,
+              "Truth for the ijedi SQG DA tests: sqg_ic.nc plus random perturbations")
     print(f"  {path}")
 
     # Observations of the truth on the lower boundary (level 0) and on the lid (level 1)
@@ -146,6 +157,21 @@ def main():
         path = os.path.join(datadir, f"obs_sqg_{name}.nc")
         write_obs(path, rng, truth[k])
         print(f"  {path}")
+
+    # Ensemble: perturbations drawn like the truth perturbation, recentred on the background
+    rng = np.random.default_rng(ENS_SEED)
+    perts = np.empty((NENS, 2, N, N))
+    for ie in range(NENS):
+        for k in range(2):
+            noise = rng.standard_normal((N, N))
+            perts[ie, k] = PERT_STD * np.fft.ifft2(sqrt_spectrum * np.fft.fft2(noise)).real
+    perts -= perts.mean(axis=0)
+    for ie in range(NENS):
+        path = os.path.join(datadir, f"ens_mem{ie+1:03d}.nc")
+        write_sqg(path, ic, background + perts[ie],
+                  f"Member {ie+1} of the ijedi SQG DA test ensemble")
+        print(f"  {path}")
+    ic.close()
 
 
 if __name__ == "__main__":

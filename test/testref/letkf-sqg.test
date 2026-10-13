@@ -1,0 +1,113 @@
+Initial state for member 1:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7652851370e+01, Max=2.0184342009e+01, RMS=7.1886312916e+00
+Initial state for member 2:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.8068757877e+01, Max=1.9498644169e+01, RMS=7.0840872168e+00
+Initial state for member 3:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7509914010e+01, Max=1.8573157388e+01, RMS=7.0279758321e+00
+Initial state for member 4:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.8829917590e+01, Max=1.9979323675e+01, RMS=7.1366710406e+00
+Initial state for member 5:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7814842161e+01, Max=2.0665834653e+01, RMS=7.1234521744e+00
+Initial state for member 6:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.9568650247e+01, Max=2.0025560421e+01, RMS=7.2023046235e+00
+Initial state for member 7:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7542183920e+01, Max=1.8679198622e+01, RMS=7.1705121137e+00
+Initial state for member 8:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7753897188e+01, Max=1.8225965505e+01, RMS=7.0760870140e+00
+Initial state for member 9:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.8088153604e+01, Max=2.1593020952e+01, RMS=7.1794396191e+00
+Initial state for member 10:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.6978092026e+01, Max=1.8301869821e+01, RMS=7.1185205179e+00
+H(x) for member 1:
+SQGLowerBoundary nobs= 200 Min=-1.5078756224e+01, Max=1.7849351200e+01, RMS=7.5829351322e+00
+SQGLid nobs= 200 Min=-1.5999220671e+01, Max=1.5945940704e+01, RMS=7.3511004475e+00
+H(x) for member 2:
+SQGLowerBoundary nobs= 200 Min=-1.2662986731e+01, Max=1.7416005569e+01, RMS=7.4654321042e+00
+SQGLid nobs= 200 Min=-1.6524250509e+01, Max=1.5438577124e+01, RMS=7.2770546330e+00
+H(x) for member 3:
+SQGLowerBoundary nobs= 200 Min=-1.4618838584e+01, Max=1.7484352487e+01, RMS=7.4038931838e+00
+SQGLid nobs= 200 Min=-1.5521222713e+01, Max=1.5073717444e+01, RMS=7.0575951226e+00
+H(x) for member 4:
+SQGLowerBoundary nobs= 200 Min=-1.5185700213e+01, Max=1.9651442437e+01, RMS=7.3297840126e+00
+SQGLid nobs= 200 Min=-1.5790203901e+01, Max=1.6464265228e+01, RMS=7.3341099843e+00
+H(x) for member 5:
+SQGLowerBoundary nobs= 200 Min=-1.4546807210e+01, Max=1.7342569067e+01, RMS=7.5945560521e+00
+SQGLid nobs= 200 Min=-1.7001215590e+01, Max=1.5870294987e+01, RMS=7.3204576518e+00
+H(x) for member 6:
+SQGLowerBoundary nobs= 200 Min=-1.4033494483e+01, Max=1.6751087575e+01, RMS=7.4633005290e+00
+SQGLid nobs= 200 Min=-1.5277586313e+01, Max=1.5566286092e+01, RMS=7.3234280041e+00
+H(x) for member 7:
+SQGLowerBoundary nobs= 200 Min=-1.3940825235e+01, Max=1.6660585670e+01, RMS=7.5718812071e+00
+SQGLid nobs= 200 Min=-1.3846668639e+01, Max=1.7084194601e+01, RMS=7.2184738893e+00
+H(x) for member 8:
+SQGLowerBoundary nobs= 200 Min=-1.3723973041e+01, Max=1.5047846465e+01, RMS=7.2786005363e+00
+SQGLid nobs= 200 Min=-1.4855395915e+01, Max=1.6487689256e+01, RMS=7.3680222004e+00
+H(x) for member 9:
+SQGLowerBoundary nobs= 200 Min=-1.4086332064e+01, Max=2.0055529980e+01, RMS=7.6693865660e+00
+SQGLid nobs= 200 Min=-1.5793801727e+01, Max=1.6100985467e+01, RMS=7.2680584283e+00
+H(x) for member 10:
+SQGLowerBoundary nobs= 200 Min=-1.3932768561e+01, Max=1.6362764983e+01, RMS=7.4426912419e+00
+SQGLid nobs= 200 Min=-1.5174682530e+01, Max=1.6584032596e+01, RMS=7.2096532585e+00
+H(x) ensemble background mean: 
+SQGLowerBoundary nobs= 200 Min=-1.3481807406e+01, Max=1.7456340952e+01, RMS=7.4212086700e+00
+SQGLid nobs= 200 Min=-1.5443739646e+01, Max=1.5533143107e+01, RMS=7.2097541444e+00
+background y - H(x): 
+SQGLowerBoundary nobs= 200 Min=-2.7513472546e+00, Max=3.4538158432e+00, RMS=1.1254547438e+00
+SQGLid nobs= 200 Min=-2.3803504357e+00, Max=2.5509999051e+00, RMS=9.9434077175e-01
+Background mean :
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7106751644e+01, Max=1.9451854519e+01, RMS=7.0659938437e+00
+Analysis mean :
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7438444344e+01, Max=1.8160115604e+01, RMS=7.0651940987e+00
+Analysis mean increment :
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-2.7203513352e+00, Max=2.3202133768e+00, RMS=5.9490681678e-01
+H(x) for member 1:
+SQGLowerBoundary nobs= 200 Min=-1.3716549132e+01, Max=1.7719761205e+01, RMS=7.3598754303e+00
+SQGLid nobs= 200 Min=-1.5949160363e+01, Max=1.6582911712e+01, RMS=7.2629831052e+00
+H(x) for member 2:
+SQGLowerBoundary nobs= 200 Min=-1.3487120551e+01, Max=1.7884892751e+01, RMS=7.3023698399e+00
+SQGLid nobs= 200 Min=-1.6086744840e+01, Max=1.6423572957e+01, RMS=7.2448602346e+00
+H(x) for member 3:
+SQGLowerBoundary nobs= 200 Min=-1.4128850680e+01, Max=1.7971646664e+01, RMS=7.3013733530e+00
+SQGLid nobs= 200 Min=-1.5571415658e+01, Max=1.6185798896e+01, RMS=7.1604085495e+00
+H(x) for member 4:
+SQGLowerBoundary nobs= 200 Min=-1.4492214274e+01, Max=1.8213665825e+01, RMS=7.2726938869e+00
+SQGLid nobs= 200 Min=-1.5757384713e+01, Max=1.6830697966e+01, RMS=7.2596794259e+00
+H(x) for member 5:
+SQGLowerBoundary nobs= 200 Min=-1.4045067292e+01, Max=1.7667164293e+01, RMS=7.3525568665e+00
+SQGLid nobs= 200 Min=-1.5953405686e+01, Max=1.6369969820e+01, RMS=7.2663277511e+00
+H(x) for member 6:
+SQGLowerBoundary nobs= 200 Min=-1.3962779638e+01, Max=1.7511307013e+01, RMS=7.3095279020e+00
+SQGLid nobs= 200 Min=-1.5478082906e+01, Max=1.6495555227e+01, RMS=7.2759121013e+00
+H(x) for member 7:
+SQGLowerBoundary nobs= 200 Min=-1.3245528769e+01, Max=1.7563531232e+01, RMS=7.3435828282e+00
+SQGLid nobs= 200 Min=-1.4834285237e+01, Max=1.6990935368e+01, RMS=7.2196203431e+00
+H(x) for member 8:
+SQGLowerBoundary nobs= 200 Min=-1.3988003743e+01, Max=1.7325739455e+01, RMS=7.2533615807e+00
+SQGLid nobs= 200 Min=-1.5389740939e+01, Max=1.6463635241e+01, RMS=7.2756679211e+00
+H(x) for member 9:
+SQGLowerBoundary nobs= 200 Min=-1.3585626167e+01, Max=1.8371936750e+01, RMS=7.3782986202e+00
+SQGLid nobs= 200 Min=-1.5786854203e+01, Max=1.6376245176e+01, RMS=7.2536981750e+00
+H(x) for member 10:
+SQGLowerBoundary nobs= 200 Min=-1.3587674234e+01, Max=1.7428677988e+01, RMS=7.3008787693e+00
+SQGLid nobs= 200 Min=-1.5382026862e+01, Max=1.6940296990e+01, RMS=7.2395475540e+00
+H(x) ensemble analysis mean: 
+SQGLowerBoundary nobs= 200 Min=-1.3790939829e+01, Max=1.7765832318e+01, RMS=7.3095166632e+00
+SQGLid nobs= 200 Min=-1.5607625274e+01, Max=1.6445830689e+01, RMS=7.2375118012e+00
+analysis y - H(x): 
+SQGLowerBoundary nobs= 200 Min=-1.6876352584e+00, Max=2.0988639613e+00, RMS=5.3938873968e-01
+SQGLid nobs= 200 Min=-1.2107010748e+00, Max=1.0329333002e+00, RMS=4.4789647952e-01
+ombg RMS: 1.0619232436e+00
+oman RMS: 4.9575773764e-01
