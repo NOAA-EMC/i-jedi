@@ -1,0 +1,6 @@
+Initial state: 
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7106751644e+01, Max=1.9451854370e+01, RMS=7.0659938444e+00
+Final state: 
+  Valid time: 2015-01-02T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7182316654e+01, Max=1.8402023281e+01, RMS=6.9548114043e+00

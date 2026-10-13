@@ -13,6 +13,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/sqg)
 
 # Link the directory 'testref' to the test directory of the build
 # ---------------------------------------------------------------
@@ -37,6 +38,11 @@ ecbuild_add_test(TARGET ijedi_setup_fv3_testdata
                  TYPE SCRIPT
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_fv3_testdata.py
                  ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+
+ecbuild_add_test(TARGET  ijedi_setup_sqg_testdata
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_sqg_testdata.py
+                 ARGS    ${CMAKE_CURRENT_SOURCE_DIR}/data/sqg ${CMAKE_CURRENT_BINARY_DIR}/data_generated/sqg)
 
 # Geometry tests
 ecbuild_add_test( TARGET  ijedi_geometry_fv3
@@ -144,6 +150,14 @@ ecbuild_add_test( TARGET  ijedi_hofx3d_coupled
                   COMMAND $<TARGET_FILE:ijedi_coupled.x>
                   ARGS    hofx3d ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_hofx3d-coupled.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata ijedi_setup_obs_testdata)
+
+# Forecast tests
+ecbuild_add_test( TARGET  ijedi_forecast_sqg
+                  MPI     1
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    forecast ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_forecast-sqg.yaml
+                  TEST_DEPENDS ijedi_setup_sqg_testdata)
 
 # Geometry cache test
 ecbuild_add_test( TARGET  ijedi_geometry_cache_mom6

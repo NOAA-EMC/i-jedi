@@ -1,0 +1,42 @@
+# 1-day forecast with the SQG model (ijedi.x forecast) from a 64x64 turbulent SQG state.
+# Geometry: the doubly periodic SQG domain as a 64x64 equatorial lon/lat patch, 0.5 deg
+# spacing (x -> lon 0..31.5E, y -> lat 15.75S..15.75N); level 0 = lower boundary, 1 = lid.
+geometry:
+  geometry_type: atlas
+  nlevels: 2
+  levels are top down: false
+  vertical coordinate source: level index
+  function space: StructuredColumns
+  partitioner: checkerboard
+  grid:
+    type: regional
+    nx: 64
+    ny: 64
+    west: 0.0
+    east: 31.5
+    south: -15.75
+    north: 15.75
+
+model:
+  name: SQG
+  time step: PT6H
+  dt: 1800
+
+initial condition:
+  date: 2015-01-01T00:00:00Z
+  state variables: [air_potential_temperature]
+  io:
+    filetype: sqg
+    filename: data_generated/sqg/sqg_ic.nc
+    time index: 0
+
+forecast length: P1D
+
+output:
+  frequency: PT6H
+  io:
+    filetype: sqg
+    filename: data_generated/sqg/fc.%{valid}.nc
+
+test:
+  reference filename: testref/forecast-sqg.test
