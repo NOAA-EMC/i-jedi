@@ -1,0 +1,93 @@
+# 3DVar on a doubly periodic Cartesian grid (see tier1_integration_dirac-atlas_bifourier.yaml)
+# with observations located at grid points, including the domain corner and edges.
+# Grid constants must match tools/gen_cartesian_testdata.py.
+cost function:
+  cost type: 3D-Var
+  jb evaluation: false
+  time window:
+    begin: 2020-12-14T21:00:00Z
+    length: PT6H
+  geometry: &geom
+    geometry_type: atlas
+    nlevels: 5
+    function space: StructuredColumns
+    partitioner: checkerboard
+    grid:
+      type: regional
+      nx: 64
+      ny: 48
+      west: -2.835
+      east: 2.835
+      south: -2.115
+      north: 2.115
+      y_numbering: 1
+  analysis variables:
+  - air_temperature
+  background:
+    date: 2020-12-15T00:00:00Z
+    state variables:
+    - air_temperature
+    io:
+      filetype: unstructured
+      filepath: data_generated/cartesian/background
+      latitude south to north: false
+
+  background error:
+    covariance model: SABER
+    saber central block:
+      saber block name: BifourierCovariance
+      profiles:
+      - variable: air_temperature
+        horizontal length-scales: [200.0e3, 200.0e3, 200.0e3, 200.0e3, 200.0e3]  # GC99 support (m)
+        vertical length-scale: 2.0  # in levels
+        standard-deviation: [1.0, 1.0, 1.0, 1.0, 1.0]
+    saber outer blocks:
+    - saber block name: BifourierSpectralToGrid
+
+  observations:
+    observers:
+    - obs space:
+        name: GridPointTemperature
+        obsdatain:
+          engine:
+            type: H5File
+            obsfile: data_generated/cartesian/obs.nc
+        simulated variables:
+        - airTemperature
+      obs operator:
+        name: Identity
+        observation alias file: data/obs/obsop_name_map.yml
+      # Obs sit on grid points; this only guards against points on the domain edge
+      # being found just outside the mesh due to round-off.
+      get values:
+        regional nn fill distance in km: 1
+
+variational:
+  minimizer:
+    algorithm: DRPCG
+  iterations:
+  - geometry: *geom
+    ninner: 10
+    gradient norm reduction: 1e-10
+    test: on
+
+output:
+  io:
+    filetype: unstructured
+    filepath: 3dvar-atlas-bifourier-an
+    latitude south to north: false
+
+final:
+  increment:
+    output:
+      state component:
+        io:
+          filetype: unstructured
+          filepath: 3dvar-atlas-bifourier-inc
+          latitude south to north: false
+
+final j evaluation: false
+
+test:
+  reference filename: testref/3dvar-atlas-bifourier.test
+  test output filename: 3dvar-atlas-bifourier.test

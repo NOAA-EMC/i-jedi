@@ -1,0 +1,66 @@
+# Doubly periodic Cartesian grid: atlas regional grid on a small equatorial patch
+# (lon/lat in degrees ~ Cartesian x/y), with bi-Fourier (FFT) correlations that wrap
+# around both domain edges. Grid constants must match tools/gen_cartesian_testdata.py.
+geometry:
+  geometry_type: atlas
+  nlevels: 5
+  function space: StructuredColumns
+  partitioner: checkerboard
+  grid:
+    type: regional
+    nx: 64
+    ny: 48
+    west: -2.835
+    east: 2.835
+    south: -2.115
+    north: 2.115
+    y_numbering: 1
+
+background:
+  date: 2020-12-15T00:00:00Z
+  state variables:
+  - air_temperature
+  io:
+    filetype: unstructured
+    filepath: data_generated/cartesian/background
+    latitude south to north: false
+
+background error:
+  covariance model: SABER
+  adjoint test: true
+  square-root test: true
+  saber central block:
+    saber block name: BifourierCovariance
+    profiles:
+    - variable: air_temperature
+      horizontal length-scales: [200.0e3, 200.0e3, 200.0e3, 200.0e3, 200.0e3]  # GC99 support (m)
+      vertical length-scale: 2.0  # in levels
+      standard-deviation: [1.0, 1.0, 1.0, 1.0, 1.0]
+  saber outer blocks:
+  - saber block name: BifourierSpectralToGrid
+
+# South-west corner grid point (wraps in x and y) and middle of the northern edge
+# (wraps in y only), on levels far enough apart not to overlap.
+dirac:
+  lon:
+  - -2.835
+  - 0.045
+  lat:
+  - -2.115
+  - 2.115
+  level:
+  - 4
+  - 1
+  variable:
+  - air_temperature
+  - air_temperature
+
+output dirac:
+  io:
+    filetype: unstructured
+    filepath: dirac-atlas-bifourier-%id%
+    latitude south to north: false
+
+test:
+  reference filename: testref/dirac-atlas-bifourier.test
+  test output filename: dirac-atlas-bifourier.test

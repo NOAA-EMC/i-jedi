@@ -1,0 +1,27 @@
+Input Dirac increment:
+  Valid time: 2020-12-15T00:00:00Z, nFields = 1
+air_temperature : Min=0.0000000000e+00, Max=1.0000000000e+00, RMS=1.1410886615e-02
+- Regional grid size: 64x48
+- Cell sizes: 1.0007900024e+01 km x 1.0007903110e+01 km
+- Mean latitude: 0.0000000000e+00 deg
+- Spectral sizes: 33x25
+- Truncation parameters MxN: 31x23
+- Maximum total wave number: 31
+- Spectral array global size: 2233
+- Direct-inverse test passed
+- Inverse-direct test passed
+- Parseval identity test passed
+- Adjoint test (forward) passed
+- Adjoint test (inverse) passed
+- Derivatives / direct Laplacian consistency test passed
+Adjoint test for block BifourierSpectralToGrid passed
+Covariance norms: 
+- air_temperature: 
+  + correlation square-root: 7.2683775441e-01
+  + standard-deviation:      2.2360679775e+00
+  + horizontal spectral std: 1.4038217693e+00
+Adjoint test for block BifourierCovariance passed
+Square-root test for block BifourierCovariance passed
+Covariance(SABER) * Increment:
+  Valid time: 2020-12-15T00:00:00Z, nFields = 1
+air_temperature : Min=-1.2065353871e-06, Max=1.0000000000e+00, RMS=1.1872344475e-01

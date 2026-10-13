@@ -1,0 +1,26 @@
+CostJo   : Nonlinear Jo(GridPointTemperature) = 2.0000000000000000e+00, nobs = 4, Jo/n = 5.0000000000000000e-01, err = 1.0000000000000000e+00
+- Regional grid size: 64x48
+- Cell sizes: 1.0007900023680389e+01 km x 1.0007903110369107e+01 km
+- Mean latitude: 0.0000000000000000e+00 deg
+- Spectral sizes: 33x25
+- Truncation parameters MxN: 31x23
+- Maximum total wave number: 31
+- Spectral array global size: 2233
+- Direct-inverse test passed
+- Inverse-direct test passed
+- Parseval identity test passed
+- Adjoint test (forward) passed
+- Adjoint test (inverse) passed
+- Derivatives / direct Laplacian consistency test passed
+Covariance norms: 
+- air_temperature: 
+  + correlation square-root: 7.2683775440579523e-01
+  + standard-deviation:      2.2360679774997898e+00
+  + horizontal spectral std: 1.4038217692737180e+00
+CostFunction: Nonlinear J = 2.0000000000000000e+00
+DRPCGMinimizer: reduction in residual norm = 2.1987919426867391e-16
+CostFunction::addIncrement: Analysis: 
+  Valid time: 2020-12-15T00:00:00Z, nFields = 1
+air_temperature : Min=2.2000000000e+02, Max=2.8050000021e+02, RMS=2.5093217749e+02
+CostJo   : Nonlinear Jo(GridPointTemperature) = 4.9999957976e-01, nobs = 4, Jo/n = 1.2499989494e-01, err = 1.0000000000e+00
+CostFunction: Nonlinear J = 4.9999957976e-01

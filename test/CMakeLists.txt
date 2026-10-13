@@ -13,6 +13,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/cartesian)
 
 # Link the directory 'testref' to the test directory of the build
 # ---------------------------------------------------------------
@@ -37,6 +38,11 @@ ecbuild_add_test(TARGET ijedi_setup_fv3_testdata
                  TYPE SCRIPT
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_fv3_testdata.py
                  ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+
+ecbuild_add_test(TARGET  ijedi_setup_cartesian_testdata
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_cartesian_testdata.py
+                 ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/cartesian)
 
 # Geometry tests
 ecbuild_add_test( TARGET  ijedi_geometry_fv3
@@ -184,6 +190,14 @@ ecbuild_add_test( TARGET  ijedi_3dvar_fv3_inc_gauss
                   ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-fv3_inc_gauss.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata ijedi_setup_obs_testdata)
 
+# 3DVar on a doubly periodic Cartesian grid with bi-Fourier correlations
+ecbuild_add_test( TARGET  ijedi_3dvar_atlas_bifourier
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    var ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_3dvar-atlas_bifourier.yaml
+                  TEST_DEPENDS ijedi_setup_cartesian_testdata)
+
 # LETKF tests
 ecbuild_add_test( TARGET  ijedi_letkf_observer_fv3
                   MPI     6
@@ -220,6 +234,13 @@ ecbuild_add_test( TARGET  ijedi_dirac_fv3_interp_gauss
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    errortoolbox ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_dirac-fv3_interp_gauss.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata)
+
+ecbuild_add_test( TARGET  ijedi_dirac_atlas_bifourier
+                  MPI     2
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    errortoolbox ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_dirac-atlas_bifourier.yaml
+                  TEST_DEPENDS ijedi_setup_cartesian_testdata)
 
 # Convert state tests
 ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_mom6
