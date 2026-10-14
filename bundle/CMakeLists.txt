@@ -62,6 +62,13 @@ if (BUILD_JEDI)
   ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"         UPDATE BRANCH develop )
   ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"          UPDATE BRANCH develop )
   ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"           UPDATE BRANCH develop )
+  # SOCA: reference MOM6 interface, used to benchmark against i-jedi/mom6.
+  # Cloned (with the MOM6 submodule) if missing; no UPDATE, so an existing
+  # checkout is left as-is on reconfigure.
+  option(BUILD_SOCA "Build soca" ON)
+  if (BUILD_SOCA)
+    ecbuild_bundle( PROJECT soca    GIT    "https://github.com/JCSDA-internal/soca.git" BRANCH develop RECURSIVE )
+  endif()
   option(BUILD_FV3JEDI "Build fv3-jedi" OFF)
   if (BUILD_FV3JEDI)
     ecbuild_bundle( PROJECT fv3-jedi-lm    GIT "https://github.com/JCSDA/fv3-jedi-linearmodel.git"   UPDATE BRANCH develop )
