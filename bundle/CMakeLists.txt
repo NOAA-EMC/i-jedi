@@ -52,16 +52,21 @@ endif()
 # ===============================================================================
 ecbuild_bundle( PROJECT jedicmake GIT    "https://github.com/jcsda/jedi-cmake.git"      UPDATE BRANCH develop RECURSIVE )
 if (BUILD_JEDI)
-  ecbuild_bundle( PROJECT oops      GIT    "https://github.com/JCSDA/oops.git"          UPDATE BRANCH develop )
-  ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA/vader.git"         UPDATE BRANCH develop)
+  ecbuild_bundle( PROJECT oops      GIT    "https://github.com/JCSDA-internal/oops.git"          UPDATE BRANCH develop )
+  ecbuild_bundle( PROJECT vader     GIT    "https://github.com/JCSDA-internal/vader.git"         UPDATE BRANCH develop)
   if (CLONE_MIST)
     ecbuild_bundle( PROJECT mist      GIT    "https://github.com/JCSDA-internal/mist.git" UPDATE BRANCH develop )
   else()
     ecbuild_bundle( PROJECT mist SOURCE "./mist" )
   endif()
-  ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"         UPDATE BRANCH develop )
-  ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"          UPDATE BRANCH develop )
-  ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"           UPDATE BRANCH develop )
+  ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA-internal/saber.git"         UPDATE BRANCH develop )
+  ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA-internal/ioda.git"          UPDATE BRANCH develop )
+  # GSW-Fortran: required by ufo's marine obs operators (insitutemperature, obsop).
+  # SOURCE (not GIT/UPDATE): uses the existing local checkout as-is.
+  ecbuild_bundle( PROJECT gsw       SOURCE "./gsw" )
+  # SOURCE (not GIT/UPDATE) while the seaicefreeboard operator is developed on a
+  # local ufo branch; UPDATE/BRANCH would check out develop over it on reconfigure.
+  ecbuild_bundle( PROJECT ufo       SOURCE "./ufo" )
   # SOCA: reference MOM6 interface, used to benchmark against i-jedi/mom6.
   # Cloned (with the MOM6 submodule) if missing; no UPDATE, so an existing
   # checkout is left as-is on reconfigure.
