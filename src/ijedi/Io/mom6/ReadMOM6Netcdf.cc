@@ -3,6 +3,7 @@
 #include <netcdf.h>
 
 #include <algorithm>
+#include <set>
 #include <string>
 #include <vector>
 
