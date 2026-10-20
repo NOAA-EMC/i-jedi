@@ -2,6 +2,7 @@
 
 #include <netcdf.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -13,6 +14,8 @@
 #include "eckit/mpi/Comm.h"
 
 #include "oops/util/Logger.h"
+
+#include "ijedi/Geometry/mom6/GeometryMOM6.h"
 
 namespace ijedi {
 
@@ -241,6 +244,113 @@ void readMOM6Netcdf(const std::vector<std::string> & filepaths,
   }
 
   // Halo exchange to fill ghost nodes from their owning ranks
+  for (auto & field : x) {
+    atlas::functionspace::NodeColumns(field.functionspace()).haloExchange(field);
+  }
+}
+
+// ---------------------------------------------------------------------------
+void readMOM6NetcdfBlocks(const std::vector<std::string> & filepaths,
+                          atlas::FieldSet & x,
+                          const std::vector<std::string> & fileVarNames,
+                          const std::vector<double> & scalings,
+                          const GeometryMOM6 & geom) {
+  const bool isRoot = (geom.comm().rank() == 0);
+  const mom6::Block block = geom.mom6Block();
+  const size_t nLocal = block.size();
+
+  // Owned JEDI nodes are overwritten by the scatter, ghosts by the halo
+  // exchange; zero first so a variable missing from every file reads as 0,
+  // as in readMOM6Netcdf.
+  for (auto & field : x) {
+    auto v = atlas::array::make_view<double, 2>(field);
+    v.assign(0.0);
+  }
+
+  for (const auto & filepath : filepaths) {
+    int ncid = -1;
+    ASSERT_MSG(nc_open(filepath.c_str(), NC_NOWRITE, &ncid) == NC_NOERR,
+               "readMOM6NetcdfBlocks: cannot open " + filepath);
+
+    size_t dimNi = 0, dimNj = 0, dimNz = 0;
+    findDimName(ncid, "x (longitude)", {"lonh", "xh", "xaxis_1", "nx", "ni"}, &dimNi);
+    findDimName(ncid, "y (latitude)", {"lath", "yh", "yaxis_1", "ny", "nj"}, &dimNj);
+    if (static_cast<int>(dimNi) != geom.niEff() || static_cast<int>(dimNj) != geom.njEff()) {
+      nc_close(ncid);
+      throw eckit::BadValue("readMOM6NetcdfBlocks: " + filepath + " is " +
+                            std::to_string(dimNi) + " x " + std::to_string(dimNj) +
+                            " but the geometry grid is " + std::to_string(geom.niEff()) +
+                            " x " + std::to_string(geom.njEff()), Here());
+    }
+    int zDimId = -1;
+    for (const auto & zName : std::vector<std::string>{"Layer", "z_l", "zaxis_1", "nz"}) {
+      if (nc_inq_dimid(ncid, zName.c_str(), &zDimId) == NC_NOERR) {
+        nc_inq_dimlen(ncid, zDimId, &dimNz);
+        break;
+      }
+      zDimId = -1;
+    }
+
+    int fi = 0;
+    for (auto & field : x) {
+      const std::string & fileVarName = fileVarNames[fi];
+      const double scale = scalings[fi];
+      ++fi;
+      const int nLevels = field.shape(1);
+      int varid;
+      if (fileVarName.empty() ||
+          nc_inq_varid(ncid, fileVarName.c_str(), &varid) != NC_NOERR) continue;
+
+      // Variable layout: ([time,] [z,] j, i).  It has a z dimension when the
+      // one before (j, i) is the file's z dimension.
+      int ndims = 0;
+      nc_inq_varndims(ncid, varid, &ndims);
+      std::vector<int> dimids(std::max(ndims, 1));
+      nc_inq_vardimid(ncid, varid, dimids.data());
+      const bool varHasZ = (ndims >= 3 && zDimId >= 0 && dimids[ndims - 3] == zDimId);
+
+      const bool is3D = (nLevels > 1);
+      if (is3D && (!varHasZ || static_cast<int>(dimNz) != nLevels)) {
+        if (isRoot)
+          oops::Log::warning() << "readMOM6NetcdfBlocks: skipping 3D field " << field.name()
+                               << ": variable '" << fileVarName << "' in " << filepath
+                               << " has no matching z dimension" << std::endl;
+        continue;
+      }
+
+      // Hyperslab of this task's block; a leading time dimension is read at
+      // index 0, and a 2D field takes level 0 of a variable with levels.
+      std::vector<size_t> start(ndims, 0), count(ndims, 1);
+      if (is3D) count[ndims - 3] = static_cast<size_t>(nLevels);
+      start[ndims - 2] = static_cast<size_t>(block.j0);
+      count[ndims - 2] = static_cast<size_t>(block.nj);
+      start[ndims - 1] = static_cast<size_t>(block.i0);
+      count[ndims - 1] = static_cast<size_t>(block.ni);
+      std::vector<double> buf(static_cast<size_t>(nLevels) * nLocal);
+      if (nLocal > 0)
+        ASSERT_MSG(nc_get_vara_double(ncid, varid, start.data(), count.data(), buf.data())
+                   == NC_NOERR, "readMOM6NetcdfBlocks: cannot read " + fileVarName
+                   + " from " + filepath);
+      if (scale != 0.0)
+        for (auto & v : buf) v *= scale;
+
+      // Block (level-major) → MOM6-space field → owned JEDI nodes
+      atlas::Field mom6Field = geom.mom6FunctionSpace().createField<double>(
+          atlas::option::name(field.name()) | atlas::option::levels(nLevels));
+      auto vm = atlas::array::make_view<double, 2>(mom6Field);
+      for (size_t n = 0; n < nLocal; ++n)
+        for (int k = 0; k < nLevels; ++k)
+          vm(n, k) = buf[static_cast<size_t>(k) * nLocal + n];
+      geom.scatterToJedi(mom6Field, &field);
+
+      if (isRoot)
+        oops::Log::info() << "readMOM6NetcdfBlocks: " << field.name() << " <- "
+                          << fileVarName << " from " << filepath << std::endl;
+    }
+    nc_close(ncid);
+  }
+
+  // Halo exchange to fill ghost nodes from their owning tasks
   for (auto & field : x) {
     atlas::functionspace::NodeColumns(field.functionspace()).haloExchange(field);
   }

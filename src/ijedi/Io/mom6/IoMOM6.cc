@@ -6,6 +6,7 @@
 #include "oops/util/Timer.h"
 
 #include "ijedi/Geometry/Geometry.h"
+#include "ijedi/Geometry/mom6/GeometryMOM6.h"
 #include "ijedi/Io/mom6/FillMaskedCells.h"
 #include "ijedi/Io/mom6/IoMOM6.h"
 #include "ijedi/Io/mom6/ReadMOM6Netcdf.h"
@@ -55,8 +56,15 @@ namespace ijedi
                          ? fileioscaling.getDouble(jediName) : 0.0);
     }
 
-    // Delegate to the NetCDF reader (root reads, scatter, halo exchange)
-    readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings, geom_.getComm());
+    // Delegate to the NetCDF reader.  On a MOM6 geometry every task reads only
+    // its MOM6 block and scatters it to its JEDI points; otherwise root reads
+    // whole variables and scatters them.
+    const auto * mom6Geom = dynamic_cast<const GeometryMOM6 *>(&geom_.geometryImpl());
+    if (mom6Geom != nullptr) {
+      readMOM6NetcdfBlocks(readFilepaths_, x, fileVarNames, scalings, *mom6Geom);
+    } else {
+      readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings, geom_.getComm());
+    }
 
     // Apply boundary conditions to masked (land) cells: nearest-neighbour
     // extrapolation for tracers, zero for non-tracers.
@@ -86,8 +94,14 @@ namespace ijedi
                              ? fileionames.getString(jediName) : "");
     }
 
-    // Delegate to the NetCDF writer (Atlas gather + root writes)
-    writeMOM6Netcdf(writeFilepath_, x, fileVarNames, ni, nj, nz, geom_.getComm());
+    // Delegate to the NetCDF writer.  On a MOM6 geometry every task writes its
+    // own MOM6 block (parallel NetCDF-4); otherwise root gathers and writes.
+    const auto * mom6Geom = dynamic_cast<const GeometryMOM6 *>(&geom_.geometryImpl());
+    if (mom6Geom != nullptr) {
+      writeMOM6NetcdfBlocks(writeFilepath_, x, fileVarNames, nz, *mom6Geom);
+    } else {
+      writeMOM6Netcdf(writeFilepath_, x, fileVarNames, ni, nj, nz, geom_.getComm());
+    }
 
     oops::Log::trace() << classname() << " write state done" << std::endl;
   }

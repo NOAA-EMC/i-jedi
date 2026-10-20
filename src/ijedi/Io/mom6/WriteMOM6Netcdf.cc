@@ -1,6 +1,8 @@
 #include "ijedi/Io/mom6/WriteMOM6Netcdf.h"
 
+#include <mpi.h>
 #include <netcdf.h>
+#include <netcdf_par.h>
 
 #include <cmath>
 #include <cstdio>
@@ -18,7 +20,17 @@
 
 #include "oops/util/Logger.h"
 
+#include "ijedi/Geometry/mom6/GeometryMOM6.h"
+
 namespace ijedi {
+
+namespace {
+void ncCheck(int status, const std::string & what, const std::string & filepath) {
+  if (status != NC_NOERR)
+    throw eckit::Exception("writeMOM6Netcdf: " + what + " failed for " + filepath + ": "
+                           + nc_strerror(status), Here());
+}
+}  // namespace
 
 // ---------------------------------------------------------------------------
 void writeMOM6Netcdf(const std::string & filepath,
@@ -79,16 +91,17 @@ void writeMOM6Netcdf(const std::string & filepath,
   // --- 2. Root creates the NetCDF file, defines dims/vars, writes data ---
   if (isRoot) {
     std::remove(filepath.c_str());
+    // NetCDF-4: classic formats cap a variable at 2-4 GB, and a 3D double
+    // field reaches ~4.9 GB at 1/12 deg (41 x 3297 x 4500).
     int ncid;
-    ASSERT_MSG(nc_create(filepath.c_str(), NC_CLOBBER, &ncid) == NC_NOERR,
-               "writeMOM6Netcdf: cannot create " + filepath);
+    ncCheck(nc_create(filepath.c_str(), NC_CLOBBER | NC_NETCDF4, &ncid), "nc_create", filepath);
 
     // Define dimensions
     int dim_time, dim_layer, dim_lath, dim_lonh;
-    nc_def_dim(ncid, "Time",  NC_UNLIMITED, &dim_time);
-    nc_def_dim(ncid, "Layer", nz,           &dim_layer);
-    nc_def_dim(ncid, "lath",  nj,           &dim_lath);
-    nc_def_dim(ncid, "lonh",  ni,           &dim_lonh);
+    ncCheck(nc_def_dim(ncid, "Time",  NC_UNLIMITED, &dim_time), "nc_def_dim", filepath);
+    ncCheck(nc_def_dim(ncid, "Layer", nz,           &dim_layer), "nc_def_dim", filepath);
+    ncCheck(nc_def_dim(ncid, "lath",  nj,           &dim_lath), "nc_def_dim", filepath);
+    ncCheck(nc_def_dim(ncid, "lonh",  ni,           &dim_lonh), "nc_def_dim", filepath);
 
     // Define variables (skip duplicates, e.g. two JEDI names → same file var)
     std::unordered_map<std::string, int> varids;
@@ -99,14 +112,16 @@ void writeMOM6Netcdf(const std::string & filepath,
       int varid;
       if (field.shape(1) > 1) {
         int dimids[4] = {dim_time, dim_layer, dim_lath, dim_lonh};
-        nc_def_var(ncid, varName.c_str(), NC_DOUBLE, 4, dimids, &varid);
+        ncCheck(nc_def_var(ncid, varName.c_str(), NC_DOUBLE, 4, dimids, &varid),
+                "nc_def_var " + varName, filepath);
       } else {
         int dimids[3] = {dim_time, dim_lath, dim_lonh};
-        nc_def_var(ncid, varName.c_str(), NC_DOUBLE, 3, dimids, &varid);
+        ncCheck(nc_def_var(ncid, varName.c_str(), NC_DOUBLE, 3, dimids, &varid),
+                "nc_def_var " + varName, filepath);
       }
       varids[varName] = varid;
     }
-    nc_enddef(ncid);
+    ncCheck(nc_enddef(ncid), "nc_enddef", filepath);
 
     // Retrieve the gathered global indices (only valid on root)
     auto gIdx = atlas::array::make_view<double, 2>(globalGidxField);
@@ -145,19 +160,19 @@ void writeMOM6Netcdf(const std::string & filepath,
       // Use the gathered global_index to place each value on the full grid.
       //   global_index = jG * ni + iG + 1  →  flatIdx = global_index - 1
       if (nLevels > 1) {
-        std::vector<double> buf(static_cast<size_t>(nz * nj * ni), 0.0);
+        const size_t nHoriz = static_cast<size_t>(nj) * ni;
+        std::vector<double> buf(static_cast<size_t>(nz) * nHoriz, 0.0);
         for (int n = 0; n < nGlobal; ++n) {
-          const int flatIdx = static_cast<int>(gIdx(n, 0)) - 1;
-          const int iG = flatIdx % ni;
-          const int jG = flatIdx / ni;
+          const size_t flatIdx = static_cast<size_t>(gIdx(n, 0)) - 1;
           for (int k = 0; k < nLevels; ++k)
-            buf[static_cast<size_t>(k * nj * ni + jG * ni + iG)] = gView(n, k);
+            buf[static_cast<size_t>(k) * nHoriz + flatIdx] = gView(n, k);
         }
         const size_t start[4] = {0, 0, 0, 0};
         const size_t count[4] = {1, static_cast<size_t>(nz),
                                     static_cast<size_t>(nj),
                                     static_cast<size_t>(ni)};
-        nc_put_vara_double(ncid, varids.at(varName), start, count, buf.data());
+        ncCheck(nc_put_vara_double(ncid, varids.at(varName), start, count, buf.data()),
+                "nc_put_vara_double " + varName, filepath);
       } else {
         std::vector<double> buf(static_cast<size_t>(nj * ni), 0.0);
         for (int n = 0; n < nGlobal; ++n) {
@@ -167,18 +182,107 @@ void writeMOM6Netcdf(const std::string & filepath,
         const size_t start[3] = {0, 0, 0};
         const size_t count[3] = {1, static_cast<size_t>(nj),
                                     static_cast<size_t>(ni)};
-        nc_put_vara_double(ncid, varids.at(varName), start, count, buf.data());
+        ncCheck(nc_put_vara_double(ncid, varids.at(varName), start, count, buf.data()),
+                "nc_put_vara_double " + varName, filepath);
       }
 
       oops::Log::info() << "writeMOM6Netcdf: " << field.name()
                         << " -> " << varName << " to " << filepath << std::endl;
     }
 
-    nc_close(ncid);
+    ncCheck(nc_close(ncid), "nc_close", filepath);
   }
 
   // Ensure the file is fully written before any rank returns (and potentially
   // tries to read it back).
+  comm.barrier();
+}
+
+// ---------------------------------------------------------------------------
+void writeMOM6NetcdfBlocks(const std::string & filepath,
+                           const atlas::FieldSet & x,
+                           const std::vector<std::string> & fileVarNames,
+                           const int nz,
+                           const GeometryMOM6 & geom) {
+  const eckit::mpi::Comm & comm = geom.comm();
+  const bool isRoot = (comm.rank() == 0);
+  const mom6::Block block = geom.mom6Block();
+  const size_t nLocal = block.size();
+
+  if (isRoot) std::remove(filepath.c_str());
+  comm.barrier();
+
+  int ncid;
+  ncCheck(nc_create_par(filepath.c_str(), NC_CLOBBER | NC_NETCDF4,
+                        MPI_Comm_f2c(comm.communicator()), MPI_INFO_NULL, &ncid),
+          "nc_create_par", filepath);
+
+  int dim_time, dim_layer, dim_lath, dim_lonh;
+  ncCheck(nc_def_dim(ncid, "Time",  NC_UNLIMITED, &dim_time), "nc_def_dim", filepath);
+  ncCheck(nc_def_dim(ncid, "Layer", nz,           &dim_layer), "nc_def_dim", filepath);
+  ncCheck(nc_def_dim(ncid, "lath",  geom.njEff(), &dim_lath), "nc_def_dim", filepath);
+  ncCheck(nc_def_dim(ncid, "lonh",  geom.niEff(), &dim_lonh), "nc_def_dim", filepath);
+
+  // Define variables (skip duplicates, e.g. two JEDI names → same file var)
+  std::unordered_map<std::string, int> varids;
+  int fi = 0;
+  for (const auto & field : x) {
+    const std::string & varName = fileVarNames[fi++];
+    if (varName.empty() || varids.count(varName)) continue;
+    int varid;
+    if (field.shape(1) > 1) {
+      int dimids[4] = {dim_time, dim_layer, dim_lath, dim_lonh};
+      ncCheck(nc_def_var(ncid, varName.c_str(), NC_DOUBLE, 4, dimids, &varid),
+              "nc_def_var " + varName, filepath);
+    } else {
+      int dimids[3] = {dim_time, dim_lath, dim_lonh};
+      ncCheck(nc_def_var(ncid, varName.c_str(), NC_DOUBLE, 3, dimids, &varid),
+              "nc_def_var " + varName, filepath);
+    }
+    varids[varName] = varid;
+  }
+  ncCheck(nc_enddef(ncid), "nc_enddef", filepath);
+
+  // Each field: owned JEDI values → this task's MOM6 block (land stays 0) →
+  // collective hyperslab write.
+  fi = 0;
+  for (const auto & field : x) {
+    const std::string & varName = fileVarNames[fi++];
+    if (varName.empty()) continue;
+    const int nLevels = static_cast<int>(field.shape(1));
+
+    atlas::Field mom6Field = geom.mom6FunctionSpace().createField<double>(
+        atlas::option::name(field.name()) | atlas::option::levels(nLevels));
+    auto vm = atlas::array::make_view<double, 2>(mom6Field);
+    vm.assign(0.0);
+    geom.gatherFromJedi(field, &mom6Field);
+
+    std::vector<double> buf(static_cast<size_t>(nLevels) * nLocal);
+    for (size_t n = 0; n < nLocal; ++n)
+      for (int k = 0; k < nLevels; ++k)
+        buf[static_cast<size_t>(k) * nLocal + n] = vm(n, k);
+
+    const int varid = varids.at(varName);
+    ncCheck(nc_var_par_access(ncid, varid, NC_COLLECTIVE), "nc_var_par_access", filepath);
+    if (nLevels > 1) {
+      const size_t start[4] = {0, 0, static_cast<size_t>(block.j0),
+                               static_cast<size_t>(block.i0)};
+      const size_t count[4] = {1, static_cast<size_t>(nLevels),
+                               static_cast<size_t>(block.nj), static_cast<size_t>(block.ni)};
+      ncCheck(nc_put_vara_double(ncid, varid, start, count, buf.data()),
+              "nc_put_vara_double " + varName, filepath);
+    } else {
+      const size_t start[3] = {0, static_cast<size_t>(block.j0), static_cast<size_t>(block.i0)};
+      const size_t count[3] = {1, static_cast<size_t>(block.nj), static_cast<size_t>(block.ni)};
+      ncCheck(nc_put_vara_double(ncid, varid, start, count, buf.data()),
+              "nc_put_vara_double " + varName, filepath);
+    }
+    if (isRoot)
+      oops::Log::info() << "writeMOM6NetcdfBlocks: " << field.name()
+                        << " -> " << varName << " to " << filepath << std::endl;
+  }
+
+  ncCheck(nc_close(ncid), "nc_close", filepath);
   comm.barrier();
 }
 
