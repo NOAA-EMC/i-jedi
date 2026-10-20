@@ -2,6 +2,10 @@
 # -------------------------
 add_subdirectory(mains)
 
+# Standalone unit tests
+# ---------------------
+add_subdirectory(unit)
+
 # Link the directory 'data' to the test directory of the build
 # ------------------------------------------------------------
 file(CREATE_LINK
@@ -228,6 +232,19 @@ ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_mom6
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_to_mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
+
+ecbuild_add_test( TARGET  ijedi_convertstate_mom6_velocity
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi.x>
+                  ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-mom6_velocity.yaml
+                  TEST_DEPENDS ijedi_setup_mom6_testdata)
+
+ecbuild_add_test(TARGET  ijedi_check_mom6_velocity
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_mom6_velocity.py
+                 ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6
+                 TEST_DEPENDS ijedi_convertstate_mom6_velocity)
 
 ecbuild_add_test( TARGET  ijedi_convertstate_mom6_to_fv3
                   MPI     6

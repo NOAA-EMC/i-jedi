@@ -99,7 +99,7 @@ namespace ijedi {
 
     // Create a Parameters object
     StateParameters params;
-    params.deserialize(config);
+    params.deserialize(swapIoMember(config));
 
     // Check that there are IO parameters
     if (params.io.value() == boost::none ||
@@ -130,7 +130,7 @@ namespace ijedi {
 
     // Create a Parameters object
     StateWriteParameters params;
-    params.deserialize(config);
+    params.deserialize(swapIoMember(config));
 
     // Check that there are IO parameters
     if (params.io.value() == boost::none ||

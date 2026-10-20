@@ -452,6 +452,8 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lon,
   atlas::Field fLatU  = addField("latu");
   atlas::Field fLonV  = addField("lonv");
   atlas::Field fLatV  = addField("latv");
+  atlas::Field fCosRot = addField("cos_rot");
+  atlas::Field fSinRot = addField("sin_rot");
 
   auto vLon   = atlas::array::make_view<double, 2>(fLon);
   auto vLat   = atlas::array::make_view<double, 2>(fLat);
@@ -460,6 +462,8 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lon,
   auto vDxT   = atlas::array::make_view<double, 2>(fDxT);
   auto vDyT   = atlas::array::make_view<double, 2>(fDyT);
   auto vAreaT = atlas::array::make_view<double, 2>(fAreaT);
+  auto vCosRot = atlas::array::make_view<double, 2>(fCosRot);
+  auto vSinRot = atlas::array::make_view<double, 2>(fSinRot);
   auto vLayerThickness = atlas::array::make_view<double, 2>(fLayerThickness);
   auto vLayerCenterDepth = atlas::array::make_view<double, 2>(fLayerCenterDepth);
   auto vVertCoord = atlas::array::make_view<double, 2>(fVertCoord);
@@ -1153,6 +1157,7 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
     geomVariables.set("ni", niEff_);
     geomVariables.set("nj", njEff_);
     geomVariables.set("nz", numLevels_);
+    geomVariables.set("has northern fold", hasFold_);
   }
 
   memStats("done");
