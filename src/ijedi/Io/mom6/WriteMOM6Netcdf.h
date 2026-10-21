@@ -41,11 +41,14 @@ void writeMOM6Netcdf(const std::string & filepath,
 
 /// Distributed variant: each task gathers its MOM6 block from the JEDI points
 /// and all tasks write their blocks collectively into one NetCDF-4 file
-/// (parallel I/O).  No task holds a global field.
+/// (parallel I/O).  No task holds a global field.  nativeVelocity as in
+/// writeMOM6Netcdf; the faces on a block's east and north edges take their
+/// neighbouring cells from the owning tasks.
 void writeMOM6NetcdfBlocks(const std::string & filepath,
                            const atlas::FieldSet & x,
                            const std::vector<std::string> & fileVarNames,
                            int nz,
-                           const GeometryMOM6 & geom);
+                           const GeometryMOM6 & geom,
+                           bool nativeVelocity = false);
 
 }  // namespace ijedi

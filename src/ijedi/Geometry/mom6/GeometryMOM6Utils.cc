@@ -104,7 +104,9 @@ void readHgridBlock(const std::string & path,
                     std::vector<double> * lonU,
                     std::vector<double> * latU,
                     std::vector<double> * lonV,
-                    std::vector<double> * latV) {
+                    std::vector<double> * latV,
+                    std::vector<double> * cosRot,
+                    std::vector<double> * sinRot) {
   const int K = coarsenFactor;
   // Supergrid corner rows/columns covering the block: x, y are (nyp, nxp),
   // dx is (nyp, nx), dy is (ny, nxp) and area is (ny, nx).
@@ -124,8 +126,14 @@ void readHgridBlock(const std::string & path,
   nc_close(ncid);
 
   const size_t nT = block.size();
-  for (auto * v : {lon, lat, dxT, dyT, areaT, lonU, latU, lonV, latV})
+  for (auto * v : {lon, lat, dxT, dyT, areaT, lonU, latU, lonV, latV, cosRot, sinRot})
     v->resize(nT);
+
+  // Shift x to within half a period of xc (MOM6 modulo_around_point).
+  auto moduloAround = [](double x, double xc) {
+    return x - 360.0 * std::floor((x - xc) / 360.0 + 0.5);
+  };
+  const double piOver720 = std::atan(1.0) / 180.0;
 
   for (int jL = 0; jL < block.nj; ++jL) {
     const size_t jS = static_cast<size_t>(K) * (2 * jL + 1);
@@ -141,6 +149,26 @@ void readHgridBlock(const std::string & path,
       (*latU)[n] = y[jS * C + (i2 + 2 * K)];
       (*lonV)[n] = x[(jS + K) * C + iS];
       (*latV)[n] = y[(jS + K) * C + iS];
+
+      // Rotation of grid "north" clockwise from true north, from the four
+      // cell corners -- MOM6 initialize_grid_rotation_angle (non-bugs branch).
+      {
+        const size_t jSo = j2, jNo = j2 + 2 * K, iWe = i2, iEa = i2 + 2 * K;
+        const double lonC = (*lon)[n];
+        const double lonSW = moduloAround(x[jSo * C + iWe], lonC);
+        const double lonSE = moduloAround(x[jSo * C + iEa], lonC);
+        const double lonNW = moduloAround(x[jNo * C + iWe], lonC);
+        const double lonNE = moduloAround(x[jNo * C + iEa], lonC);
+        const double latSW = y[jSo * C + iWe];
+        const double latSE = y[jSo * C + iEa];
+        const double latNW = y[jNo * C + iWe];
+        const double latNE = y[jNo * C + iEa];
+        const double lonScale = std::cos(piOver720 * ((latSW + latNE) + (latSE + latNW)));
+        const double angle = std::atan2(lonScale * ((lonNW - lonSE) + (lonNE - lonSW)),
+                                        (latNW - latSE) + (latNE - latSW));
+        (*cosRot)[n] = std::cos(angle);
+        (*sinRot)[n] = std::sin(angle);
+      }
 
       (*dxT)[n] = 0.0;
       for (int dc = 0; dc < 2 * K; ++dc)

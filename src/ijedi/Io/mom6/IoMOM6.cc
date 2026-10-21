@@ -140,6 +140,9 @@ namespace ijedi
     const auto * mom6Geom = dynamic_cast<const GeometryMOM6 *>(&geom_.geometryImpl());
     if (mom6Geom != nullptr) {
       readMOM6NetcdfBlocks(readFilepaths_, x, fileVarNames, scalings, *mom6Geom);
+    } else if (hasVelocity(x)) {
+      const mom6::VelocityGridInfo velGrid = gatherVelocityGrid(geom_);
+      readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings, geom_.getComm(), &velGrid);
     } else {
       readMOM6Netcdf(readFilepaths_, x, fileVarNames, scalings, geom_.getComm());
     }
@@ -176,7 +179,11 @@ namespace ijedi
     // own MOM6 block (parallel NetCDF-4); otherwise root gathers and writes.
     const auto * mom6Geom = dynamic_cast<const GeometryMOM6 *>(&geom_.geometryImpl());
     if (mom6Geom != nullptr) {
-      writeMOM6NetcdfBlocks(writeFilepath_, x, fileVarNames, nz, *mom6Geom);
+      writeMOM6NetcdfBlocks(writeFilepath_, x, fileVarNames, nz, *mom6Geom, nativeVelocity_);
+    } else if (nativeVelocity_ && hasVelocity(x)) {
+      const mom6::VelocityGridInfo velGrid = gatherVelocityGrid(geom_);
+      writeMOM6Netcdf(writeFilepath_, x, fileVarNames, ni, nj, nz, geom_.getComm(),
+                      true, &velGrid);
     } else {
       writeMOM6Netcdf(writeFilepath_, x, fileVarNames, ni, nj, nz, geom_.getComm());
     }

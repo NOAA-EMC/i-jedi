@@ -45,6 +45,10 @@ namespace ijedi
       { return {iStart_ - 1, jStart_ - 1, iCount_, jCount_}; }
     int niEff() const { return niEff_; }
     int njEff() const { return njEff_; }
+    bool hasFold() const { return hasFold_; }
+    // MOM6 rank owning effective-grid point (iG, jG) (0-based) and the
+    // row-major index of that point in the owner's block
+    std::pair<int, int> mom6Owner(int iG, int jG) const;
     const eckit::mpi::Comm & comm() const { return comm_; }
 
     // Scatter/gather map: for each JEDI-owned ocean point, the owning MOM6
@@ -96,7 +100,9 @@ namespace ijedi
                          const std::vector<double> & lonU,
                          const std::vector<double> & latU,
                          const std::vector<double> & lonV,
-                         const std::vector<double> & latV);
+                         const std::vector<double> & latV,
+                         const std::vector<double> & cosRot,
+                         const std::vector<double> & sinRot);
 
     // Populate fields_ on functionSpace_ (JEDI unstructured): owned nodes are
     // scattered from mom6Fields_, ghost/halo nodes filled by halo exchange.

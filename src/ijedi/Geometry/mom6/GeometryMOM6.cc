@@ -419,7 +419,9 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lon,
                                     const std::vector<double> & lonU,
                                     const std::vector<double> & latU,
                                     const std::vector<double> & lonV,
-                                    const std::vector<double> & latV)
+                                    const std::vector<double> & latV,
+                                    const std::vector<double> & cosRot,
+                                    const std::vector<double> & sinRot)
 {
   const int npts = iCount_ * jCount_;
   mom6Fields_ = atlas::FieldSet();
@@ -492,6 +494,8 @@ void GeometryMOM6::buildMom6Fields(const std::vector<double> & lon,
     vLatU(n, 0)  = latU[n];
     vLonV(n, 0)  = lonV[n];
     vLatV(n, 0)  = latV[n];
+    vCosRot(n, 0) = cosRot[n];
+    vSinRot(n, 0) = sinRot[n];
   }
 }
 
@@ -536,7 +540,8 @@ void GeometryMOM6::buildFields(bool buildVerticalGeometry)
       {"lon", "lon"}, {"lat", "lat"}, {"mask2d", "mask2d"}, {"depth", "depth"},
       {"dxT", "dxT"}, {"dyT", "dyT"}, {"area", "areaT"},
       {"lonu", "lonu"}, {"latu", "latu"}, {"lonv", "lonv"}, {"latv", "latv"},
-      {"areaT", "areaT"}, {"mask3d", "mask3d"}};
+      {"areaT", "areaT"}, {"mask3d", "mask3d"},
+      {"cos_rot", "cos_rot"}, {"sin_rot", "sin_rot"}};
   if (buildVerticalGeometry) {
     fromMom6.push_back({"sea_water_cell_thickness", "sea_water_cell_thickness"});
     fromMom6.push_back({"sea_water_depth", "sea_water_depth"});
@@ -683,34 +688,36 @@ void GeometryMOM6::buildScatterMap()
   scatterMap_.mom6LocalIdx.resize(ownedCount_);
 
   for (int n = 0; n < ownedCount_; ++n) {
-    const int iG = jediPoints_[n].first;
-    const int jG = jediPoints_[n].second;
-
-    // Find MOM6 piX (i-rank) and piY (j-rank) owning (iG, jG)
-    const int baseX  = niEff_ / layoutX_;
-    const int extraX = niEff_ % layoutX_;
-    const int piX    = (iG < extraX * (baseX + 1))
-                       ? iG / (baseX + 1)
-                       : extraX + (iG - extraX * (baseX + 1)) / baseX;
-
-    const int baseY  = njEff_ / layoutY_;
-    const int extraY = njEff_ % layoutY_;
-    const int piY    = (jG < extraY * (baseY + 1))
-                       ? jG / (baseY + 1)
-                       : extraY + (jG - extraY * (baseY + 1)) / baseY;
-
-    scatterMap_.mom6Rank[n] = piX * layoutY_ + piY;
-
-    // 0-based start of that tile
-    int iStart0 = 0;
-    for (int k = 0; k < piX; ++k) iStart0 += mom6::computeExtent(niEff_, layoutX_, k);
-    int jStart0 = 0;
-    for (int k = 0; k < piY; ++k) jStart0 += mom6::computeExtent(njEff_, layoutY_, k);
-
-    scatterMap_.mom6LocalIdx[n] =
-        (jG - jStart0) * mom6::computeExtent(niEff_, layoutX_, piX)
-        + (iG - iStart0);
+    const auto owner = mom6Owner(jediPoints_[n].first, jediPoints_[n].second);
+    scatterMap_.mom6Rank[n] = owner.first;
+    scatterMap_.mom6LocalIdx[n] = owner.second;
   }
+}
+
+// ---------------------------------------------------------------------------
+std::pair<int, int> GeometryMOM6::mom6Owner(const int iG, const int jG) const
+{
+  // Find MOM6 piX (i-rank) and piY (j-rank) owning (iG, jG)
+  const int baseX  = niEff_ / layoutX_;
+  const int extraX = niEff_ % layoutX_;
+  const int piX    = (iG < extraX * (baseX + 1))
+                     ? iG / (baseX + 1)
+                     : extraX + (iG - extraX * (baseX + 1)) / baseX;
+
+  const int baseY  = njEff_ / layoutY_;
+  const int extraY = njEff_ % layoutY_;
+  const int piY    = (jG < extraY * (baseY + 1))
+                     ? jG / (baseY + 1)
+                     : extraY + (jG - extraY * (baseY + 1)) / baseY;
+
+  // 0-based start of that tile
+  int iStart0 = 0;
+  for (int k = 0; k < piX; ++k) iStart0 += mom6::computeExtent(niEff_, layoutX_, k);
+  int jStart0 = 0;
+  for (int k = 0; k < piY; ++k) jStart0 += mom6::computeExtent(njEff_, layoutY_, k);
+
+  return {piX * layoutY_ + piY,
+          (jG - jStart0) * mom6::computeExtent(niEff_, layoutX_, piX) + (iG - iStart0)};
 }
 
 // ---------------------------------------------------------------------------
@@ -1023,11 +1030,12 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
   }
 
   {
-    std::vector<double> lon, lat, dxT, dyT, areaT, lonU, latU, lonV, latV;
+    std::vector<double> lon, lat, dxT, dyT, areaT, lonU, latU, lonV, latV, cosRot, sinRot;
     {
       util::Timer timer("ijedi::GeometryMOM6", "readHgrid");
       mom6::readHgridBlock(hgridPath, coarsenFactor_, block,
-                           &lon, &lat, &dxT, &dyT, &areaT, &lonU, &latU, &lonV, &latV);
+                           &lon, &lat, &dxT, &dyT, &areaT, &lonU, &latU, &lonV, &latV,
+                           &cosRot, &sinRot);
     }
     memStats("readHgrid");
 
@@ -1081,7 +1089,7 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
     {
       util::Timer timer("ijedi::GeometryMOM6", "buildMom6Fields");
       buildMom6Fields(lon, lat, depth, wet, layerThickness, layerCenterDepth,
-                      mask3d, dxT, dyT, areaT, lonU, latU, lonV, latV);
+                      mask3d, dxT, dyT, areaT, lonU, latU, lonV, latV, cosRot, sinRot);
     }
   }
   memStats("buildMom6Fields");

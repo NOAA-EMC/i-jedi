@@ -31,7 +31,9 @@ void readHgridBlock(const std::string & path,
                     std::vector<double> * lonU,
                     std::vector<double> * latU,
                     std::vector<double> * lonV,
-                    std::vector<double> * latV);
+                    std::vector<double> * latV,
+                    std::vector<double> * cosRot,
+                    std::vector<double> * sinRot);
 
 /// Global T-point lon/lat (niEff*njEff), read a strip of supergrid rows at a
 /// time.  Same values as readHgrid's lon/lat.
