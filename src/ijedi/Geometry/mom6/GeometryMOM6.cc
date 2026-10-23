@@ -46,8 +46,9 @@
 namespace ijedi
 {
 namespace {
-// Exchange-plan counts/displacements are per point; scale them to per value
-// for fields with several levels.
+// Exchange-plan counts/displacements are per point and do not depend on the
+// number of levels (fields carry 1 or nz).  Scale them to per value so that
+// all levels of a field move in one allToAllv.
 std::vector<int> perValue(const std::vector<int> & perPoint, int nlev) {
   std::vector<int> v(perPoint);
   for (auto & x : v) x *= nlev;
@@ -176,6 +177,7 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
   }
   nActiveGlobal_ = static_cast<int>(active.size());
   std::vector<int>().swap(frontier);
+  std::vector<int>().swap(distToOcean);
 
   // --- Step 2: Atlas geographic partition ---
   // Build an UnstructuredGrid from the active-point coordinates and let
@@ -212,9 +214,7 @@ void GeometryMOM6::buildJediFunctionSpace(const eckit::mpi::Comm & comm,
   ownedMax_   = static_cast<int>(dist.max_pts());
 
   // Dense lookup: flat global index (jG*NI+iG) → index in active[], or -1.
-  // Reuses the distance buffer, which is no longer needed.
-  std::vector<int> activeIdx = std::move(distToOcean);
-  std::fill(activeIdx.begin(), activeIdx.end(), -1);
+  std::vector<int> activeIdx(nCells, -1);
   for (int k = 0; k < nActiveGlobal_; ++k)
     activeIdx[active[k].jG * niEff_ + active[k].iG] = k;
   auto isActive = [&](int flat) { return activeIdx[flat] >= 0; };
