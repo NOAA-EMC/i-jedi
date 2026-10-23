@@ -170,6 +170,9 @@ namespace ijedi {
       // (probably coming from FieldsMetaData)
       if (geom_.fields().has("mask2d")) {
         field.metadata().set("mask", "mask2d");
+        // MOM6 2D fields (e.g. SSH) live at the ocean surface: BUMP needs to
+        // know which 3D level they pair with (as SOCA sets).
+        field.metadata().set("nearest 3d level", "top");
       }
     }
   }
