@@ -10,6 +10,7 @@
 #include "eckit/config/Configuration.h"
 #include "eckit/exception/Exceptions.h"
 #include "ijedi/Geometry/Geometry.h"
+#include "ijedi/Increment/Increment.h"
 #include "ijedi/Utilities/PrintHelper.h"
 #include "oops/base/Variables.h"
 #include "oops/util/DateTime.h"
@@ -99,7 +100,7 @@ namespace ijedi {
 
     // Create a Parameters object
     StateParameters params;
-    params.deserialize(config);
+    params.deserialize(swapIoMember(config));
 
     // Check that there are IO parameters
     if (params.io.value() == boost::none ||
@@ -131,7 +132,7 @@ namespace ijedi {
 
     // Create a Parameters object
     StateWriteParameters params;
-    params.deserialize(config);
+    params.deserialize(swapIoMember(config));
 
     // Check that there are IO parameters
     if (params.io.value() == boost::none ||
@@ -157,6 +158,14 @@ namespace ijedi {
 
   // -----------------------------------------------------------------------------------------------
 
+  State &State::operator+=(const Increment &dx)
+  {
+    mist::Fields::operator+=(dx);
+    return *this;
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
   void State::analytic_init(const eckit::Configuration &config)
   {
     oops::Log::trace() << "ijedi::State::analytic_init starting" << std::endl;
@@ -172,6 +181,9 @@ namespace ijedi {
       // (probably coming from FieldsMetaData)
       if (geom_.fields().has("mask2d")) {
         field.metadata().set("mask", "mask2d");
+        // MOM6 2D fields (e.g. SSH) live at the ocean surface: BUMP needs to
+        // know which 3D level they pair with (as SOCA sets).
+        field.metadata().set("nearest 3d level", "top");
       }
     }
   }

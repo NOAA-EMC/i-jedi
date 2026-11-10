@@ -623,14 +623,6 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
-    md.longName = "f10m";
-    md.units = "none";
-    md.kind = "double";
-    md.tracer = "false";
-    md.levels = "1";
-    md.vtype = "magnitude";
-    addFieldMetadata(fieldsmetadata, nlev, md);
-
     md.longName = "filtered_orography";
     md.units = "m";
     md.kind = "double";
@@ -1365,6 +1357,14 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
+    md.vtype = "magnitude";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "ratio_of_wind_at_surface_adjacent_layer_to_wind_at_10m";
+    md.units = "none";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
