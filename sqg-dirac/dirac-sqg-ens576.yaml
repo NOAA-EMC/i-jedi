@@ -1,0 +1,75 @@
+# Dirac test of the localized ensemble covariance of the sqgturb EnKF background ensemble
+# (sqg_enstest.nc, all 576 members), with one broad bi-Fourier localization.
+# Run from build/ijedi/test with 1 MPI task (SQG files are written on a single task):
+#   ijedi.x errortoolbox <this yaml>
+# after splitting the ensemble file (sqgturb EnKF output, not in the repository) into members:
+#   ../../../sqg-dirac/split_sqg_ensemble.py sqg_enstest.nc sqg-dirac
+# The SQG domain is the doubly periodic 64x64 equatorial lon/lat patch of the SQG tests
+# (0.5 deg spacing, period 32 deg = 3558 km in both directions); one SQG grid cell (312.5 km)
+# is 55.6 km on the patch, i.e. SQG lengths times 0.178. Level 1 is the lower boundary, level 2
+# the lid.
+geometry:
+  geometry_type: atlas
+  nlevels: 2
+  levels are top down: false
+  vertical coordinate source: level index
+  function space: StructuredColumns
+  partitioner: checkerboard
+  grid:
+    type: regional
+    nx: 64
+    ny: 64
+    west: 0.0
+    east: 31.5
+    south: -15.75
+    north: 15.75
+
+background:
+  date: 2015-01-01T00:00:00Z
+  state variables: [air_potential_temperature]
+  io:
+    filetype: sqg
+    filename: sqg-dirac/sqg_ens_mean.nc
+    time index: 0
+
+background error:
+  covariance model: SABER
+  covariance type: ensemble
+  adjoint test: true
+  square-root test: true
+  ensemble:
+    members from template:
+      template:
+        date: 2015-01-01T00:00:00Z
+        state variables: [air_potential_temperature]
+        io:
+          filetype: sqg
+          filename: sqg-dirac/ens/sqg_ens_mem%mem%.nc
+          time index: 0
+      pattern: '%mem%'
+      nmembers: 576
+      zero padding: 3
+  # GC99 support 1750 km, about the EnKF's hcovlocal_scale (1e7 m in SQG units = 1780 km) and
+  # just below half the domain (1779 km); vertical length-scale 10 (levels) gives a localization
+  # of gc99(0.1) = 0.94 between the lower boundary and the lid.
+  localization:
+    saber central block:
+      saber block name: BifourierCovariance
+      profiles:
+      - variable: air_potential_temperature
+        horizontal length-scales: [1750.0e3, 1750.0e3]
+        vertical length-scale: 10.0
+    saber outer blocks:
+    - saber block name: BifourierSpectralToGrid
+
+# Domain centre, lower boundary
+dirac:
+  lon: [16.0]
+  lat: [0.25]
+  level: [1]
+  variable: [air_potential_temperature]
+
+output dirac:
+  io:
+    filetype: sqg
+    filename: sqg-dirac/dirac-ens576%id%.nc
