@@ -23,6 +23,12 @@ DRPCGMinimizer: reduction in residual norm = 4.6136304014320612e-06
 CostFunction::addIncrement: Analysis: 
   Valid time: 2015-01-01T00:00:00Z, nFields = 1
 air_potential_temperature : Min=-1.7119189645e+01, Max=1.9156074522e+01, RMS=7.0499739274e+00
+Writing Increment:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-2.2008679827e+00, Max=2.6486683121e+00, RMS=5.8783711898e-01
+Writing State:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7119189645e+01, Max=1.9156074522e+01, RMS=7.0499739274e+00
 CostJo   : Nonlinear Jo(SQGLowerBoundary) = 3.4079674384e+01, nobs = 200, Jo/n = 1.7039837192e-01, err = 5.0000000000e-01
 CostJo   : Nonlinear Jo(SQGLid) = 2.6786963929e+01, nobs = 200, Jo/n = 1.3393481965e-01, err = 5.0000000000e-01
 CostFunction: Nonlinear J = 6.0866638313e+01

@@ -90,19 +90,14 @@ variational:
     test: on
 
 output:
-  io:
-    filetype: sqg
-    filename: 3dvar-sqg-an.nc
-
-final:
+  analysis:
+    io:
+      filetype: sqg
+      filename: 3dvar-sqg-an.nc
   increment:
-    output:
-      state component:
-        io:
-          filetype: sqg
-          filename: 3dvar-sqg-inc.nc
-
-final j evaluation: false
+    io:
+      filetype: sqg
+      filename: 3dvar-sqg-inc.nc
 
 test:
   reference filename: testref/3dvar-sqg.test

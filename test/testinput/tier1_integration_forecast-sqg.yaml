@@ -40,3 +40,4 @@ output:
 
 test:
   reference filename: testref/forecast-sqg.test
+  test output filename: forecast-sqg.test

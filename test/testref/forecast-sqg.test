@@ -1,6 +1,21 @@
 Initial state: 
   Valid time: 2015-01-01T00:00:00Z, nFields = 1
 air_potential_temperature : Min=-1.7106751644e+01, Max=1.9451854370e+01, RMS=7.0659938444e+00
+Writing State:
+  Valid time: 2015-01-01T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7106751644e+01, Max=1.9451854370e+01, RMS=7.0659938444e+00
+Writing State:
+  Valid time: 2015-01-01T06:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.6765067872e+01, Max=1.8501673013e+01, RMS=7.0424964412e+00
+Writing State:
+  Valid time: 2015-01-01T12:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7601592302e+01, Max=1.8069225730e+01, RMS=7.0166598824e+00
+Writing State:
+  Valid time: 2015-01-01T18:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7272458355e+01, Max=1.8788310049e+01, RMS=6.9852188614e+00
+Writing State:
+  Valid time: 2015-01-02T00:00:00Z, nFields = 1
+air_potential_temperature : Min=-1.7182316654e+01, Max=1.8402023281e+01, RMS=6.9548114043e+00
 Final state: 
   Valid time: 2015-01-02T00:00:00Z, nFields = 1
 air_potential_temperature : Min=-1.7182316654e+01, Max=1.8402023281e+01, RMS=6.9548114043e+00

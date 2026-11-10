@@ -57,11 +57,6 @@ namespace ijedi {
 
   // -----------------------------------------------------------------------------------------------
 
-  State::State(const oops::Variables &vars, const State &other)
-      : mist::State(vars, other), geom_(other.geom_) {
-    setAtlasFieldMetadata();
-  }
-
   State::State(const State &other) : mist::State(other), geom_(other.geom_) {
     setAtlasFieldMetadata();
   }
