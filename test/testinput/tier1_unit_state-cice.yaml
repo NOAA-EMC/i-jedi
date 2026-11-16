@@ -1,0 +1,54 @@
+# CICE restart io (filetype cice) on the MOM6 geometry: read, then write in update mode
+# (template copied first) and read back. tools/check_cice_io.py then checks the
+# written file against the template.
+geometry:
+  geometry_type: mom6
+  ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+  ocean_topog: data_generated/mom6/ocean_topog.nc
+  vertical geometry from: data_generated/mom6/MOM.res.nc
+  has northern fold: true
+  coarsen factor: 1
+  fringe width: 2
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [3, 2]
+    MINIMUM_DEPTH: 0.5
+state test:
+  statefile:
+    date: 2021-01-01T00:00:00Z
+    state variables: &cice_vars
+    - sea_ice_category_area_fraction
+    - sea_ice_category_volume
+    - sea_ice_snow_category_volume
+    - sea_ice_category_surface_temperature
+    io:
+      filetype: cice
+      datapath: data_generated/mom6
+      restart_file: cice6_restart.nc
+      field io names: &cice_field_io_names
+        sea_ice_category_area_fraction: aicen
+        sea_ice_category_volume: vicen
+        sea_ice_snow_category_volume: vsnon
+        sea_ice_category_surface_temperature: Tsfcn
+  write then read test:
+    state write:
+      io:
+        filetype: cice
+        datapath: data_generated/mom6
+        restart_file: cice6_restart_write_test.nc
+        template_file: cice6_restart.nc
+        field io names: *cice_field_io_names
+    state read:
+      date: 2021-01-01T00:00:00Z
+      state variables: *cice_vars
+      io:
+        filetype: cice
+        datapath: data_generated/mom6
+        restart_file: cice6_restart_write_test.nc
+        field io names: *cice_field_io_names
+  date: 2021-01-01T00:00:00Z
+  norm file: 2.15397072733909056e+02
+  tolerance: 1.0e-05
+  test variable change constructor: false
