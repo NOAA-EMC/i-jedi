@@ -36,17 +36,77 @@ void updateCICENetcdf(const std::string & filepath,
       atlas::option::name("__gidx") | atlas::option::levels(1) | atlas::option::global());
   fs.gather(gidxField, globalGidxField);
 
-  int ncid = -1;
-  if (isRoot) {
-    ASSERT_MSG(nc_open(filepath.c_str(), NC_WRITE, &ncid) == NC_NOERR,
-               "updateCICENetcdf: cannot open " + filepath);
-  }
-  const auto gIdx = atlas::array::make_view<double, 2>(globalGidxField);
-  const int nGathered = static_cast<int>(globalGidxField.shape(0));
   const size_t nHoriz = static_cast<size_t>(ni) * nj;
 
+  // Rank 0 checks the file and every variable before any collective call. A failure is
+  // broadcast so that all ranks throw together: a throw on rank 0 alone would leave the other
+  // ranks waiting in the gathers below.
+  int ncid = -1;
+  std::vector<int> varids(fileVarNames.size(), -1);
+  std::string error;
+  if (isRoot) {
+    if (nc_open(filepath.c_str(), NC_WRITE, &ncid) != NC_NOERR) {
+      error = "cannot open " + filepath
+              + " (the restart is updated in place and must be staged beforehand)";
+    }
+    int fi = 0;
+    for (const auto & field : x) {
+      const std::string & varName = fileVarNames[fi++];
+      if (!error.empty()) break;
+      if (varName.empty()) continue;
+      int varid, ndims;
+      if (nc_inq_varid(ncid, varName.c_str(), &varid) != NC_NOERR) {
+        error = "no variable " + varName + " in " + filepath;
+        break;
+      }
+      std::vector<int> dimids(NC_MAX_VAR_DIMS);
+      if (nc_inq_varndims(ncid, varid, &ndims) != NC_NOERR
+          || nc_inq_vardimid(ncid, varid, dimids.data()) != NC_NOERR) {
+        error = "cannot inquire " + varName + " in " + filepath;
+        break;
+      }
+      size_t nTotal = 1;
+      std::vector<size_t> lens(ndims);
+      for (int d = 0; d < ndims && error.empty(); ++d) {
+        if (nc_inq_dimlen(ncid, dimids[d], &lens[d]) != NC_NOERR) {
+          error = "cannot inquire " + varName + " in " + filepath;
+        }
+        nTotal *= lens[d];
+      }
+      if (!error.empty()) break;
+      const int nLevels = field.shape(1);
+      if (ndims < 2 || lens[ndims - 1] != static_cast<size_t>(ni)
+          || lens[ndims - 2] != static_cast<size_t>(nj) || nTotal != nHoriz * nLevels) {
+        error = "shape of " + varName + " in " + filepath + " does not match a field with "
+                + std::to_string(nLevels) + " levels";
+        break;
+      }
+      varids[fi - 1] = varid;
+    }
+    if (!error.empty() && ncid >= 0) nc_close(ncid);
+  }
+  int failed = error.empty() ? 0 : 1;
+  comm.broadcast(failed, 0);
+  if (failed) {
+    throw eckit::UserError("updateCICENetcdf: "
+                           + (isRoot ? error : std::string("check failed on rank 0")),
+                           Here());
+  }
+
+  const auto gIdx = atlas::array::make_view<double, 2>(globalGidxField);
+  const int nGathered = static_cast<int>(globalGidxField.shape(0));
+
   // One field at a time: gather it on root (collective), which overwrites the file variable at
-  // the mesh nodes, so that root holds a single global field at a time
+  // the mesh nodes, so that root holds a single global field at a time. An i/o error past the
+  // checks above aborts all ranks (rank 0 cannot throw alone in the middle of the gathers), and
+  // a failed read never writes a stale buffer over the values JEDI does not hold.
+  auto abortOnError = [&](const int status, const std::string & what) {
+    if (status != NC_NOERR) {
+      oops::Log::error() << "updateCICENetcdf: " << what << ": " << nc_strerror(status)
+                         << std::endl;
+      comm.abort(1);
+    }
+  };
   int fi = 0;
   for (const auto & field : x) {
     const std::string & varName = fileVarNames[fi++];
@@ -57,41 +117,23 @@ void updateCICENetcdf(const std::string & filepath,
     fs.gather(field, gf);
     if (!isRoot) continue;
 
-    int varid;
-    ASSERT_MSG(nc_inq_varid(ncid, varName.c_str(), &varid) == NC_NOERR,
-               "updateCICENetcdf: no variable " + varName + " in " + filepath);
-    int ndims;
-    nc_inq_varndims(ncid, varid, &ndims);
-    std::vector<int> dimids(ndims);
-    nc_inq_vardimid(ncid, varid, dimids.data());
-    size_t nTotal = 1;
-    std::vector<size_t> lens(ndims);
-    for (int d = 0; d < ndims; ++d) {
-      nc_inq_dimlen(ncid, dimids[d], &lens[d]);
-      nTotal *= lens[d];
-    }
+    const int varid = varids[fi - 1];
     const int nLevels = field.shape(1);
-    ASSERT_MSG(ndims >= 2 && lens[ndims - 1] == static_cast<size_t>(ni)
-               && lens[ndims - 2] == static_cast<size_t>(nj)
-               && nTotal == nHoriz * nLevels,
-               "updateCICENetcdf: shape of " + varName + " in " + filepath
-               + " does not match a field with " + std::to_string(nLevels) + " levels");
-
-    // Read the variable, overwrite the mesh nodes, write it back
-    std::vector<double> buf(nTotal);
-    nc_get_var_double(ncid, varid, buf.data());
+    std::vector<double> buf(nHoriz * nLevels);
+    abortOnError(nc_get_var_double(ncid, varid, buf.data()),
+                 "cannot read " + varName + " in " + filepath);
     const auto gView = atlas::array::make_view<double, 2>(gf);
     for (int n = 0; n < nGathered; ++n) {
       const size_t flat = static_cast<size_t>(gIdx(n, 0)) - 1;
       ASSERT(flat < nHoriz);
       for (int k = 0; k < nLevels; ++k) buf[k * nHoriz + flat] = gView(n, k);
     }
-    ASSERT_MSG(nc_put_var_double(ncid, varid, buf.data()) == NC_NOERR,
-               "updateCICENetcdf: cannot write " + varName + " in " + filepath);
+    abortOnError(nc_put_var_double(ncid, varid, buf.data()),
+                 "cannot write " + varName + " in " + filepath);
     oops::Log::info() << "updateCICENetcdf: " << field.name() << " -> " << varName
                       << " in " << filepath << std::endl;
   }
-  if (isRoot) nc_close(ncid);
+  if (isRoot) abortOnError(nc_close(ncid), "cannot close " + filepath);
   comm.barrier();
 }
 

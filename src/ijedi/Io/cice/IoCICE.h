@@ -3,7 +3,6 @@
 #include <ostream>
 #include <string>
 
-#include "oops/util/parameters/OptionalParameter.h"
 #include "oops/util/parameters/Parameter.h"
 #include "oops/util/parameters/Parameters.h"
 #include "oops/util/parameters/RequiredParameter.h"
@@ -26,17 +25,11 @@ namespace ijedi
                                           "path to location of files to be read",
                                           "./", this};
 
-    // CICE restart file: read, and updated in place on write
+    // CICE restart file: read, and updated in place on write (the file must already exist:
+    // staging it, e.g. copying the background restart, is left to the workflow)
     oops::RequiredParameter<std::string> restart_file{"restart_file",
                                                       "CICE restart file name",
                                                       this};
-
-    // On write, copy this file to the restart file first (the variables not written keep
-    // the template's values)
-    oops::OptionalParameter<std::string> template_file{"template_file",
-                                                       "CICE restart copied to restart_file "
-                                                       "before it is updated on write",
-                                                       this};
   };
 
   // -------------------------------------------------------------------------------------------------
@@ -64,7 +57,6 @@ namespace ijedi
 
     const Geometry & geom_;
     std::string filepath_;
-    std::string templatePath_;
   };
 
   // -------------------------------------------------------------------------------------------------

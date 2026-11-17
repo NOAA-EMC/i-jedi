@@ -1,6 +1,5 @@
 #include "ijedi/Io/cice/IoCICE.h"
 
-#include <fstream>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -26,11 +25,7 @@ namespace ijedi
         geom_(geom)
   {
     oops::Log::trace() << classname() << " constructor starting" << std::endl;
-    const std::string datapath = params.datapath.value();
-    filepath_ = datapath + "/" + params.restart_file.value();
-    if (params.template_file.value()) {
-      templatePath_ = datapath + "/" + *params.template_file.value();
-    }
+    filepath_ = params.datapath.value() + "/" + params.restart_file.value();
     oops::Log::trace() << classname() << " constructor done" << std::endl;
   }
 
@@ -72,15 +67,8 @@ namespace ijedi
     util::Timer timer(classname(), "write state");
     oops::Log::trace() << classname() << " write state starting" << std::endl;
 
+    // The restart is updated in place: it must already exist (staged by the workflow)
     const auto & comm = geom_.getComm();
-    if (!templatePath_.empty() && comm.rank() == 0) {
-      std::ifstream src(templatePath_, std::ios::binary);
-      ASSERT_MSG(src.good(), "IoCICE::write: cannot open template " + templatePath_);
-      std::ofstream dst(filepath_, std::ios::binary | std::ios::trunc);
-      dst << src.rdbuf();
-      ASSERT_MSG(dst.good(), "IoCICE::write: cannot copy the template to " + filepath_);
-    }
-
     std::vector<std::string> fileVarNames;
     for (const auto & field : x) {
       const std::string jediName = field.name();

@@ -6,7 +6,8 @@ Usage: check_cice_io.py <data_generated/mom6 dir>
 Expects, in that directory (gen_mom6_testdata.py and the ijedi_state_cice /
 ijedi_state_mom6_cice_history tests):
   cice6.nc                         CICE history (aice_h, grid-cell mean hi_h, hs_h)
-  cice6_restart.nc                 CICE restart template (aicen, vicen, vsnon, Tsfcn, iceumask)
+  cice6_restart.nc                 CICE restart (aicen, vicen, vsnon, Tsfcn, iceumask), copied
+                                   to cice6_restart_write_test.nc before the write
   cice6_restart_write_test.nc      restart written by the cice io (update mode)
   mom6_cice_history_write_test.nc  state read with "thickness from volume", written by the
                                    mom6 io
@@ -42,7 +43,7 @@ def check_restart(datadir):
     written = os.path.join(datadir, "cice6_restart_write_test.nc")
     ok = True
     for name in ("aicen", "vicen", "vsnon", "Tsfcn"):
-        err = np.nanmax(np.abs(read(written, name) - STATE_FACTOR * read(template, name)))
+        err = np.max(np.abs(read(written, name) - STATE_FACTOR * read(template, name)))
         print(f"  restart {name}: max |written - 3 x template| = {err:.3e}")
         ok = ok and err < TOL
     if not np.array_equal(read(written, "iceumask"), read(template, "iceumask")):
