@@ -15,7 +15,6 @@
 #include "mist/base/ModelData.h"
 #include "oops/base/Variables.h"
 #include "oops/util/Logger.h"
-#include "vader/vader.h"
 
 namespace ijedi {
 
@@ -32,13 +31,10 @@ VariableChange::VariableChange(const eckit::Configuration & varchangeConfig,
       configCookbook.set(key, val);
     }
   }
-  eckit::LocalConfiguration config{};
-  config.set(vader::configCookbookKey, configCookbook);
   // Set up model data for cookbook
   auto configModelData = mist::ModelData(geometry).modelData();
-  config.set(vader::configModelVarsKey, configModelData);
 
-  varchange_ = std::make_unique<mist::VaderVariableChange>(config);
+  initVaderVariableChange(configCookbook, configModelData);
   oops::Log::trace() << "ijedi::VariableChange::VariableChange done" << std::endl;
 }
 
@@ -56,7 +52,7 @@ void VariableChange::changeVar(State & xx, const oops::Variables & vars) const {
     geom_.addVaderIngredients(xx.fieldSet());
   }
 
-  varchange_->changeVar(xx, vars);
+  mist::VariableChange::changeVar(xx, vars);
   xx.setAtlasFieldMetadata();
   oops::Log::trace() << "ijedi::VariableChange::changeVar done" << std::endl;
 }

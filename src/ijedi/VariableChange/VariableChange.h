@@ -7,11 +7,9 @@
 
 #pragma once
 
-#include <memory>
 #include <ostream>
 
-#include "mist/utils/VaderVariableChange.h"
-#include "oops/util/Printable.h"
+#include "mist/base/VariableChange.h"
 
 namespace eckit {
 class Configuration;
@@ -26,7 +24,7 @@ namespace ijedi {
 class Geometry;
 class State;
 
-class VariableChange : public util::Printable {
+class VariableChange : public mist::VariableChange {
  public:
   VariableChange(const eckit::Configuration &, const Geometry &);
   ~VariableChange() = default;
@@ -38,7 +36,6 @@ class VariableChange : public util::Printable {
  private:
   void print(std::ostream &) const override;
   const Geometry & geom_;
-  std::unique_ptr<mist::VaderVariableChange> varchange_;
 };
 
 }  // namespace ijedi
