@@ -45,6 +45,10 @@ namespace ijedi
     typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
     typedef ufo::ObsLocalization<mist::GeometryIterator> ObsLocalization;
+
+    // Model-specific norms for oops' NormFactory (oops#3413): none yet, the generic
+    // "Scalar" norm is registered by oops
+    static void registerNorms() {}
   };
 
   struct TraitsAtm
@@ -70,6 +74,10 @@ namespace ijedi
     typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
     typedef ufo::ObsLocalization<mist::GeometryIterator> ObsLocalization;
+
+    // Model-specific norms for oops' NormFactory (oops#3413): none yet, the generic
+    // "Scalar" norm is registered by oops
+    static void registerNorms() {}
   };
 
   struct TraitsOcn
@@ -92,6 +100,10 @@ namespace ijedi
     typedef mist::ModelAuxCovariance         ModelAuxCovariance;
     typedef oops::UnstructuredInterpolator   LocalInterpolator;
     typedef ufo::ObsLocalization<mist::GeometryIterator> ObsLocalization;
+
+    // Model-specific norms for oops' NormFactory (oops#3413): none yet, the generic
+    // "Scalar" norm is registered by oops
+    static void registerNorms() {}
   };
 
 }  // namespace ijedi
