@@ -59,7 +59,9 @@ if (BUILD_JEDI)
   else()
     ecbuild_bundle( PROJECT mist SOURCE "./mist" )
   endif()
-  ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"         UPDATE BRANCH develop )
+  # TODO: back to develop once saber builds with the container atlas (saber b16feab90, "Inter-operability
+  # for AROME data (#1346)", calls atlas::FunctionSpace::grid(), not in that atlas); pinned to its parent
+  ecbuild_bundle( PROJECT saber     GIT    "https://github.com/JCSDA/saber.git"         TAG    e0b2ab3a8b376a1bf380718d8a60405663e60b68 )
   ecbuild_bundle( PROJECT ioda      GIT    "https://github.com/JCSDA/ioda.git"          UPDATE BRANCH develop )
   ecbuild_bundle( PROJECT ufo       GIT    "https://github.com/JCSDA/ufo.git"           UPDATE BRANCH develop )
   option(BUILD_FV3JEDI "Build fv3-jedi" OFF)
