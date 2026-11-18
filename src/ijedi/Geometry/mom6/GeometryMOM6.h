@@ -46,6 +46,9 @@ namespace ijedi
     int niEff() const { return niEff_; }
     int njEff() const { return njEff_; }
     bool hasFold() const { return hasFold_; }
+    int nSeaIceCategories() const { return nSeaIceCategories_; }
+    int nSeaIceLayers() const { return nSeaIceLayers_; }
+    int nSnowLayers() const { return nSnowLayers_; }
     // MOM6 rank owning effective-grid point (iG, jG) (0-based) and the
     // row-major index of that point in the owner's block
     std::pair<int, int> mom6Owner(int iG, int jG) const;
@@ -143,6 +146,12 @@ namespace ijedi
     int njEff_         = 0;   // njGlobal_ / coarsenFactor_
     int fringeWidth_   = 2;   // retained land-fringe layers around ocean
     bool hasFold_      = false;  // true for tripolar grids with a northern fold
+
+    // Sea-ice (CICE) dimensions: ice thickness categories, thermodynamic layers of ice and of
+    // snow (defaults: the GFS CICE configuration)
+    int nSeaIceCategories_ = 5;
+    int nSeaIceLayers_     = 7;
+    int nSnowLayers_       = 1;
 
     // Local MOM6 compute domain (1-based, inclusive)
     int iStart_ = 1, iCount_ = 0;

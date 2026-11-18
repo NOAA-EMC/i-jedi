@@ -985,6 +985,15 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
     throw eckit::BadValue("fringe width must be non-negative, got " +
                           std::to_string(fringeWidth_), Here());
   hasFold_ = conf.getBool("has northern fold", true);
+
+  // Sea-ice dimensions: the per-category CICE fields are named by category
+  // (sea_ice_category<k>_...) and their levels are the ice or snow layers
+  nSeaIceCategories_ = conf.getInt("sea ice categories", nSeaIceCategories_);
+  nSeaIceLayers_     = conf.getInt("sea ice layers", nSeaIceLayers_);
+  nSnowLayers_       = conf.getInt("snow layers", nSnowLayers_);
+  if (nSeaIceCategories_ < 1 || nSeaIceLayers_ < 1 || nSnowLayers_ < 1)
+    throw eckit::BadValue("MOM6 geometry: sea ice categories, sea ice layers and snow layers "
+                          "must be positive", Here());
   }
 
   oops::Log::debug() << "GeometryMOM6: NI=" << niGlobal_ << " NJ=" << njGlobal_
@@ -1166,6 +1175,9 @@ GeometryMOM6::GeometryMOM6(const eckit::Configuration & conf,
     geomVariables.set("nj", njEff_);
     geomVariables.set("nz", numLevels_);
     geomVariables.set("has northern fold", hasFold_);
+    geomVariables.set("sea ice categories", nSeaIceCategories_);
+    geomVariables.set("sea ice layers", nSeaIceLayers_);
+    geomVariables.set("snow layers", nSnowLayers_);
   }
 
   memStats("done");

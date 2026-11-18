@@ -34,10 +34,18 @@ namespace ijedi
 
   // -------------------------------------------------------------------------------------------------
 
-  /// Io for CICE restarts on the MOM6 (tripolar) grid of the MOM6 geometry. Fields with several
-  /// levels are read from, and written to, variables with an "ncat" category dimension. A write
-  /// updates the existing variables of an existing restart (at the geometry's mesh nodes only), so
-  /// the variables and grid points that JEDI does not hold keep their values.
+  /// Io for CICE restarts on the MOM6 (tripolar) grid of the MOM6 geometry.
+  ///
+  /// The per-category CICE fields (see FieldsMetadataMarine.h) are mapped to the restart
+  /// variables without configuration: sea_ice_category<k>_<quantity> is category k of the CICE
+  /// variable(s) of that quantity, and its levels are the ice or snow layers, each a separate
+  /// CICE variable (e.g. level l of sea_ice_category<k>_enthalpy is qice<lll>(k, :, :)); the
+  /// levels are top-down, as in CICE (layer 1 is the top layer) and the MOM6 geometry. The
+  /// numbers of categories and layers come from the MOM6 geometry. Other fields are mapped by
+  /// "field io names" to 2-D (nj, ni) variables.
+  ///
+  /// A write updates the existing variables of an existing restart (at the geometry's mesh nodes
+  /// only), so the variables, categories and grid points that JEDI does not hold keep their values.
   class IoCICE : public IoBase, private util::ObjectCounter<IoCICE>
   {
    public:
