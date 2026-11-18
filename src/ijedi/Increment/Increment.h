@@ -79,7 +79,7 @@ namespace ijedi {
 
     void read(const eckit::Configuration &);
     void write(const eckit::Configuration &) const;
-    void dirac(const eckit::Configuration &);
+    void dirac(const eckit::Configuration &) override;
 
    private:
     void print(std::ostream & os) const override;
