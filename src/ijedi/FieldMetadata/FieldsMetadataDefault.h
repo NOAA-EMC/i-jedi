@@ -335,7 +335,7 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
-    md.longName = "eastward_wind_at_surface";
+    md.longName = "eastward_wind_at_surface_adjacent_layer";
     md.units = "ms-1";
     md.kind = "double";
     md.tracer = "false";
@@ -1264,7 +1264,7 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
-    md.longName = "northward_wind_at_surface";
+    md.longName = "northward_wind_at_surface_adjacent_layer";
     md.units = "ms-1";
     md.kind = "double";
     md.tracer = "false";
@@ -1357,14 +1357,6 @@ namespace ijedi
     md.kind = "double";
     md.tracer = "true";
     md.levels = "full";
-    md.vtype = "magnitude";
-    addFieldMetadata(fieldsmetadata, nlev, md);
-
-    md.longName = "ratio_of_wind_at_surface_adjacent_layer_to_wind_at_10m";
-    md.units = "none";
-    md.kind = "double";
-    md.tracer = "false";
-    md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
@@ -2024,24 +2016,24 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
-    md.longName = "wind_from_direction_at_surface";
-    md.units = "none";
+    md.longName = "wind_to_direction_at_10m";
+    md.units = "degree";
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "direction";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
-    md.longName = "wind_reduction_factor_at_10m";
-    md.units = "none";
+    md.longName = "ratio_of_wind_at_10m_to_wind_at_surface_adjacent_layer";
+    md.units = "1";
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
-    md.longName = "wind_speed_at_surface";
-    md.units = "none";
+    md.longName = "wind_speed_at_10m";
+    md.units = "ms-1";
     md.kind = "double";
     md.tracer = "false";
     md.levels = "1";
