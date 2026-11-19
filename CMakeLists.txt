@@ -35,6 +35,10 @@ if(OPENMP)
   find_package(OpenMP)
 endif()
 
+# Optional: real fv3-jedi, only present when the bundle is built with
+# BUILD_FV3JEDI=ON. Used solely by the temporary fv3+mom6 coupled driver.
+find_package( fv3jedi QUIET )
+
 # ###############################################################################
 # Model Specific Dependencies
 # ###############################################################################
