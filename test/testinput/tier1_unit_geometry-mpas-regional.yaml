@@ -1,0 +1,5 @@
+geometry:
+  geometry_type: mpas
+  grid file: data_generated/mpas/regional.invariant.nc
+  partition file prefix: data_generated/mpas/regional.graph.info.part.
+  iterator dimension: 2

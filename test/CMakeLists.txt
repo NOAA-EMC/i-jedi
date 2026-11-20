@@ -17,6 +17,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mpas)
 
 # Link the directory 'testref' to the test directory of the build
 # ---------------------------------------------------------------
@@ -41,6 +42,11 @@ ecbuild_add_test(TARGET ijedi_setup_fv3_testdata
                  TYPE SCRIPT
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_fv3_testdata.py
                  ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+
+ecbuild_add_test(TARGET  ijedi_setup_mpas_testdata
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_mpas_testdata.py
+                 ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mpas)
 
 # Geometry tests
 ecbuild_add_test( TARGET  ijedi_geometry_fv3
@@ -68,6 +74,20 @@ ecbuild_add_test( TARGET  ijedi_geometry_mom6
                   ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
 
+ecbuild_add_test( TARGET  ijedi_geometry_mpas
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mpas.yaml
+                  TEST_DEPENDS ijedi_setup_mpas_testdata)
+
+ecbuild_add_test( TARGET  ijedi_geometry_mpas_regional
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mpas-regional.yaml
+                  TEST_DEPENDS ijedi_setup_mpas_testdata)
+
 # OOPS GeometryIterator interface tests
 ecbuild_add_test( TARGET  ijedi_geometryiterator_fv3
                   MPI     6
@@ -81,6 +101,13 @@ ecbuild_add_test( TARGET  ijedi_geometryiterator_mom6
                   COMMAND $<TARGET_FILE:ijedi_test.x>
                   ARGS    geometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mom6.yaml
                   TEST_DEPENDS ijedi_setup_mom6_testdata)
+
+ecbuild_add_test( TARGET  ijedi_geometryiterator_mpas
+                  MPI     6
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    geometryiterator ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-mpas.yaml
+                  TEST_DEPENDS ijedi_setup_mpas_testdata)
 
 ecbuild_add_test( TARGET  ijedi_geometryiterator_fv3_3diter
                   MPI     6
