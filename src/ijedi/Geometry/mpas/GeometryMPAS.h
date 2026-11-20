@@ -18,6 +18,8 @@ namespace eckit
 namespace ijedi
 {
 
+  // MPAS Voronoi mesh read directly from an MPAS NetCDF file (no MPAS-Model library). The
+  // decomposition follows the MPAS framework so the function space matches mpas-jedi.
   class GeometryMPAS : public GeometryBase
   {
    public:
@@ -26,6 +28,9 @@ namespace ijedi
                  atlas::FunctionSpace &, atlas::FieldSet &, bool &, int &);
     void print(std::ostream &) const override;
     std::vector<double> verticalCoord(std::string &) const override;
+
+   private:
+    std::string printMessage_;
   };
 
 }  // namespace ijedi
