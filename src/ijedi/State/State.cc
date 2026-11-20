@@ -153,7 +153,7 @@ namespace ijedi {
 
   State &State::operator+=(const Increment &dx)
   {
-    mist::Fields::operator+=(dx);
+    addIncrementFields(dx);
     return *this;
   }
 
