@@ -112,11 +112,13 @@ namespace ijedi
     // Requires the scatter map and exchange plan.
     void buildFields(bool buildVerticalGeometry);
 
-    // Distance from each JEDI point to the nearest land cell (metres)
-    void buildDistFromCoast(const std::vector<double> & lonGlobal,
-                            const std::vector<double> & latGlobal,
-                            const std::vector<double> & wetGlobal,
-                            const std::vector<double> & mask3dGlobal);
+    // Distance from each jediPoints_ node to the nearest surface land cell
+    // (metres), from the global effective-grid lon/lat and wet mask
+    std::vector<double> computeDistFromCoast(const std::vector<double> & lonGlobal,
+                                             const std::vector<double> & latGlobal,
+                                             const std::vector<double> & wetGlobal) const;
+    // Add that distance to fields_ as "dist_from_coast" (halo-exchanged)
+    void addDistFromCoast(const std::vector<double> & dist);
 
     // --- Scatter map & exchange plan ---
     void buildScatterMap();

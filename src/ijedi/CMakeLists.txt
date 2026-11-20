@@ -68,6 +68,8 @@ list(APPEND ijedi_src_files
   Io/utils/UpdateNetcdf.h
 
   # Variable change
+  VariableChange/SeaSurfaceSalinity.h
+  VariableChange/SeaSurfaceSalinity_A.cc
   VariableChange/SeaSurfaceTemperature.h
   VariableChange/SeaSurfaceTemperature_A.cc
   VariableChange/VaderCookbook.cc
