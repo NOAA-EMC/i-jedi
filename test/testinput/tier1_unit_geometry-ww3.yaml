@@ -1,0 +1,4 @@
+geometry:
+  geometry_type: ww3
+  mesh file: data_generated/ww3/ww3_test.msh
+  save gmsh to: ww3_mesh.msh

@@ -1,0 +1,37 @@
+geometry:
+  geometry_type: ww3
+  mesh file: data_generated/ww3/ww3_test.msh
+state test:
+  statefile:
+    date: 2021-01-01T00:00:00Z
+    state variables:
+    - sea_surface_wave_significant_height
+    - sea_ice_area_fraction
+    io:
+      filetype: ww3
+      datapath: data_generated/ww3
+      filename: ww3_fields.nc
+      field io names: &ww3_field_io_names
+        sea_surface_wave_significant_height: hs
+        sea_ice_area_fraction: ice
+  write then read test:
+    state write:
+      io:
+        filetype: ww3
+        datapath: data_generated/ww3
+        filename: ww3_write_test.nc
+        field io names: *ww3_field_io_names
+    state read:
+      date: 2021-01-01T00:00:00Z
+      state variables:
+      - sea_surface_wave_significant_height
+      - sea_ice_area_fraction
+      io:
+        filetype: ww3
+        datapath: data_generated/ww3
+        filename: ww3_write_test.nc
+        field io names: *ww3_field_io_names
+  date: 2021-01-01T00:00:00Z
+  norm file: 1.03752652682081589e+02
+  tolerance: 1.0e-05
+  test variable change constructor: false

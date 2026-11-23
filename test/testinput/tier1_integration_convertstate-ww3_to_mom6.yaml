@@ -1,0 +1,40 @@
+input geometry:
+  geometry_type: ww3
+  mesh file: data_generated/ww3/ww3_test.msh
+
+output geometry:
+  geometry_type: mom6
+  ocean_hgrid: data_generated/mom6/ocean_hgrid.nc
+  ocean_topog: data_generated/mom6/ocean_topog.nc
+  vertical geometry from: data_generated/mom6/MOM.res.nc
+  coarsen factor: 1
+  MOM_input:
+    NIGLOBAL: 72
+    NJGLOBAL: 35
+    NZ: 25
+    LAYOUT: [3, 2]
+    MINIMUM_DEPTH: 0.5
+
+states:
+- input:
+    date: 2021-01-01T00:00:00Z
+    state variables: &vars
+    - sea_surface_wave_significant_height
+    - sea_ice_area_fraction
+    io:
+      filetype: ww3
+      datapath: data_generated/ww3
+      filename: ww3_fields.nc
+      field io names:
+        sea_surface_wave_significant_height: hs
+        sea_ice_area_fraction: ice
+  output:
+    date: 2021-01-01T00:00:00Z
+    state variables: *vars
+    io:
+      filetype: mom6
+      datapath: data_generated/ww3
+      ocn_file: ww3_to_mom6.nc
+      field io names:
+        sea_surface_wave_significant_height: hs
+        sea_ice_area_fraction: aice
