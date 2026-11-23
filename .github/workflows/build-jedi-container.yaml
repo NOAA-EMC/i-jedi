@@ -78,6 +78,7 @@ jobs:
               -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
               -DBUILD_JEDI=ON \
               -DCLONE_MIST=OFF \
+              -DBUNDLE_SKIP_ATLAS=ON \
               -DMPI_ARGS="--map-by :OVERSUBSCRIBE" \
               /src/i-jedi/bundle 
             
