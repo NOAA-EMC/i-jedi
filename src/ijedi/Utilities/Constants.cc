@@ -26,6 +26,7 @@ namespace ijedi
   // Put the constants into a map
   static const std::unordered_map<std::string, double> constants = {
       {"rad2deg", 57.2957779186820},
+      {"radians_to_degrees", 57.2957779186820},
       {"pi", M_PI},
       {"tice", 273.16},
       {"constoz", 603447.6},

@@ -11,8 +11,12 @@
 #include <string>
 #include <vector>
 
+namespace oops { class Variables; }
+namespace vader { class Vader; }
+
 namespace ijedi {
 
 std::map<std::string, std::vector<std::string>> vaderDefaultCookbook();
+oops::Variables requiredVariables(vader::Vader &, const oops::Variables &, const oops::Variables &);
 
 }  // namespace ijedi

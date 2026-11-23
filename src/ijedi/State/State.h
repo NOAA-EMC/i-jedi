@@ -1,7 +1,9 @@
 #pragma once
 
+#include <map>
 #include <ostream>
 #include <string>
+#include <vector>
 
 #include "mist/base/State.h"
 #include "oops/util/ObjectCounter.h"
@@ -13,6 +15,7 @@
 #include "oops/util/parameters/RequiredParameter.h"
 
 #include "ijedi/Io/IoBase.h"
+#include "ijedi/VariableChange/VaderCookbook.h"
 
 namespace eckit
 {
@@ -57,6 +60,8 @@ namespace ijedi
     oops::OptionalParameter<AnalyticICParameters> analytic{"analytic init", this};
     // Io parameters wrapper for polymorphic IO parameters (nested under "io" key)
     oops::OptionalParameter<IoParametersWrapper> io{"io", this};
+    oops::Parameter<std::map<std::string, std::vector<std::string>>>
+      customVaderCookbook{"vader custom cookbook", vaderDefaultCookbook(), this};
   };
 
   // -----------------------------------------------------------------------------------------------
@@ -101,6 +106,7 @@ namespace ijedi
     void print(std::ostream &os) const override;
 
     const Geometry &geom_;
+    std::map<std::string, std::vector<std::string>> customVaderCookbook_;
   };
 
   // -----------------------------------------------------------------------------------------------

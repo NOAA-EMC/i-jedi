@@ -12,10 +12,12 @@
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Increment/Increment.h"
 #include "ijedi/Utilities/PrintHelper.h"
+#include "mist/base/ModelData.h"
 #include "oops/base/Variables.h"
 #include "oops/util/DateTime.h"
 #include "oops/util/Logger.h"
 #include "oops/util/for_each.h"
+#include "vader/vader.h"
 
 #include "ijedi/Io/IoBase.h"
 
@@ -28,6 +30,9 @@ namespace ijedi {
                     util::DateTime(config.getString("date")), false),
         geom_(geom)
   {
+      StateParameters params;
+      params.deserialize(swapIoMember(config));
+      customVaderCookbook_ = params.customVaderCookbook.value();
     // If config has 'analytic init' then call analytic_init, else if config has 'io' then call read
     if (config.has("analytic init")) {
       analytic_init(config);
@@ -44,20 +49,22 @@ namespace ijedi {
 
   State::State(const Geometry &geom, const oops::Variables &vars, const util::DateTime &time,
                bool initToZero)
-      : mist::State(geom, vars, time, initToZero), geom_(geom) {
+      : mist::State(geom, vars, time, initToZero), geom_(geom),
+        customVaderCookbook_(vaderDefaultCookbook()) {
     setAtlasFieldMetadata();
   }
 
   // -----------------------------------------------------------------------------------------------
 
   State::State(const Geometry &geom, const State &other)
-      : mist::State(geom, other), geom_(geom) {
+      : mist::State(geom, other), geom_(geom), customVaderCookbook_(other.customVaderCookbook_) {
     setAtlasFieldMetadata();
   }
 
   // -----------------------------------------------------------------------------------------------
 
-  State::State(const State &other) : mist::State(other), geom_(other.geom_) {
+  State::State(const State &other) : mist::State(other), geom_(other.geom_),
+                                     customVaderCookbook_(other.customVaderCookbook_) {
     setAtlasFieldMetadata();
   }
 
@@ -154,6 +161,44 @@ namespace ijedi {
   State &State::operator+=(const Increment &dx)
   {
     mist::Fields::operator+=(dx);
+
+    // Ensure pressure variables are consistent across the final state
+    // ---------------------------------------------------------------
+
+    // Prepare Vader cookbook and variables change
+    eckit::LocalConfiguration vaderConfig, cookbookConfig;
+    for (const auto & entry : customVaderCookbook_) {
+      cookbookConfig.set(entry.first, entry.second);
+    }
+    vaderConfig.set(vader::configCookbookKey, cookbookConfig);
+    vaderConfig.set(vader::configModelVarsKey, mist::ModelData(geom_).modelData());
+    vader::Vader vader(vader::VaderParameters{}, vaderConfig);
+
+    // Get (potentially non-unique) set of minimum required variables
+    // to reproduce the full state with a variable change
+    const oops::Variables stateVars = this->variables();
+    const auto requiredVars = requiredVariables(vader, stateVars, dx.variables());
+
+    // Change variables if necessary
+    if ( requiredVars != stateVars ) {
+      // Remove fields not required to reproduce full state with variable change
+      atlas::FieldSet fields;
+      for (const auto & var : requiredVars) fields.add(this->fieldSet()[var.name()]);
+
+      // Variable change
+      oops::Variables outputVars = stateVars;
+      outputVars -= requiredVars;
+      vader.changeVar(fields, outputVars);
+
+      // Update state with new fields
+      atlas::FieldSet result;
+      for (const auto & var : stateVars) result.add(fields[var.name()]);
+      this->fromFieldSet(result);
+      this->setAtlasFieldMetadata();
+
+      ASSERT(this->variables() == stateVars);
+    }
+
     return *this;
   }
 

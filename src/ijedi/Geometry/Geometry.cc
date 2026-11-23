@@ -10,6 +10,7 @@
 
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Geometry/base/GeometryBase.h"
+#include "ijedi/Utilities/Constants.h"
 #include "mist/utils/Geometry.h"
 #include "mist/utils/IterationUnit.h"
 
@@ -44,8 +45,9 @@ namespace ijedi
     // Set up levels information for each variable using the fields metadata
     levelsPerVariable_ = fieldsMeta_->levelsPerVariable();
 
-    // Expose vertical ordering to downstream components such as Vader recipes.
+    // Expose Geometry member data to downstream components such as Vader recipes.
     modelData_.set("levels_are_top_down", levelsAreTopDown_);
+    modelData_.set("radians_to_degrees", getConstant("radians_to_degrees"));
 
     // Reference pressure column used by vertical localization, now chosen by "vertical
     // coordinate source". The default prefers one published by the model geometry (which can

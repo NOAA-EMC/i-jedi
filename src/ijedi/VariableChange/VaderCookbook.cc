@@ -11,6 +11,10 @@
 #include <string>
 #include <vector>
 
+#include "oops/base/Variables.h"
+#include "oops/util/abor1_cpp.h"
+#include "vader/vader.h"
+
 namespace detail {
 static std::map<std::string, std::vector<std::string>> cookbook() {
   return {
@@ -40,11 +44,12 @@ static std::map<std::string, std::vector<std::string>> cookbook() {
       // phi_e from phi tv ln(p) and ln(pe)
       {"geopotential_levels",                  {"GeopotentialLevels_A"}},
       // z: from phi
-      {"geopotential_height",                  {"GeopotentialHeight_A"}},
+      {"geopotential_height",                  {"GeopotentialHeight_A", "GeopotentialHeight_B"}},
       // z_surf: from phi_surf
       {"geopotential_height_at_surface",       {"GeopotentialHeightAtSurface_A"}},
       // ze: from phi_e
-      {"geopotential_height_levels",           {"GeopotentialHeightLevels_A"}},
+      {"geopotential_height_levels",           {"GeopotentialHeightLevels_A",
+                    "GeopotentialHeightLevels_B"}},
       // h_amsl: from z_surf
       {"height_above_mean_sea_level_at_surface",  {"HeightAboveMeanSeaLevelAtSurface_A"}},
       // pt: from t and pkz, from t and ps
@@ -52,6 +57,16 @@ static std::map<std::string, std::vector<std::string>> cookbook() {
                                                    "AirPotentialTemperature_A"}},
       // tv: from t and q
       {"virtual_temperature",                     {"AirVirtualTemperature_A"}},
+      {"eastward_wind_at_surface_adjacent_layer", {"EastwardWindAtSurfaceAdjacentLayer_A"}},
+      {"northward_wind_at_surface_adjacent_layer", {"NorthwardWindAtSurfaceAdjacentLayer_A"}},
+      {"wind_speed_at_surface_adjacent_layer",     {"WindSpeedAtSurfaceAdjacentLayer_A"}},
+      {"eastward_wind_at_10m",                    {"EastwardWindAt10m_A"}},
+      {"northward_wind_at_10m",                   {"NorthwardWindAt10m_A"}},
+      {"wind_speed_at_10m",                       {"WindSpeedAt10m_A", "WindSpeedAt10m_B",
+                       "WindSpeedAt10m_C"}},
+      {"wind_to_direction_at_10m",                {"WindToDirectionAt10m_A"}},
+      {"ratio_of_wind_at_10m_to_wind_at_surface_adjacent_layer",
+       {"RatioOfWind10mToSurfaceAdjacent_A"}},
       // t: from tv and q; needed when tv is the control variable
       {"air_temperature",                         {"AirTemperature_B"}},
       // o3mr: from o3 mole fraction; needed when the control variable is ppmv
@@ -75,6 +90,27 @@ namespace ijedi {
 
 std::map<std::string, std::vector<std::string>> vaderDefaultCookbook() {
   return detail::cookbook();
+}
+
+oops::Variables requiredVariables(vader::Vader & vader, const oops::Variables & stateVars,
+                                  const oops::Variables & incVars) {
+  oops::Variables invalidIncVars = incVars;
+  invalidIncVars -= stateVars;
+  ASSERT_MSG(invalidIncVars.size() == 0,
+             "Vader::requiredVariables: incVars contains variables not present in stateVars");
+
+  oops::Variables requiredVars = stateVars;
+  for (const auto & candidateVar : stateVars) {
+    if (incVars.has(candidateVar)) continue;
+    oops::Variables trialVars = requiredVars;
+    trialVars -= candidateVar;
+    oops::Variables ingredientVars = trialVars;
+    oops::Variables neededVars = stateVars;
+    vader::Vader::vaderPlanType plan;
+    vader.planVariables(ingredientVars, neededVars, plan);
+    if (neededVars.size() == 0) requiredVars = trialVars;
+  }
+  return requiredVars;
 }
 
 }  // namespace ijedi
