@@ -15,6 +15,7 @@
 #include "ijedi/Geometry/gsibec/GeometryGsibec.h"
 #include "ijedi/Geometry/mpas/GeometryMPAS.h"
 #include "ijedi/Geometry/mom6/GeometryMOM6.h"
+#include "ijedi/Geometry/ww3/GeometryWW3.h"
 
 namespace ijedi
 {
@@ -43,6 +44,11 @@ namespace ijedi
     {
       return std::make_shared<GeometryMOM6>(geomConf, comm, geomVars, functionSpace, fieldSet,
                                             levelsAreTopDown, numLevels);
+    }
+    if (type == "ww3")
+    {
+      return std::make_shared<GeometryWW3>(geomConf, comm, geomVars, functionSpace, fieldSet,
+                                           levelsAreTopDown, numLevels);
     }
     if (type == "atlas")
     {

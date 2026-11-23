@@ -17,6 +17,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/obs)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data_generated/ww3)
 
 # Link the directory 'testref' to the test directory of the build
 # ---------------------------------------------------------------
@@ -41,6 +42,12 @@ ecbuild_add_test(TARGET ijedi_setup_fv3_testdata
                  TYPE SCRIPT
                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_fv3_testdata.py
                  ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/fv3)
+
+ecbuild_add_test(TARGET  ijedi_setup_ww3_testdata
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/gen_ww3_testdata.py
+                 ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated/mom6 ${CMAKE_CURRENT_BINARY_DIR}/data_generated/ww3
+                 TEST_DEPENDS ijedi_setup_mom6_testdata)
 
 # Geometry tests
 ecbuild_add_test( TARGET  ijedi_geometry_fv3
@@ -304,3 +311,46 @@ ecbuild_add_test( TARGET  ijedi_convertstate_fv3-restart_to_fv3-restart
                   COMMAND $<TARGET_FILE:ijedi.x>
                   ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-fv3-restart_to_fv3-restart.yaml
                   TEST_DEPENDS ijedi_setup_fv3_testdata)
+
+# WW3: geometry, io and MOM6 <-> WW3 interpolation
+foreach(NP 1 4)
+  ecbuild_add_test( TARGET  ijedi_geometry_ww3_np${NP}
+                    MPI     ${NP}
+                    OMP     1
+                    COMMAND $<TARGET_FILE:ijedi_test.x>
+                    ARGS    geometry ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_geometry-ww3.yaml
+                    TEST_DEPENDS ijedi_setup_ww3_testdata)
+endforeach()
+
+ecbuild_add_test( TARGET  ijedi_state_ww3
+                  MPI     4
+                  OMP     1
+                  COMMAND $<TARGET_FILE:ijedi_test.x>
+                  ARGS    state ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_unit_state-ww3.yaml
+                  TEST_DEPENDS ijedi_setup_ww3_testdata)
+
+foreach(CASE ww3_to_mom6 mom6_to_ww3)
+  ecbuild_add_test( TARGET  ijedi_convertstate_${CASE}
+                    MPI     6
+                    OMP     1
+                    COMMAND $<TARGET_FILE:ijedi.x>
+                    ARGS    convertstate ${CMAKE_CURRENT_SOURCE_DIR}/testinput/tier1_integration_convertstate-${CASE}.yaml
+                    TEST_DEPENDS ijedi_setup_ww3_testdata)
+endforeach()
+
+ecbuild_add_test(TARGET  ijedi_check_ww3_interp
+                 TYPE    SCRIPT
+                 COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_ww3_interp.py
+                 ARGS    ${CMAKE_CURRENT_BINARY_DIR}/data_generated
+                 TEST_DEPENDS ijedi_convertstate_ww3_to_mom6 ijedi_convertstate_mom6_to_ww3)
+
+# Optional, local only: the real WW3 uglo_100km mesh (expect 45166 nodes, 87369 triangles)
+if(DEFINED ENV{IJEDI_WW3_FIX})
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/geometry-ww3-uglo_100km.yaml
+       "geometry:\n  geometry_type: ww3\n  mesh file: $ENV{IJEDI_WW3_FIX}/uglo_100km.msh\n")
+  ecbuild_add_test( TARGET  ijedi_geometry_ww3_uglo_100km
+                    MPI     4
+                    OMP     1
+                    COMMAND $<TARGET_FILE:ijedi_test.x>
+                    ARGS    geometry ${CMAKE_CURRENT_BINARY_DIR}/geometry-ww3-uglo_100km.yaml)
+endif()

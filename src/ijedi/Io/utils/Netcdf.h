@@ -45,4 +45,22 @@ void updateNetcdf(const std::string & filepath,
                   const NetcdfLayout & layout,
                   const eckit::mpi::Comm & comm);
 
+/// Read variables of a NetCDF file into a distributed FieldSet: the mirror of updateNetcdf.
+///
+/// Same layout rules (any dimension order, dimensions outside the layout of length 1). Rank 0
+/// checks the file and the variables before any collective call (all ranks throw together on a
+/// failure), then reads each variable, which is scattered to the nodes holding it by global index
+/// and halo-exchanged. _FillValue becomes util::missingValue<double>().
+///
+/// @param filepath      NetCDF file.
+/// @param x             Distributed FieldSet to fill (all ranks participate in the scatters).
+/// @param fileVarNames  File variable name of each field of x (empty => the field is skipped).
+/// @param layout        Horizontal and level dimensions of the variables.
+/// @param comm          MPI communicator.
+void readNetcdf(const std::string & filepath,
+                atlas::FieldSet & x,
+                const std::vector<std::string> & fileVarNames,
+                const NetcdfLayout & layout,
+                const eckit::mpi::Comm & comm);
+
 }  // namespace ijedi

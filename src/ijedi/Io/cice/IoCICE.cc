@@ -20,7 +20,7 @@
 
 #include "ijedi/Geometry/Geometry.h"
 #include "ijedi/Geometry/mom6/GeometryMOM6.h"
-#include "ijedi/Io/utils/UpdateNetcdf.h"
+#include "ijedi/Io/utils/Netcdf.h"
 #include "ijedi/Io/mom6/FillMaskedCells.h"
 #include "ijedi/Io/mom6/ReadMOM6Netcdf.h"
 

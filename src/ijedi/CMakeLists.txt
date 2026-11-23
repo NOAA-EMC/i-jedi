@@ -30,6 +30,8 @@ list(APPEND ijedi_src_files
   Geometry/mom6/GeometryMOM6.h
   Geometry/mom6/GeometryMOM6Utils.cc
   Geometry/mom6/GeometryMOM6Utils.h
+  Geometry/ww3/GeometryWW3.cc
+  Geometry/ww3/GeometryWW3.h
 
   # Fields
   FieldMetadata/FieldsMetadata.cc
@@ -64,8 +66,10 @@ list(APPEND ijedi_src_files
   Io/mom6/WriteMOM6Netcdf.h
   Io/unstructured/IoUnstructured.cc
   Io/unstructured/IoUnstructured.h
-  Io/utils/UpdateNetcdf.cc
-  Io/utils/UpdateNetcdf.h
+  Io/utils/Netcdf.cc
+  Io/utils/Netcdf.h
+  Io/ww3/IoWW3.cc
+  Io/ww3/IoWW3.h
 
   # Variable change
   VariableChange/SeaSurfaceTemperature.h

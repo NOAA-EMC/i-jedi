@@ -5,7 +5,7 @@
  * which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
  */
 
-// updateNetcdf on an MPAS-like restart: cells numbered 0..nCells-1 (as the atlas global index - 1),
+// readNetcdf and updateNetcdf on an MPAS-like restart: cells numbered 0..nCells-1 (as the atlas global index - 1),
 // variables (Time, nCells, nVertLevels) with the levels innermost, a 2-D (Time, nCells) variable
 // and one the update must not touch. The cells are distributed over the MPI tasks (PointCloud,
 // equal_regions). The values are a function of the cell position, so a wrong mapping of the
@@ -28,7 +28,7 @@
 #include "eckit/mpi/Comm.h"
 #include "eckit/testing/Test.h"
 
-#include "ijedi/Io/utils/UpdateNetcdf.h"
+#include "ijedi/Io/utils/Netcdf.h"
 
 namespace {
 
@@ -157,6 +157,28 @@ CASE("updateNetcdf/mpas_like_restart") {
     EXPECT(errPs < 1.0e-6);
     EXPECT(errKeep == 0.0);
   }
+}
+
+CASE("readNetcdf/mpas_like_restart") {
+  const eckit::mpi::Comm & comm = eckit::mpi::comm();
+  Setup s;
+  if (comm.rank() == 0) createFile(s.centers);
+  comm.barrier();
+
+  // Each task gets the file values at its own cells
+  ijedi::readNetcdf(fileName, s.x, {"theta", "surface_pressure"},
+                    ijedi::NetcdfLayout{{"nCells"}, {"nVertLevels"}}, comm);
+  const auto lonlat = atlas::array::make_view<double, 2>(s.fs.lonlat());
+  const auto tv = atlas::array::make_view<double, 2>(s.x.field("air_potential_temperature"));
+  const auto pv = atlas::array::make_view<double, 2>(s.x.field("air_pressure_at_surface"));
+  double errT = 0.0, errPs = 0.0;
+  for (atlas::idx_t n = 0; n < s.fs.size(); ++n) {
+    for (int k = 0; k < nVertLevels; ++k)
+      errT = std::max(errT, std::abs(tv(n, k) - theta(lonlat(n, 0), lonlat(n, 1), k)));
+    errPs = std::max(errPs, std::abs(pv(n, 0) - surfacePressure(lonlat(n, 0), lonlat(n, 1))));
+  }
+  EXPECT(errT < 1.0e-9);
+  EXPECT(errPs < 1.0e-6);
 }
 
 CASE("updateNetcdf/layout_not_in_file_throws_on_all_tasks") {

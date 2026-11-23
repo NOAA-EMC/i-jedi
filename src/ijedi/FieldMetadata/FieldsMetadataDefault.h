@@ -1460,6 +1460,33 @@ namespace ijedi
     md.vtype = "magnitude";
     addFieldMetadata(fieldsmetadata, nlev, md);
 
+    md.longName = "sea_surface_wave_mean_period";
+    md.units = "s";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    md.bctype = "none";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "sea_surface_wave_peak_period";
+    md.units = "s";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    md.bctype = "none";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
+    md.longName = "sea_surface_wave_significant_height";
+    md.units = "m";
+    md.kind = "double";
+    md.tracer = "false";
+    md.levels = "1";
+    md.vtype = "magnitude";
+    md.bctype = "none";
+    addFieldMetadata(fieldsmetadata, nlev, md);
+
     md.longName = "sea_water_absolute_salinity";
     md.units = "none";
     md.kind = "double";
