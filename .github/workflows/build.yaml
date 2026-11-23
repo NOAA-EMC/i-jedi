@@ -18,15 +18,14 @@ jobs:
       uses: actions/checkout@v6
       with:
         repository: "JCSDA-internal/mist"
-        ref: "feature/install" # Specify your branch here
+        ref: "develop" # Specify your branch here
         path: i-jedi/bundle/mist
         ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
     - name: Run ecbuild
       shell: bash
       run: |
         su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         mkdir -p Build
         cd Build
@@ -65,8 +64,7 @@ jobs:
       shell: bash
       run: |
         su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
     - name: Compile the code without using container libraries
@@ -74,8 +72,7 @@ jobs:
       shell: bash
       run: |
         su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         rm -rf Build
         mkdir -p Build
@@ -90,8 +87,7 @@ jobs:
         echo "Libaries are installed"
         ls -l /opt/jedi
         su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         rm -rf Build
         mkdir -p Build
@@ -107,8 +103,7 @@ jobs:
       shell: bash
       run: |
         su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
         export OMPI_ALLOW_RUN_AS_ROOT=1
         export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
