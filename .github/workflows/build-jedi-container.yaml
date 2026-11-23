@@ -72,7 +72,7 @@ jobs:
             load_jedi_bundle_env
             mkdir -p /build && cd /build
             ls -l /src
-            git config --global --add safe.directory /src/i-jedi
+            git config --global --add safe.directory /src/i-jedi/bundle/mist
             ecbuild \
               -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
               -DBUILD_JEDI=ON \
