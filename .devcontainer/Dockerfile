@@ -1,5 +1,5 @@
 # Use jcsda/docker as base image
-FROM jcsda/docker-gnu-openmpi-dev:1.9
+FROM noaaepic/ubuntu26.04-gcc14-openmpi5.0.10:v2.2-jedi-bundle
 
 RUN useradd -ms /bin/bash builder
 

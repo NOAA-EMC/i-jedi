@@ -7,6 +7,9 @@ jobs:
     name: Full CI (style and tests)
     container: ghcr.io/noaa-emc/i-jedi:latest
     steps:
+    # needed as this container is missing ssh somehow
+    - name: Install SSH client
+      run: apt-get update && apt-get install -y --no-install-recommends openssh-client git
     - name: Checkout
       uses: actions/checkout@v2
       with:
@@ -18,30 +21,35 @@ jobs:
       uses: actions/checkout@v6
       with:
         repository: "JCSDA-internal/mist"
-        ref: "feature/install" # Specify your branch here
+        ref: "develop" # Specify your branch here
         path: i-jedi/bundle/mist
         ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
+    - name: Give nonroot the workspace
+      run: chown -R nonroot "$GITHUB_WORKSPACE"
     - name: Run ecbuild
       shell: bash
       run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        su - nonroot <<EOF
+        whoami
+        set -e
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         mkdir -p Build
         cd Build
-        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DCLONE_MIST="OFF" ../i-jedi/bundle
-        cd ../i-jedi/bundle
+        ecbuild -DMPI_ARGS='--map-by :OVERSUBSCRIBE' -DCLONE_MIST='OFF' -DBUNDLE_SKIP_ATLAS=ON ../i-jedi/bundle
+        EOF
     - name: Check container libraries
       id: check-container
       shell: bash
       run: |
+        git config --global --add safe.directory '*'
         MATCH=true
         if [ -f /opt/jedi/etc/jedi_repo_hashes.txt ]; then
           for d in $GITHUB_WORKSPACE/i-jedi/bundle/*; do
             if [ -d "$d/.git" ]; then
               REPO=$(basename $d)
-              if [[ "$REPO" == "ijedi" || "$REPO" == "mist" ]]; then
+              if [[ "$REPO" == "ijedi" || "$REPO" == "mist" || "$REPO" == "atlas" ]]; then
                 continue
               fi
               CURRENT_SHA=$(git -C $d rev-parse HEAD)
@@ -64,34 +72,39 @@ jobs:
     - name: Run coding style checks
       shell: bash
       run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        su - nonroot <<EOF
+        set -e
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
+        EOF
     - name: Compile the code without using container libraries
       if: steps.check-container.outputs.match == 'false'
       shell: bash
       run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        su - nonroot <<EOF
+        set -e
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         rm -rf Build
         mkdir -p Build
         cd Build
-        ecbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle 
+        ecbuild -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install -DBUNDLE_SKIP_ATLAS=ON -DMPI_ARGS="--map-by :OVERSUBSCRIBE" ../i-jedi/bundle 
         make -j4
         make install
+        EOF
     - name: Compile the code with container libraries
       if: steps.check-container.outputs.match == 'true'
       shell: bash
       run: |
         echo "Libaries are installed"
         ls -l /opt/jedi
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        su - nonroot <<EOF
+        set -e
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         rm -rf Build
         mkdir -p Build
@@ -100,16 +113,17 @@ jobs:
         ls -l /opt/jedi/lib
         ls -l /opt/jedi/include
         ls -l /opt/jedi/bin
-        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=/opt/jedi -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
+        ecbuild -DMPI_ARGS="--map-by :OVERSUBSCRIBE" -DBUILD_JEDI=OFF -DCMAKE_PREFIX_PATH=/opt/jedi -DBUNDLE_SKIP_ATLAS=ON -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/install ../i-jedi/bundle 
         cd ijedi
         make -j4
+        EOF
     - name: Run ctests
       shell: bash
       run: |
-        su - nonroot
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        su - nonroot <<EOF
+        set -e
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
-        export OMPI_ALLOW_RUN_AS_ROOT=1
-        export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-        ctest --rerun-failed --output-on-failure --allow-run-as-root
+        ctest --rerun-failed --output-on-failure --timeout 300
+        EOF
