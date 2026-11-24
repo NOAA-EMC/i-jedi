@@ -24,6 +24,11 @@ jobs:
         ref: "develop" # Specify your branch here
         path: i-jedi/bundle/mist
         ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
+    - name: Debug container users
+      run: |
+        id
+        grep -E 'builder|nonroot' /etc/passwd || echo "neither user exists"
+        ls /home
     - name: Give builder the workspace
       run: chown -R builder "$GITHUB_WORKSPACE"
     - name: Run ecbuild
