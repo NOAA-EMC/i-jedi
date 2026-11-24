@@ -7,6 +7,9 @@ jobs:
     name: Full CI (style and tests)
     container: ghcr.io/noaa-emc/i-jedi:latest
     steps:
+    # needed as this container is missing ssh somehow
+    - name: Install SSH client
+      run: apt-get update && apt-get install -y --no-install-recommends openssh-client git
     - name: Checkout
       uses: actions/checkout@v2
       with:
