@@ -125,7 +125,5 @@ jobs:
         source /etc/spack_container_rc.sh
         load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
-        export OMPI_ALLOW_RUN_AS_ROOT=1
-        export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
         ctest --rerun-failed --output-on-failure
         EOF
