@@ -49,7 +49,7 @@ jobs:
           for d in $GITHUB_WORKSPACE/i-jedi/bundle/*; do
             if [ -d "$d/.git" ]; then
               REPO=$(basename $d)
-              if [[ "$REPO" == "ijedi" || "$REPO" == "mist" ]]; then
+              if [[ "$REPO" == "ijedi" || "$REPO" == "mist" || "$REPO" == "atlas" ]]; then
                 continue
               fi
               CURRENT_SHA=$(git -C $d rev-parse HEAD)
