@@ -31,8 +31,8 @@ jobs:
       run: |
         su - nonroot <<EOF
         set -e
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         mkdir -p Build
         cd Build
@@ -73,8 +73,8 @@ jobs:
       run: |
         su - nonroot <<EOF
         set -e
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
         ctest -R coding_norms --output-on-failure
         EOF
@@ -84,8 +84,8 @@ jobs:
       run: |
         su - nonroot <<EOF
         set -e
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         rm -rf Build
         mkdir -p Build
@@ -102,8 +102,8 @@ jobs:
         ls -l /opt/jedi
         su - nonroot <<EOF
         set -e
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
         rm -rf Build
         mkdir -p Build
@@ -121,8 +121,8 @@ jobs:
       run: |
         su - nonroot <<EOF
         set -e
-        export jedi_cmake_ROOT=/opt/view
-        source /opt/spack-environment/activate.sh
+        source /etc/spack_container_rc.sh
+        load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
         export OMPI_ALLOW_RUN_AS_ROOT=1
         export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
