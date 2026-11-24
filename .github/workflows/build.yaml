@@ -37,7 +37,7 @@ jobs:
         cd $GITHUB_WORKSPACE
         mkdir -p Build
         cd Build
-        ecbuild -DMPI_ARGS='--map-by :OVERSUBSCRIBE' -DCLONE_MIST='OFF' ../i-jedi/bundle
+        ecbuild -DMPI_ARGS='--map-by :OVERSUBSCRIBE' -DCLONE_MIST='OFF' -DBUNDLE_SKIP_ATLAS=ON ../i-jedi/bundle
         EOF
     - name: Check container libraries
       id: check-container
