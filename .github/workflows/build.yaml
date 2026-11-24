@@ -30,6 +30,7 @@ jobs:
       shell: bash
       run: |
         su - nonroot <<EOF
+        whoami
         set -e
         source /etc/spack_container_rc.sh
         load_jedi_bundle_env
