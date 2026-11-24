@@ -24,17 +24,12 @@ jobs:
         ref: "develop" # Specify your branch here
         path: i-jedi/bundle/mist
         ssh-key: ${{ secrets.JCSDA_MIST_KEY }}
-    - name: Debug container users
-      run: |
-        id
-        grep -E 'builder|nonroot' /etc/passwd || echo "neither user exists"
-        ls /home
-    - name: Give builder the workspace
-      run: chown -R builder "$GITHUB_WORKSPACE"
+    - name: Give nonroot the workspace
+      run: chown -R nonroot "$GITHUB_WORKSPACE"
     - name: Run ecbuild
       shell: bash
       run: |
-        su - builder <<EOF
+        su - nonroot <<EOF
         set -e
         load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
@@ -75,7 +70,7 @@ jobs:
     - name: Run coding style checks
       shell: bash
       run: |
-        su - builder <<EOF
+        su - nonroot <<EOF
         set -e
         load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
@@ -85,7 +80,7 @@ jobs:
       if: steps.check-container.outputs.match == 'false'
       shell: bash
       run: |
-        su - builder <<EOF
+        su - nonroot <<EOF
         set -e
         load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
@@ -102,7 +97,7 @@ jobs:
       run: |
         echo "Libaries are installed"
         ls -l /opt/jedi
-        su - builder <<EOF
+        su - nonroot <<EOF
         set -e
         load_jedi_bundle_env
         cd $GITHUB_WORKSPACE
@@ -120,7 +115,7 @@ jobs:
     - name: Run ctests
       shell: bash
       run: |
-        su - builder <<EOF
+        su - nonroot <<EOF
         set -e
         load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
