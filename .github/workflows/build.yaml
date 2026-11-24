@@ -125,5 +125,5 @@ jobs:
         source /etc/spack_container_rc.sh
         load_jedi_bundle_env
         cd $GITHUB_WORKSPACE/Build/ijedi
-        ctest --rerun-failed --output-on-failure
+        ctest --rerun-failed --output-on-failure --timeout 300
         EOF
