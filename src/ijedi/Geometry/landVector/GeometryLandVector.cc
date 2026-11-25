@@ -251,7 +251,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   levelsAreTopDown = config.getBool("levels_are_topdown", false);
   levelsAreTopDown_ = levelsAreTopDown;
 
-  // 1. Read coordinates (lat, lon, elevation) from configuration or input file
+  // 1. Read coordinates (lat, lon, elevation) from input  file
   std::string latlonFile = config.getString("latlon_file", "");
   std::string latName = config.getString("lat_name", "latitude");
   std::string lonName = config.getString("lon_name", "longitude");
@@ -267,23 +267,15 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   if(!latlonFile.empty() && config.has("lat_name") && config.has("lon_name") && config.has("elev_name")) {
     oops::Log::info() << "Reading lat/lon/elevation from file: " << latlonFile << std::endl;
     readLatLonElevFromFile(latlonFile, latName, lonName, elevName, lats, lons, elevations, global_tile, global_i, global_j);
-  } else if (config.has("lats") && config.has("lons") && config.has("elevations")) {
-    oops::Log::info() << "Reading lat/lon/elevation from configuration." << std::endl;
-    std::vector<double> lats = config.getDoubleVector("lats");
-    std::vector<double> lons = config.getDoubleVector("lons");
-    std::vector<double> elevations = config.getDoubleVector("elevations");
-  }
   else {
-    throw eckit::BadParameter("GeometryLandVector: Must specify either latlon_file or lats/lons/elevations in configuration.", Here());
+    throw eckit::BadParameter("GeometryLandVector: Must specify latlon_file in configuration.", Here());
   }
-
-  ASSERT(lats.size() == lons.size());
-  ASSERT(lats.size() == elevations.size());
 
   const size_t my_rank = static_cast<size_t>(comm_.rank());
   const size_t nproc = static_cast<size_t>(comm_.size());
-  oops::Log::info() << "landGeom NC: Proc  " << my_rank << " running with " << nproc << " procs" << std::endl;
+  oops::Log::info() << ":GeometryLandVector: rank  " << my_rank << " running with " << nproc << " procs" << std::endl;
 
+  // 2. divide points among ranks evenly
   const size_t num_points = lats.size();
   std::vector<atlas::PointXY> global_pts(num_points);
   for (size_t i = 0; i < num_points; ++i) {
@@ -296,24 +288,17 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   size_t start_idx = my_rank * points_per_rank + std::min<size_t>(my_rank, remainder);
   size_t local_count = points_per_rank + (my_rank < remainder ? 1 : 0);
 
-  eckit::LocalConfiguration fs_config;
-  fs_config.set("mpi_comm", comm_.name());
-  
   std::vector<int> rank_owning(num_points, 0);
-  // 2. Assign balanced chunks across MPI ranks
+  // Assign balanced chunks across MPI ranks
   for (size_t i = 0; i < num_points; ++i) {
     rank_owning[i] = static_cast<int>((i * nproc) / num_points);
   }
   
-  // 3. Optional: Wrap in an explicit Atlas distribution if downstream APIs require one
-  std::vector<int> part_list(rank_owning.begin(), rank_owning.end());
-  atlas::grid::Distribution distribution(comm_.size(), num_points, part_list.data());
-
+  // 3. Assign rank specific tile/index info 
   std::vector<atlas::PointXY> rank_points;
   std::vector<int> rank_tiles;
   std::vector<int> rank_i;
   std::vector<int> rank_j;
-
   std::vector<double> rank_lons;
   std::vector<double> rank_lats;
   std::vector<int> ghosts;  //(ownedCount_,0); // 0 for owned, 1 for ghost
@@ -325,15 +310,15 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   std::vector<int> ownerLocalIdx(num_points);  // each active point's local index on its owner rank.
   std::vector<int> ownerCount(nproc, 0);
   for (int i = 0; i < num_points; ++i){
-    int owner_rank = rank_owning[i];  // cust_partition[g_idx];
+    int owner_rank = rank_owning[i];  
     ownerLocalIdx[i] = ownerCount[owner_rank]++;
   }
   //atlas::idx_t rem_indx = 1;
   for (size_t g_idx = 0; g_idx < global_pts.size(); ++g_idx) {
-    if (rank_owning[g_idx] == my_rank){  //cust_partition[g_idx] == my_rank) {
+    if (rank_owning[g_idx] == my_rank){  
         rank_points.push_back(global_pts[g_idx]);
         ghosts.push_back(0); // Owned
-        globalIdx.push_back(g_idx + 1); // 1-based global ID
+        globalIdx.push_back(g_idx + 1); 
 	rank_lons.push_back(global_pts[g_idx].x());
         rank_lats.push_back(global_pts[g_idx].y());
 	remoteIdx.push_back(static_cast<atlas::idx_t>(ownerLocalIdx[g_idx] + 1));  //rem_indx++); 
@@ -350,35 +335,22 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   comm_.allGather(ownedCount_, num_owned_vec.begin(), num_owned_vec.end());
   auto min_no = *std::min_element(num_owned_vec.begin(), num_owned_vec.end());
   auto max_no = *std::max_element(num_owned_vec.begin(), num_owned_vec.end());
-  oops::Log::info() << "proc " << my_rank << " ownedCount_ " << ownedCount_ << " min/max ownedCount_ " 
-	  << min_no << " / " << max_no << std::endl;  
+  //oops::Log::info() << "proc " << my_rank << " ownedCount_ " << ownedCount_ << " min/max ownedCount_ " 
+  //	  << min_no << " / " << max_no << std::endl;  
 
-  size_t min_owned = ownedCount_;
-  size_t max_owned = ownedCount_;
-  comm_.allReduceInPlace(min_owned, eckit::mpi::Operation::MIN);
-  comm_.allReduceInPlace(max_owned, eckit::mpi::Operation::MAX);
-
-  oops::Log::info() << "proc " << my_rank << " min/max owned " << min_owned << " / " << max_owned << std::endl;
-
-  const int N = config.getInt("resolution", 384);
-  const int idxMin = 1; // *std::min_element(global_i.begin(), global_i.end());
-  const int idxMax = N; //(idxMin == 1) ? N : (N - 1);
-
-// 4. Build global spatial index to discover owners of missing boundary vertices
+  // 4. Build global spatial index to discover owners of missing boundary vertices
   std::unordered_map<uint64_t, size_t> globalCoordToIdx;
   globalCoordToIdx.reserve(num_points);
   for (size_t g = 0; g < num_points; ++g) {
     globalCoordToIdx[pack_tile_ij(global_tile[g], global_i[g], global_j[g])] = g;
   }
 
-  // 4b. Precompute perimeter cells (i=0, i=N-1, j=0, j=N-1) and geometric seam lookup
-  //     (Used by both Step 5 for MPI ghost requests and Step 9 for quad generation)
+  // 4b. Precompute perimeter cells (i=1, i=N, j=1, j=N) and geometric seam lookup
+  // (Used by both Step 5 for MPI ghost requests and Step 9 for quad generation)
   
-  // Great-circle distance check on the unit sphere (avoids polar convergence and 0/360 wrap issues)
-  // For a ~0.25 deg (C384) to ~1.0 deg (C96) cubed-sphere grid, 3.0 degrees (~333 km) safely
-  // allows stretched cubed-sphere corners while rejecting trans-oceanic jumps.
-  const double maxEdgeDeg = 3.0;
-  const double maxChordSq = std::pow(2.0 * std::sin((maxEdgeDeg * M_PI / 180.0) / 2.0), 2);
+  const int N = config.getInt("resolution", 384);
+  const int idxMin = 1; //
+  const int idxMax = (idxMin == 1) ? N : (N - 1);
 
   struct BoundaryCell {
     int t, i, j;
@@ -399,6 +371,11 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
           std::sin(rlat)});
     }
   }
+
+  // Great-circle distance check on the unit sphere (avoids polar convergence and 0/360 wrap issues)
+  // use value that safely allows stretched cubed-sphere corners while rejecting trans-oceanic jumps.
+  const double maxEdgeDeg = config.getDouble("maximum_edge_size_deg", 3.0);
+  const double maxChordSq = std::pow(2.0 * std::sin((maxEdgeDeg * M_PI / 180.0) / 2.0), 2);
 
   auto find_nearest_foreign_cell = [&](int t, int i, int j) -> std::pair<Fv3Corner, bool> {
     auto it = globalCoordToIdx.find(pack_tile_ij(t, i, j));
@@ -429,7 +406,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
     return {bestCorner, found};
   };
 
-  auto get_fv3_quad_corners_geometric = [&](int t, int i, int j)
+  auto get_fv3_quad_corners = [&](int t, int i, int j)
       -> std::tuple<Fv3Corner, Fv3Corner, Fv3Corner, bool> {
     // Interior cell (both i+1 and j+1 are <= idxMax)
     if (i < idxMax && j < idxMax) {
@@ -464,7 +441,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
     int i = rank_i[n];
     int j = rank_j[n];
 
-    auto [c_SE, c_NE, c_NW, valid] = get_fv3_quad_corners_geometric(t, i, j);
+    auto [c_SE, c_NE, c_NW, valid] = get_fv3_quad_corners(t, i, j);
     if (!valid) continue;
 
     const std::array<Fv3Corner, 3> corners = {c_SE, c_NE, c_NW};
@@ -588,7 +565,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
     }
   }
 
-// 9. Build pure quads across local and halo nodes using rotated seam transformations
+  // 9. Build pure quads across local and halo nodes using rotated seam transformations
   //    and great-circle edge length filtering
   std::vector<std::array<atlas::gidx_t, 4>> quadNodes;
   std::vector<atlas::gidx_t> quadGidx;
@@ -610,8 +587,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
     return (dx * dx + dy * dy + dz * dz) <= maxChordSq;
   };
 
-  // 1. Build local node table: (tile, i, j) -> 1-based globalIdx
-  std::unordered_map<uint64_t, atlas::gidx_t> nodeLookup;
+  std::unordered_map<uint64_t, atlas::gidx_t> nodeLookup;  // local node table: (tile, i, j) -> 1-based globalIdx
   nodeLookup.reserve(globalIdx.size());
 
   for (size_t k = 0; k < globalIdx.size(); ++k) {
@@ -624,9 +600,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
 
     atlas::gidx_t id_SW = globalIdx[n];
 
-    //auto [c_SE, c_NE, c_NW, valid] = get_fv3_quad_corners(t, i, j, N);
-    auto [c_SE, c_NE, c_NW, valid] = get_fv3_quad_corners_geometric(t, i, j);
-    //get_fv3_quad_corners_from_existing(t, i, j, N);
+    auto [c_SE, c_NE, c_NW, valid] = get_fv3_quad_corners(t, i, j);
     if (!valid) continue;
 
     auto it_SE = nodeLookup.find(pack_tile_ij(c_SE.t, c_SE.i, c_SE.j));
