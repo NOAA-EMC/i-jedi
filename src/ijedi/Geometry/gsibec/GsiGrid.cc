@@ -96,7 +96,6 @@ namespace ijedi
 
     const int nlats = config.getInt(GsiGridKey + ".lats");  // pole to pole
     const int nlons = config.getInt(GsiGridKey + ".lons");
-    const bool lendp = config.getInt(GsiGridKey + ".endpoint");
     const double lat_start = config.has(GsiGridKey + ".lat_start") ?
                              config.getDouble(GsiGridKey + ".lat_start") : 0.0;
     const double lat_end = config.has(GsiGridKey + ".lat_end") ?
@@ -109,7 +108,8 @@ namespace ijedi
                                   config.getDouble(GsiGridKey + ".north_pole_lat") : 0.0;
     const double north_pole_lon = config.has(GsiGridKey + ".north_pole_lon") ?
                                   config.getDouble(GsiGridKey + ".north_pole_lon") : 0.0;
-   
+
+
     const auto gsi_gaussian_points = [](const int N) -> std::vector<double> {
       ASSERT(N % 2 == 0);  // code below would need verification, probably fixing, in odd case
       std::vector<double> result(N);
@@ -119,12 +119,10 @@ namespace ijedi
       result[N-1] = -90.0;
       // flip sign to obtain south-to-north order, following GSI's default
       for (auto & r : result) {
-        r *= 1.0; //-1.0;  keep north-to-south order for surface 
+        r *= -1.0;
       }
       return result;
     };
-    
-    std::vector<double> grid_xt_ar = {0., 1.5, 3.0};  //read coords from input
 
     const auto build_xspace_config = [&](const std::string & grid_type)
                                      -> eckit::LocalConfiguration {
@@ -134,20 +132,14 @@ namespace ijedi
         lc.set("N", nlons);
         lc.set("start", lon_start);
         lc.set("end", lon_end);
-      /*} else if (grid_type == "gaussian") {
-        lc.set("type", "custom");
-        lc.set("N", nlons);
-        lc.set("values", grid_xt_ar); */
       } else {
         lc.set("type", "linear");
         lc.set("N", nlons);
-        lc.set("interval", std::vector<double>{{0.0, 360.0}});    
-        lc.set("endpoint", lendp);   //false);
+        lc.set("interval", std::vector<double>{{0.0, 360.0}});
+        lc.set("endpoint", false);
       }
       return lc;
     };
-    
-    std::vector<double> grid_yt_ar = {3. 0. -3.}; 
 
     const auto build_yspace_config = [&](const std::string & grid_type) ->
                                      eckit::LocalConfiguration {
@@ -160,11 +152,11 @@ namespace ijedi
       } else if (grid_type == "gaussian") {
         lc.set("type", "custom");
         lc.set("N", nlats);
-        lc.set("values", gsi_gaussian_points(nlats)); //grid_yt_ar); //
+        lc.set("values", gsi_gaussian_points(nlats));
       } else {
         lc.set("type", "linear");
         lc.set("N", nlats);
-        lc.set("interval", std::vector<double>{{90.0, -90.0}});
+        lc.set("interval", std::vector<double>{{-90.0, 90.0}});
       }
       return lc;
     };
