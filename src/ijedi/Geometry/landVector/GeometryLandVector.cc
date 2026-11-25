@@ -68,123 +68,6 @@
 #include "eckit/mpi/Comm.h"
 
 
-// Standard 2D Hilbert point-to-index conversion (2D box of size N x N, where N = 2^bits)
-uint64_t hilbertEncode(uint32_t x, uint32_t y, int bits) {
-    uint64_t d = 0;
-    for (int s = 1 << (bits - 1); s > 0; s >>= 1) {
-        uint32_t rx = (x & s) > 0;
-        uint32_t ry = (y & s) > 0;
-        d += static_cast<uint64_t>(s) * s * ((3 * rx) ^ ry);
-
-        // Rotate/flip quadrant
-        if (ry == 0) {
-            if (rx == 1) {
-                x = (1U << bits) - 1 - x;
-                y = (1U << bits) - 1 - y;
-            }
-            // Swap x and y
-            std::swap(x, y);
-        }
-    }
-    return d;
-}
-
-// Convert Lon (x) [-180, 180] or [0, 360] and Lat (y) [-90, 90] to integer grid coordinates
-uint64_t pointToHilbertKey(const atlas::PointXY& pt, int bits = 16) {
-    double lon = pt.x(); // degrees
-    double lat = pt.y(); // degrees
-
-    // Normalize Longitude to [0, 1)
-    while (lon < 0.0) lon += 360.0;
-    while (lon >= 360.0) lon -= 360.0;
-    double norm_lon = lon / 360.0;
-
-    // Normalize Latitude to [0, 1]
-    double norm_lat = (lat + 90.0) / 180.0;
-    norm_lat = std::max(0.0, std::min(1.0, norm_lat));
-
-    // Scale to integer grid [0, 2^bits - 1]
-    uint32_t max_val = (1U << bits) - 1;
-    uint32_t x = static_cast<uint32_t>(norm_lon * max_val);
-    uint32_t y = static_cast<uint32_t>(norm_lat * max_val);
-
-    return hilbertEncode(x, y, bits);
-}
-
-
-// Call this function before passing landPoints to atlas::UnstructuredGrid
-void sortLandPointsByHilbert(std::vector<atlas::PointXY>& landPoints) {
-    // 1. Precompute Hilbert keys for fast comparison
-    struct ScoredPoint {
-        atlas::PointXY point;
-        uint64_t key;
-    };
-
-    std::vector<ScoredPoint> scoredPoints;
-    scoredPoints.reserve(landPoints.size());
-
-    for (const auto& pt : landPoints) {
-        scoredPoints.push_back({pt, pointToHilbertKey(pt, 16)}); // 16-bit resolution per axis
-    }
-
-    // 2. Sort by Hilbert curve key
-    std::sort(scoredPoints.begin(), scoredPoints.end(),
-              [](const ScoredPoint& a, const ScoredPoint& b) {
-                  return a.key < b.key;
-              });
-
-    // 3. Copy back to landPoints array
-    for (size_t i = 0; i < landPoints.size(); ++i) {
-        landPoints[i] = scoredPoints[i].point;
-    }
-}
-
- bool is_point_in_vector(const atlas::PointXY& target, const std::vector<atlas::PointXY>& points, double epsilon = 1e-9) {
-    return std::any_of(points.begin(), points.end(), [&target, epsilon](const atlas::PointXY& p) {
-        return std::abs(p.x() - target.x()) < epsilon &&
-               std::abs(p.y() - target.y()) < epsilon;
-    });
-}
-
-
-// Helper to convert degrees to radians
-constexpr double deg2rad(double deg) {
-    return deg * M_PI / 180.0;
-}
-
-// Computes the Haversine distance in meters between two lon/lat points
-double haversine_distance(const atlas::PointXY& p1, const atlas::PointXY& p2) {
-    constexpr double EARTH_RADIUS_METERS = 6371000.0; // Mean Earth radius
-
-    double lon1 = deg2rad(p1.x()); // x represents longitude
-    double lat1 = deg2rad(p1.y()); // y represents latitude
-    double lon2 = deg2rad(p2.x());
-    double lat2 = deg2rad(p2.y());
-
-    double dlat = lat2 - lat1;
-    double dlon = lon2 - lon1;
-
-    double a = std::sin(dlat / 2.0) * std::sin(dlat / 2.0) +
-               std::cos(lat1) * std::cos(lat2) *
-               std::sin(dlon / 2.0) * std::sin(dlon / 2.0);
-
-    double c = 2.0 * std::atan2(std::sqrt(a), std::sqrt(1.0 - a));
-
-    return EARTH_RADIUS_METERS * c;
-}
-
-// Computes distances from all points in the vector to the target point
-std::vector<double> compute_distances_to_target(const atlas::PointXY& target, const std::vector<atlas::PointXY>& points) {
-    std::vector<double> distances;
-    distances.reserve(points.size());
-
-    for (const auto& point : points) {
-        distances.push_back(haversine_distance(target, point));
-    }
-
-    return distances;
-}
-
 static inline void nc_rc(const int return_code, const std::string & operation) {
   if (return_code != NC_NOERR) {
     std::string errMsg = "GeometryLandVector netCDF operation '" + operation +
@@ -219,7 +102,6 @@ inline uint64_t pack_tile_ij(int tile, int i, int j) {
          static_cast<uint64_t>(j & 0xFFFF);
 }
 
-
 struct Fv3Corner {
   int t;
   int i;
@@ -235,10 +117,8 @@ struct Fv3StepState {
   bool valid;
 };
 
-// -----------------------------------------------------------------------------
-// Helper: Construct quads across panels using FV3 seam neighbor resolution
-// -----------------------------------------------------------------------------
-/*TODO: move the quad nodes step here
+/*TODO: move the quad nodes construction step here
+// Construct quads across panels using FV3 seam neighbor resolution
 void compute_quad_nodes(
     size_t ownedCount_,
     int N,
@@ -404,32 +284,12 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   const size_t nproc = static_cast<size_t>(comm_.size());
   oops::Log::info() << "landGeom NC: Proc  " << my_rank << " running with " << nproc << " procs" << std::endl;
 
-  auto isOwnedByThisRank = [&](atlas::PointXY target, std::vector<atlas::PointXY> vPoints) -> bool {
-    return is_point_in_vector(target, vPoints);
-  };
-
-  auto distanceToRankDomain = [&] (atlas::PointXY target, std::vector<atlas::PointXY> vPoints) -> double {
-    auto dist_vec = compute_distances_to_target(target, vPoints);
-    if(!dist_vec.empty()){
-      auto min_dist = *std::min_element(dist_vec.begin(), dist_vec.end());
-      return 0.001*min_dist;  // km
-    } else {
-      throw eckit::BadParameter("GeometryLandVector: Error in distance computation.", Here());
-    }
-  };
-  
   const size_t num_points = lats.size();
   std::vector<atlas::PointXY> global_pts(num_points);
   for (size_t i = 0; i < num_points; ++i) {
     global_pts[i] = atlas::PointXY(lons[i], lats[i]);
   }
   
-  // Sort points using Hilbert curve
-  // Warning: only if also sorting other coord vars--tile, i, j
-//***** doesn't seem to make a difference---sortLandPointsByHilbert(global_pts);
-//TODO: Sort corresponding elevation 
- 
-
   size_t points_per_rank = num_points / nproc;
   size_t remainder = num_points % nproc;
   
