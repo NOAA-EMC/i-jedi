@@ -38,6 +38,7 @@ list(APPEND ijedi_src_files
   FieldMetadata/FieldsMetadata.cc
   FieldMetadata/FieldsMetadata.h
   FieldMetadata/FieldsMetadataDefault.h
+  FieldMetadata/FieldsMetadataMarine.h
 
   # State
   State/State.cc
@@ -50,6 +51,8 @@ list(APPEND ijedi_src_files
   # IO
   Io/IoBase.cc
   Io/IoBase.h
+  Io/cice/IoCICE.cc
+  Io/cice/IoCICE.h
   Io/gmsh/IoGmsh.cc
   Io/gmsh/IoGmsh.h
   Io/mom6/FillMaskedCells.cc
@@ -58,6 +61,8 @@ list(APPEND ijedi_src_files
   Io/mom6/IoMOM6.h
   Io/mom6/ReadMOM6Netcdf.cc
   Io/mom6/ReadMOM6Netcdf.h
+  Io/mom6/VelocityStagger.cc
+  Io/mom6/VelocityStagger.h
   Io/mom6/WriteMOM6Netcdf.cc
   Io/mom6/WriteMOM6Netcdf.h
   Io/unstructured/IoUnstructured.cc
@@ -69,6 +74,8 @@ list(APPEND ijedi_src_files
   Io/landVector/IOLandVector.h
 
   # Variable change
+  VariableChange/SeaSurfaceSalinity.h
+  VariableChange/SeaSurfaceSalinity_A.cc
   VariableChange/SeaSurfaceTemperature.h
   VariableChange/SeaSurfaceTemperature_A.cc
   VariableChange/VaderCookbook.cc

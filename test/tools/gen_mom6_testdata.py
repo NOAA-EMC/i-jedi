@@ -41,6 +41,73 @@ def ice_concentration(lat2d):
     return np.maximum(arctic, antarctic)
 
 
+VELOCITY_SCALE = 0.1  # m/s
+
+
+def velocity_east_north(lon, lat):
+    """Smooth analytic surface flow: solid-body rotations about the polar axis
+    and about the (lon=0, lat=0) axis.  Well defined at the poles and has both
+    components, so a sign or ordering error in the rotation shows up."""
+    lam = np.deg2rad(lon)
+    phi = np.deg2rad(lat)
+    uE = VELOCITY_SCALE * (np.cos(phi) - np.sin(phi) * np.cos(lam))
+    vN = VELOCITY_SCALE * np.sin(lam)
+    return uE, vN
+
+
+def _xyz(lon, lat):
+    lam, phi = np.deg2rad(lon), np.deg2rad(lat)
+    return np.stack([np.cos(phi) * np.cos(lam), np.cos(phi) * np.sin(lam), np.sin(phi)], -1)
+
+
+def _velocity_xyz(lon, lat):
+    """velocity_east_north as a 3-D vector."""
+    lam, phi = np.deg2rad(lon), np.deg2rad(lat)
+    east = np.stack([-np.sin(lam), np.cos(lam), np.zeros_like(lam)], -1)
+    north = np.stack([-np.sin(phi) * np.cos(lam), -np.sin(phi) * np.sin(lam), np.cos(phi)], -1)
+    uE, vN = velocity_east_north(lon, lat)
+    return uE[..., None] * east + vN[..., None] * north
+
+
+def _tangent(p, a, b):
+    """Unit vector along chord a->b, projected on the tangent plane at p."""
+    t = b - a
+    t = t - np.sum(t * p, -1, keepdims=True) * p
+    return t / np.linalg.norm(t, axis=-1, keepdims=True)
+
+
+def cgrid_velocity(hgrid_nc, ni, nj):
+    """Grid-relative analytic velocity on non-symmetric MOM6 C-grid faces.
+
+    u on the east face of cell i (supergrid (2j+1, 2i+2)) is the component
+    along grid east, v on the north face of cell j (supergrid (2j+2, 2i+1))
+    the component along grid north.  Grid directions come from the faces' own
+    supergrid edges in 3-D, so they stay exact near the geographic pole.
+    Returns u, v of shape (nj, ni).
+    """
+    with netCDF4.Dataset(hgrid_nc) as ds:
+        x = ds["x"][:].data
+        y = ds["y"][:].data
+    xyz = _xyz(x, y)
+    jT = 2 * np.arange(nj) + 1
+    iT = 2 * np.arange(ni) + 1
+
+    # u face: grid north along the face edge, grid east = north x up
+    J, I = np.meshgrid(jT, iT + 1, indexing="ij")
+    p = xyz[J, I]
+    gnorth = _tangent(p, xyz[J - 1, I], xyz[J + 1, I])
+    geast = np.cross(gnorth, p)
+    u = np.sum(_velocity_xyz(x[J, I], y[J, I]) * geast, -1)
+
+    # v face: grid east along the face edge, grid north = up x east
+    J, I = np.meshgrid(jT + 1, iT, indexing="ij")
+    p = xyz[J, I]
+    geast = _tangent(p, xyz[J, I - 1], xyz[J, I + 1])
+    gnorth = np.cross(p, geast)
+    v = np.sum(_velocity_xyz(x[J, I], y[J, I]) * gnorth, -1)
+
+    return u, v
+
 def gen_mom6_restart(outdir):
     """Generate MOM.res.nc with analytically defined fields.
 
@@ -132,27 +199,22 @@ def gen_mom6_restart(outdir):
         LAND_FILL,
     )   # shape: (nz, nj, ni)
 
-    # ---- u: surface-trapped zonal flow; grid (Layer, lath, lonq) same shape -
-    u_surf = 0.1 * np.cos(np.deg2rad(lat2d))
-    u = np.where(
-        h > 1e-5,
-        (u_surf[np.newaxis, :, :]
-         * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 200.0)),
-        LAND_FILL,
-    )   # shape: (nz, nj, ni)
+    # ---- u, v: analytic geographic flow on the MOM6 C-grid ------------------
+    # (uE, vN) is evaluated at each face position and projected on that face's
+    # grid direction, so i-jedi's face->h averaging and grid->geographic
+    # rotation can be checked against velocity_east_north().
+    # Masked faces are 0, as in a real MOM6 restart.
+    tmask = h > 1e-5                                          # (nz, nj, ni)
+    u_surf, v_surf = cgrid_velocity(os.path.join(outdir, "ocean_hgrid.nc"), ni, nj)
+    decay = np.exp(-layer_z / 200.0)[:, np.newaxis, np.newaxis]
 
-    # ---- v: weak gyre-like meridional flow with depth decay -----------------
-    lon2d = np.tile(lonh[np.newaxis, :], (nj, 1))
-    v_surf = (0.06
-              * np.sin(2.0 * np.deg2rad(lon2d))
-              * np.cos(np.deg2rad(lat2d))
-              * np.exp(-(lat2d / 65.0) ** 2))
-    v = np.where(
-        h > 1e-5,
-        (v_surf[np.newaxis, :, :]
-         * np.exp(-layer_z[:, np.newaxis, np.newaxis] / 250.0)),
-        LAND_FILL,
-    )   # shape: (nz, nj, ni); grid (Layer, latq, lonh)
+    u_mask = tmask & np.roll(tmask, -1, axis=2)               # periodic in i
+    u = np.where(u_mask, decay * u_surf, 0.0)                 # (Layer, lath, lonq)
+
+    v_mask = np.zeros_like(tmask)
+    v_mask[:, :-1, :] = tmask[:, :-1, :] & tmask[:, 1:, :]
+    v_mask[:, -1, :] = tmask[:, -1, :] & tmask[:, -1, ::-1]   # tripolar fold
+    v = np.where(v_mask, decay * v_surf, 0.0)                 # (Layer, latq, lonh)
 
     # ---- ave_ssh: small sinusoidal SSH with zero on land --------------------
     ave_ssh = np.where(
@@ -273,6 +335,66 @@ def gen_cice6_history(outdir):
     print(f"  {out_nc}")
 
 
+def gen_cice6_restart(outdir):
+    """Generate cice6_restart.nc with CICE6-restart-format sea-ice fields on the 72x35 grid.
+
+    Same ice as cice6.nc, split into 5 thickness categories with fixed weights:
+    aicen, vicen, vsnon (grid-cell means) and Tsfcn on (ncat, nj, ni); the thermodynamic
+    layers, one variable per layer as in CICE (7 ice layers: qice001.., sice001..; 1 snow
+    layer: qsno001) and the melt ponds (apnd, hpnd, ipnd), with values that differ between
+    categories and layers; and the 2-D
+    iceumask, which JEDI does not read (an io update must leave it unchanged).
+    """
+    nj, ni = 35, 72
+    weights = np.array([0.1, 0.2, 0.3, 0.25, 0.15])
+    n_ice_layers, n_snow_layers = 7, 1
+
+    gridspec_nc = os.path.join(outdir, "soca_gridspec.72x35x25.nc")
+    with netCDF4.Dataset(gridspec_nc) as gs:
+        lat2d = gs["lat"][0].data           # (nj, ni)
+        mask  = gs["mask2d"][0].data        # (nj, ni) 1=ocean 0=land
+
+    aice = ice_concentration(lat2d) * mask
+    in_ice_hi = np.where(lat2d > 0.0, 2.0, 1.0)
+    in_ice_hs = np.where(lat2d > 0.0, 0.3, 0.1)
+    vice = aice * in_ice_hi
+    vsno = aice * in_ice_hs
+    tsfc = np.where(aice > 0.0, -5.0, 0.0)
+
+    out_nc = os.path.join(outdir, "cice6_restart.nc")
+    with netCDF4.Dataset(out_nc, "w", format="NETCDF4") as ds:
+        ds.title  = "CICE restart (synthetic test data)"
+        ds.source = "gen_mom6_testdata.py"
+        ds.createDimension("ncat", len(weights))
+        ds.createDimension("nj",   nj)
+        ds.createDimension("ni",   ni)
+        for name, field in (("aicen", aice), ("vicen", vice), ("vsnon", vsno)):
+            v = ds.createVariable(name, "f8", ("ncat", "nj", "ni"))
+            v[:] = weights[:, np.newaxis, np.newaxis] * field[np.newaxis, :, :]
+        v = ds.createVariable("Tsfcn", "f8", ("ncat", "nj", "ni"))
+        v[:] = np.broadcast_to(tsfc, (len(weights), nj, ni))
+        ice = (aice > 0.0).astype(np.float64)
+        snow = (vsno > 0.0).astype(np.float64)
+        cat = 1.0 + 0.01 * np.arange(1, len(weights) + 1)[:, np.newaxis, np.newaxis]
+        for layer in range(1, n_ice_layers + 1):
+            v = ds.createVariable(f"qice{layer:03d}", "f8", ("ncat", "nj", "ni"))
+            v[:] = -3.0e8 * (1.0 + 0.1 * layer) * cat * ice[np.newaxis, :, :]
+            v = ds.createVariable(f"sice{layer:03d}", "f8", ("ncat", "nj", "ni"))
+            v[:] = (4.0 + 0.5 * layer) * cat * ice[np.newaxis, :, :]
+        for layer in range(1, n_snow_layers + 1):
+            v = ds.createVariable(f"qsno{layer:03d}", "f8", ("ncat", "nj", "ni"))
+            v[:] = -1.2e8 * (1.0 + 0.1 * layer) * cat * snow[np.newaxis, :, :]
+        # melt ponds: area fraction, depth and refrozen lid thickness, different magnitudes so
+        # that a swapped mapping fails the check
+        for name, value in (("apnd", 0.1), ("hpnd", 0.05), ("ipnd", 0.01)):
+            v = ds.createVariable(name, "f8", ("ncat", "nj", "ni"))
+            v[:] = value * cat * ice[np.newaxis, :, :]
+        v = ds.createVariable("iceumask", "f8", ("nj", "ni"))
+        v[:] = (aice > 0.0).astype(np.float64)
+
+    print(f"  {out_nc}")
+
+
 def main():
     if len(sys.argv) != 3:
         print(f"Usage: {sys.argv[0]} <input_dir> <output_dir>")
@@ -308,6 +430,11 @@ def main():
     # cice6.nc — CICE6-format sea-ice history (aice_h, hi_h, hs_h, sice_h)
     # -------------------------------------------------------------------------
     gen_cice6_history(outdir)
+
+    # -------------------------------------------------------------------------
+    # cice6_restart.nc — CICE6-format sea-ice restart (aicen, vicen, vsnon, Tsfcn)
+    # -------------------------------------------------------------------------
+    gen_cice6_restart(outdir)
 
     print(f"MOM6 test data written to: {outdir}")
 
