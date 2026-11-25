@@ -49,6 +49,10 @@ class IOLandVectorParameters : public IoParametersBase {
   oops::Parameter<std::string> filename{"filename", "filename", 
                                         "landVector_%Y%m%dT%H%M%S.nc4", this};
 
+  // update existing file (e.g add inc to few states in existing file)
+  oops::Parameter<bool> update_existing_file{"update existing file", "update existing file (filename must exist)",
+                                        false, this};
+
   // Filename of geom input (for reading lat/lon/elevation from a NetCDF file)
   oops::OptionalParameter<std::string> geomfilename{"geom filename",
                                                      "geometry NetCDF filename for read()",
@@ -75,8 +79,9 @@ class IOLandVectorParameters : public IoParametersBase {
                                       this};
 
   // Geometry var names
-  oops::Parameter<std::string> locationName{"location dime name", "location dim name", "location", this};
+  oops::Parameter<std::string> locationName{"location dim name", "location dim name", "location", this};
   oops::Parameter<std::string> layerName{"layer dim name", "layer dim name", "soil_levels", this};
+  oops::Parameter<int> num_layers{"num layers", "num layers", 4, this};
   oops::Parameter<std::string> timeName{"time dim name", "time dim name", "time", this};
 
 };
@@ -104,7 +109,6 @@ class IOLandVector : public IoBase, private util::ObjectCounter<IOLandVector> {
                   const eckit::LocalConfiguration &) const override;
   void write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
                    const eckit::LocalConfiguration &) const override;
-
  private:
   // Methods
   void print(std::ostream &) const override;
@@ -112,10 +116,12 @@ class IOLandVector : public IoBase, private util::ObjectCounter<IOLandVector> {
   void writeVector(const T & obj, const std::string & label,
                       const eckit::LocalConfiguration & fileionames,
                       const eckit::LocalConfiguration & fileioscaling) const;
+                     //,const eckit::LocalConfiguration & fullconfig) const;
   void writeVectorFields(const atlas::FieldSet &, //const util::DateTime &,
                              size_t num_points,
                              const eckit::LocalConfiguration &,
                              const eckit::LocalConfiguration &) const;
+			     //const eckit::LocalConfiguration &) const;
   void readVectorFields(std::string pathFile,
                             atlas::FieldSet &, const util::DateTime &,
                             size_t, size_t,
