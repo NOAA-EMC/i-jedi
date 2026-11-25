@@ -242,7 +242,8 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
                                        atlas::FunctionSpace &functionSpace,
                                        atlas::FieldSet &geomFields,
                                        bool &levelsAreTopDown, int &numLevels)
-    : comm_(comm) {
+    : comm_(comm) 
+{
   oops::Log::trace() << "GeometryLandVector::GeometryLandVector starting..." << std::endl;
  
   numLevels_ = config.getInt("nlevels", 1);
@@ -250,6 +251,8 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   numLevels = numLevels_;
   levelsAreTopDown = config.getBool("levels_are_topdown", false);
   levelsAreTopDown_ = levelsAreTopDown;
+
+  bool print_debug_info = config.getBool("print_debug_info", false);
 
   // 1. Read coordinates (lat, lon, elevation) from input  file
   std::string latlonFile = config.getString("latlon_file", "");
@@ -267,7 +270,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   if(!latlonFile.empty() && config.has("lat_name") && config.has("lon_name") && config.has("elev_name")) {
     oops::Log::info() << "Reading lat/lon/elevation from file: " << latlonFile << std::endl;
     readLatLonElevFromFile(latlonFile, latName, lonName, elevName, lats, lons, elevations, global_tile, global_i, global_j);
-  else {
+  } else {
     throw eckit::BadParameter("GeometryLandVector: Must specify latlon_file in configuration.", Here());
   }
 
@@ -329,14 +332,16 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
         partitions.push_back(my_rank);
     }
   }
-  
+    
   ownedCount_ = rank_points.size(); 
-  std::vector<size_t> num_owned_vec(nproc);
-  comm_.allGather(ownedCount_, num_owned_vec.begin(), num_owned_vec.end());
-  auto min_no = *std::min_element(num_owned_vec.begin(), num_owned_vec.end());
-  auto max_no = *std::max_element(num_owned_vec.begin(), num_owned_vec.end());
-  //oops::Log::info() << "proc " << my_rank << " ownedCount_ " << ownedCount_ << " min/max ownedCount_ " 
-  //	  << min_no << " / " << max_no << std::endl;  
+  if (print_debug_info) {
+      std::vector<size_t> num_owned_vec(nproc);
+      comm_.allGather(ownedCount_, num_owned_vec.begin(), num_owned_vec.end());
+      auto min_no = *std::min_element(num_owned_vec.begin(), num_owned_vec.end());
+      auto max_no = *std::max_element(num_owned_vec.begin(), num_owned_vec.end());
+      oops::Log::debug() << "proc " << my_rank << " ownedCount_ " << ownedCount_ << " min/max ownedCount_ " 
+      	  << min_no << " / " << max_no << std::endl;  
+  }
 
   // 4. Build global spatial index to discover owners of missing boundary vertices
   std::unordered_map<uint64_t, size_t> globalCoordToIdx;
@@ -347,7 +352,6 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
 
   // 4b. Precompute perimeter cells (i=1, i=N, j=1, j=N) and geometric seam lookup
   // (Used by both Step 5 for MPI ghost requests and Step 9 for quad generation)
-  
   const int N = config.getInt("resolution", 384);
   const int idxMin = 1; //
   const int idxMax = (idxMin == 1) ? N : (N - 1);
@@ -564,8 +568,18 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
       partitions.push_back(g.ownerRank);
     }
   }
+  
+  if (print_debug_info) {
+      size_t nghost = std::accumulate(ghosts.begin(), ghosts.end(), 0);
+      std::vector<size_t> num_ghost_vec(nproc);
+      comm_.allGather(nghost, num_ghost_vec.begin(), num_ghost_vec.end());
+      auto min_ng = *std::min_element(num_ghost_vec.begin(), num_ghost_vec.end());
+      auto max_ng = *std::max_element(num_ghost_vec.begin(), num_ghost_vec.end());
+      oops::Log::debug() << "rank " << my_rank << "num ghost cells " << nghost << " min/max num ghosts "
+              << min_ng << " / " << max_ng << std::endl;  
+  }
 
-  // 9. Build pure quads across local and halo nodes using rotated seam transformations
+  // 9. Build quads across local and halo nodes using rotated seam transformations
   //    and great-circle edge length filtering
   std::vector<std::array<atlas::gidx_t, 4>> quadNodes;
   std::vector<atlas::gidx_t> quadGidx;
@@ -650,76 +664,48 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
       comm_);
 */
 
-  // 1. Verify owned node count matches the expected input exactly across all ranks
-  size_t local_owned = 0;
-  for (int g : ghosts) {
-    if (g == 0) local_owned++;
-  }
-  
-  size_t total_owned = local_owned;
-  comm_.allReduceInPlace(total_owned, eckit::mpi::Operation::SUM);
-  
-  oops::Log::info() << "Total globally owned nodes (sum of ghosts == 0): "
-                    << total_owned
-                    << " (Expected: " << num_points << ")" << std::endl;
-  
-  // 2. Check maximum globalIdx assigned across all ranks
-  atlas::gidx_t max_gid = 0;
-  for (atlas::gidx_t gid : globalIdx) {
-    max_gid = std::max(max_gid, gid);
-  }
-  comm.allReduceInPlace(max_gid, eckit::mpi::Operation::MAX);
-  
-  oops::Log::info() << "Maximum globalIdx across all ranks: "
-                  << max_gid << std::endl;
-
-  size_t nghost = std::accumulate(ghosts.begin(), ghosts.end(), 0);
-  std::vector<size_t> num_ghost_vec(nproc);
-  comm_.allGather(nghost, num_ghost_vec.begin(), num_ghost_vec.end());
-  auto min_ng = *std::min_element(num_ghost_vec.begin(), num_ghost_vec.end());
-  auto max_ng = *std::max_element(num_ghost_vec.begin(), num_ghost_vec.end());
-  oops::Log::info() << "proc 0 nghost " << nghost << " min/max numGhost "
-          << min_ng << " / " << max_ng << std::endl;
-  
-    // 1. Check for duplicate globalIdx in local rank tables
-  std::unordered_set<atlas::gidx_t> seen_gidx;
-  size_t local_duplicates = 0;
-  for (atlas::gidx_t gid : globalIdx) {
-    if (!seen_gidx.insert(gid).second) {
-      local_duplicates++;
-    }
-  }
-  
-  size_t total_duplicates = local_duplicates;
-  comm_.allReduceInPlace(total_duplicates, eckit::mpi::Operation::SUM);
-  oops::Log::info() << "Total duplicate node registrations across local vectors: " 
-                    << total_duplicates << std::endl;
-  
-  // 2. Validate ghost remoteIdx against owner capacity
-  // Share each rank's owned node vector size across all ranks
-  std::vector<int> localOwnedCounts(nproc, 0);
-  int myOwned = static_cast<int>(ownedCount_);
-  comm_.allGather(myOwned, localOwnedCounts.begin(), localOwnedCounts.end());
-  
-  size_t out_of_bounds_remoteIdx = 0;
-  for (size_t k = 0; k < ghosts.size(); ++k) {
-    if (ghosts[k] == 1) {
-      int owner = partitions[k];
-      atlas::idx_t rem = remoteIdx[k];
-      // remoteIdx is 1-based, so it must be between 1 and localOwnedCounts[owner]
-      if (rem < 1 || rem > localOwnedCounts[owner]) {
-        out_of_bounds_remoteIdx++;
+  // only print these if necessary-- later remove
+  if (print_debug_info) {
+      //Check for duplicate globalIdx in local rank tables
+      std::unordered_set<atlas::gidx_t> seen_gidx;
+      size_t local_duplicates = 0;
+      for (atlas::gidx_t gid : globalIdx) {
+        if (!seen_gidx.insert(gid).second) {
+          local_duplicates++;
+        }
       }
-    }
-  }
+      
+      size_t total_duplicates = local_duplicates;
+      comm_.allReduceInPlace(total_duplicates, eckit::mpi::Operation::SUM);
+      oops::Log::info() << "Total duplicate node registrations across local vectors: " 
+                        << total_duplicates << std::endl;
   
-  size_t total_bad_remotes = out_of_bounds_remoteIdx;
-  comm_.allReduceInPlace(total_bad_remotes, eckit::mpi::Operation::SUM);
-  oops::Log::info() << "Total out-of-bounds ghost remoteIdx values: " 
-                  << total_bad_remotes << std::endl;
+      //Validate ghost remoteIdx against owner capacity
+      // Share each rank's owned node vector size across all ranks
+      std::vector<int> localOwnedCounts(nproc, 0);
+      int myOwned = static_cast<int>(ownedCount_);
+      comm_.allGather(myOwned, localOwnedCounts.begin(), localOwnedCounts.end());
+      
+      size_t out_of_bounds_remoteIdx = 0;
+      for (size_t k = 0; k < ghosts.size(); ++k) {
+        if (ghosts[k] == 1) {
+          int owner = partitions[k];
+          atlas::idx_t rem = remoteIdx[k];
+          // remoteIdx is 1-based, so it must be between 1 and localOwnedCounts[owner]
+          if (rem < 1 || rem > localOwnedCounts[owner]) {
+            out_of_bounds_remoteIdx++;
+          }
+        }
+      }
+      
+      size_t total_bad_remotes = out_of_bounds_remoteIdx;
+      comm_.allReduceInPlace(total_bad_remotes, eckit::mpi::Operation::SUM);
+      oops::Log::info() << "Total out-of-bounds ghost remoteIdx values: " 
+                      << total_bad_remotes << std::endl;
+  }
 
+  // check lengths are consistent
   const size_t total_nodes = rank_points.size();
-
   ASSERT(rank_lons.size()   == total_nodes);
   ASSERT(rank_lats.size()   == total_nodes);
   ASSERT(ghosts.size()      == total_nodes);
@@ -739,11 +725,10 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
     }
   }
 
-  // 10. Build Atlas Mesh with zero triangle structures
+  // 10. Build Atlas Mesh with quad cells 
   eckit::LocalConfiguration meshConf;
   meshConf.set("mpi_comm", comm.name());
-  // Inform Atlas that parallel fields are already validly constructed
-  meshConf.set("halo", 0);
+  meshConf.set("halo", 0);   // ?? doesn't seem to matter
 
   const atlas::mesh::MeshBuilder meshBuilder;
   mesh_ = meshBuilder(
@@ -752,6 +737,11 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
       /*triag_nodes_global=*/{}, /*triag_global_index=*/{},
       /*quad_nodes_global=*/quadNodes, /*quad_global_index=*/quadGidx,
       meshConf);
+  
+  if (print_debug_info) {
+      oops::Log::info() << "GeometryLandVector: mesh_nodes_size: " << mesh_.nodes().size()
+          << " mesh_cells_size: " << mesh_.cells().size() << std::endl;
+  }
 
   // 11. Global verification that at least one rank holds cells
   size_t local_cells = mesh_.cells().size();
@@ -759,11 +749,11 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   comm_.allReduceInPlace(global_cells, eckit::mpi::Operation::SUM);
   ASSERT(global_cells > 0);
 
-  // Guarantee cells are present so MeshTriangulation populates its KD-tree
+  // Ensure cells are present 
   ASSERT(mesh_.cells().size() > 0);
 
   // 12. Instantiate Atlas NodeColumns function space
-  functionSpace_ = atlas::functionspace::NodeColumns(mesh_, atlas::util::Config("mpi_comm", comm.name()));  //fs_config);
+  functionSpace_ = atlas::functionspace::NodeColumns(mesh_, atlas::util::Config("mpi_comm", comm.name()));  
 
   lonlat_ = functionSpace_.lonlat();
   ghost_ = functionSpace_.ghost();
@@ -785,7 +775,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   auto global_index_view = atlas::array::make_view<atlas::gidx_t, 1>(global_index_);
   auto remote_index_view  = atlas::array::make_view<int, 1>(remote_index_);
  
-  // Explicit 1D latitude and longitude fields, eg for KD-tree search
+  // Explicit 1D latitude and longitude fields
   lat_ = functionSpace_.createField<double>(atlas::option::name("lat") | atlas::option::levels(1));
   lon_ = functionSpace_.createField<double>(atlas::option::name("lon") | atlas::option::levels(1));
   auto latView = atlas::array::make_view<double, 2>(lat_);
@@ -821,13 +811,13 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
       }
   }
 
-  // 1. Ensure ghost field matches your manual ghost array
+  // Ensure ghost field matches the manual ghost array
   for (atlas::idx_t j = 0; j < functionSpace_.size(); ++j) {
     int g_expected = (j < ownedCount_) ? 0 : 1;
     ASSERT(ghostView(j) == g_expected);
   }
   
-  // 2. Add gmask explicitly for BUMP universe routines
+  // Add gmask and mask fields--(expect to use in BUMP, but not sure) 
   atlas::Field gmaskField = functionSpace_.createField<int>(
       atlas::option::name("gmask") | atlas::option::levels(1));
   auto gmaskView = atlas::array::make_view<int, 2>(gmaskField);
@@ -835,7 +825,6 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
     gmaskView(j, 0) = (j < ownedCount_) ? 1 : 0;
   }
  
-  // 2. Add mask explicitly for BUMP universe routines
   atlas::Field maskField = functionSpace_.createField<int>(
       atlas::option::name("mask") | atlas::option::levels(1));
   auto maskView = atlas::array::make_view<int, 2>(maskField);
@@ -845,7 +834,6 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   
 
   // do halo exchange
-
   atlas::functionspace::NodeColumns fsHalo(functionSpace_);
 
   fsHalo.haloExchange(elevationField_);
@@ -859,19 +847,7 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   fsHalo.haloExchange(gmaskField);
   fsHalo.haloExchange(maskField);
 
-  std::vector<atlas::Point2> treePoints(functionSpace_.size());
-  std::vector<size_t> payloads(functionSpace_.size()); 
-  
-  for (size_t i = 0; i < functionSpace_.size(); ++i) {
-    treePoints.emplace_back(atlas::Point2(lonlatView(i, 0), lonlatView(i, 1)));
-    payloads.push_back(i); // local functionspace index as payload
-  }
-  localCellCenterTree_ = std::make_unique<atlas::util::IndexKDTree>();  // atlas::util::IndexKDTree();
-  localCellCenterTree_->build(treePoints, payloads);
-
-  oops::Log::info() << "localCellCenterTree_.size() " << localCellCenterTree_->size() 
-	<< " functionSpace_.size() " << functionSpace_.size() << std::endl;
-
+  // add fields to 
   fields_.add(lonlat_);
   fields_.add(global_index_);
   fields_.add(remote_index_);
@@ -888,12 +864,11 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
   functionSpace = functionSpace_;
   geomFields = fields_; 
 
-  oops::Log::info() << "mesh_nodes_size: " << mesh_.nodes().size() 
-	  << " mesh_cells_size: " << mesh_.cells().size() << std::endl;
+  // save mesh for inspection
   if (config.has("save_grid_gmsh_to")){
 
     std::string gFile = config.getString("save_grid_gmsh_to");
-    const atlas::functionspace::NodeColumns fsNC(functionSpace_);
+    //const atlas::functionspace::NodeColumns fsNC(functionSpace_);
     eckit::LocalConfiguration gmshConf;
     gmshConf.set("coordinates", "xyz");
     gmshConf.set("ghost", true);
@@ -903,86 +878,19 @@ GeometryLandVector::SharedData::SharedData(const eckit::Configuration &config,
     // only need elevation field for now
     atlas::FieldSet gFields;
     gFields.add(elevationField_);
-    gmsh.write(gFields, fsNC);
+    gmsh.write(gFields, fsHalo);
 
     comm_.barrier();
     oops::Log::info() << "GeometryLandVector gmsh saved " << std::endl;
     
     //save to nc too
     std::string grid_resol = config.getString("grid_resol", "C384.mx025");
-    std::string ncFile = "landVector_" + grid_resol + "_gFields.nc";
+    std::string ncFile = "landVector_" + grid_resol + "_gFields";
     eckit::LocalConfiguration conf;
     conf.set("filepath", ncFile);
     util::writeFieldSet(comm_, conf, gFields);
-    oops::Log::info() << "GeometryLandVector elev field saved to nc " << std::endl;
+    oops::Log::info() << "GeometryLandVector elevation field saved to " << ncFile << std::endl;
   }  
-
-  oops::Log::info() << "Fields present in geom.fields():" << std::endl;
-  for (const auto & f : fields_) {
-    oops::Log::info() << "  - " << f.name() 
-                      << " | Rank: " << f.rank() 
-                      << " | Shape: [" << f.shape(0) 
-                      << (f.rank() > 1 ? ", " + std::to_string(f.shape(1)) : "") << "]" 
-                      << std::endl;
-  }
-
-  oops::Log::info() << "=== GeometryLandVector Diagnostic ===" << std::endl;
-  auto loccnt = localNodeCount();
-  auto glbcnt = globalNodeCount();
-  if (comm_.rank() == 0 || comm_.rank() == comm_.size() - 1) {
-    std::cout << "Rank " << comm_.rank() << "  Local node count:  " << loccnt << std::endl;
-    std::cout << "Rank " << comm_.rank() << "  Global node count: " << glbcnt << std::endl;
-  }
-
-  if (!fields_.has("lonlat")) {
-    oops::Log::error() << "CRITICAL: 'lonlat' field missing in fields_!" << std::endl;
-  }
-  auto llView = atlas::array::make_view<double, 2>(fields_["lonlat"]);
-  if (localNodeCount() > 0) {
-      oops::Log::info() << "  Sample Point 0: Lon = " << llView(0, 0) 
-                        << ", Lat = " << llView(0, 1) << std::endl;
-      // Check for NaN or 0,0 coordinates
-      ASSERT(!std::isnan(llView(0,0)) && !std::isnan(llView(0,1)));   //,"Geometry coordinates contain NaN!");
-  }
-
-  atlas::Field loc_latlon = functionSpace_.createField<double>(
-      atlas::option::name("loc_latlon") | atlas::option::variables(2));
-
-  atlas::Field global_latlon = functionSpace_.createField<double>(atlas::option::name("global_latlon") 
-		  | atlas::option::variables(2) | atlas::option::global(0));  //
-
-  auto locllView = atlas::array::make_view<double, 2>(loc_latlon);
-  for (size_t i = 0; i < functionSpace_.size(); ++i) {
-    locllView(i, 0) = llView(i, 0);
-    locllView(i, 1) = llView(i, 1);
-  }
-
-  //atlas::functionspace::NodeColumns fsHalo(functionSpace_);
-  fsHalo.haloExchange(loc_latlon);
-  functionSpace_.gather(loc_latlon, global_latlon);
-
-  oops::Log::info() << ">>> GEOMETRY GATHER TEST RESULT <<<" << std::endl;
-  oops::Log::info() << "Global gathered shape: " << global_latlon.shape(0) 
-                    << " x " << global_latlon.shape(1) << std::endl;
-  if (comm_.rank() == 0) {
-    ASSERT(global_latlon.shape(0) > 0); //, "Atlas functionSpace.gather() returned 0 points! GeometryData cannot build globalNodeTree_.");
-  }
-
-  // Gather all owned coordinates to rank 0 to test for global duplicates
-  std::vector<double> local_owned_lons;
-  for (size_t n = 0; n < ownedCount_; ++n) 
-    local_owned_lons.push_back(rank_lons[n]);
-
-  // Count owned points across all ranks
-  std::vector<size_t> recvcounts(comm_.size());
-  comm_.allGather(local_owned_lons.size(), recvcounts.begin(), recvcounts.end());
-  
-  // Inspect whether the sum of owned points equals the global active count exactly
-  size_t total_rec = 0;
-  for (size_t c : recvcounts) total_rec += c;
-  oops::Log::info() << "Total global owned points gathered: " 
-                    << total_rec << " (Target: " << glbcnt << ")" << std::endl;
-  ASSERT(total_rec == glbcnt);
 
 
 // -----------------------------------------------------------------------------
