@@ -100,19 +100,6 @@ void IOLandVector::read(atlas::FieldSet &x, const eckit::LocalConfiguration &fil
   auto gIdx = atlas::array::make_view<double, 2>(globalGidxField);
   const int nGlobal = static_cast<int>(globalGidxField.shape(0));
 
-/*  // --- 2. Pre-allocate one global field per output field (all ranks). ---
-  std::vector<atlas::Field> globalFields;
-  globalFields.reserve(x.size());
-  for (const auto & field : x) {
-    globalFields.push_back(fs.createField<double>(
-        atlas::option::name(field.name())
-        | atlas::option::levels(field.shape(1))
-        | atlas::option::global()));
-  }
-
-  // 5. Create serial FunctionSpace on rank 0
-  atlas::functionspace::NodeColumns serialFunctionSpace(geom_.mesh_)
-*/
   // 3. Allocate fieldsSerial using the serial function space factory
   // This guarantees all ranks have perfectly matching metadata, ranks, and levels
   atlas::FieldSet fieldsSerial;
@@ -145,13 +132,6 @@ void IOLandVector::read(atlas::FieldSet &x, const eckit::LocalConfiguration &fil
   // Since both function spaces share the exact same grid, this will now succeed seamlessly
   //--fs.scatter(fieldsSerial, x);
 
-  // --- 4. Scatter all global fields to distributed ranks (collective). ---
-  // Zero the distributed fields first. atlas::createField leaves memory
-  // uninitialised, and scatter only writes nodes whose global index is present
-  // in the gathered global field. With the northern-fold / periodic mesh, some
-  // owned nodes are not covered by the gather/scatter round-trip; without this
-  // they would retain heap garbage, which is then summed by reductions
-  // (e.g. normField over exclude_halo) and makes results non-reproducible.
   for (auto & field : x) {
     auto v = atlas::array::make_view<double, 2>(field);
     v.assign(0.0);
@@ -165,13 +145,11 @@ void IOLandVector::read(atlas::FieldSet &x, const eckit::LocalConfiguration &fil
 
   // Halo exchange to fill ghost nodes from their owning ranks
   for (auto & field : x) {
-    //atlas::functionspace::PointCloud(field.functionspace()).haloExchange(field);
-    //atlas::functionspace::NodeColumns(field.functionspace())
     field.set_dirty();
     fs.haloExchange(field);
   }
   
-  oops::Log::info() << classname() << " read done" << std::endl;
+  oops::Log::trace() << classname() << " read done" << std::endl;
 }
 
 
@@ -189,7 +167,7 @@ void IOLandVector::readVectorFields(const std::string pathFile,
 
   // Open a file to read fields from
   // -------------------------------
-  oops::Log::info() << "Reading file " << pathFile << std::endl;
+  oops::Log::trace() << "Reading file " << pathFile << std::endl;
   nc_rc(nc_open(pathFile.c_str(), NC_NOWRITE, &fileId), "nc_open " + pathFile);
 
   //int num_points = geom_.globalNodeCount();
@@ -246,33 +224,6 @@ void IOLandVector::readVectorFields(const std::string pathFile,
     if (ioNames.has(fieldName)) {
       fieldName = ioNames.getString(field.name());
     }
-    oops::Log::info() << "Field " << fieldName << std::endl;
-    oops::Log::info() << "Field Name: " << field.name() << "\n"
-                  << "  Rank:  " << field.rank() << "\n"
-                  << "  Size:  " << field.size() << "\n"
-                  << "  Shape: [";
-    for (atlas::idx_t i = 0; i < field.rank(); ++i) {
-        oops::Log::info() << field.shape(i) << (i + 1 < field.rank() ? ", " : "");
-    }
-    oops::Log::info() << "]" << std::endl;
-    /*
-    Field Name: sheleg
-      0:   Rank:  2
-      0:   Size:  18320
-      0:   Shape: [18320, 1]
-      0: Field Name: air_temperature_at_2m
-      0:   Rank:  2
-      0:   Size:  18320
-      0:   Shape: [18320, 1]
-      0: Field Name: specfic_humidity_at_2m
-      0:   Rank:  2
-      0:   Size:  18320
-      0:   Shape: [18320, 1]
-      0: Field Name: stc
-      0:   Rank:  2
-      0:   Size:  73280
-      0:   Shape: [18320, 4]
-    */
 
     // Get the variable ID for this field
     int varId;
@@ -343,17 +294,10 @@ void IOLandVector::readVectorFields(const std::string pathFile,
     } else {
       ABORT("IOLandVector::readVectorFields - Unsupported field rank: " + std::to_string(field.rank()));
     }
-    oops::Log::info() << "Done reading Field " << fieldName << std::endl;
   }
   // Close file
   nc_rc(nc_close(fileId), "nc_close");
 }
-
-/*void IOLandVector::write(const atlas::FieldSet &, const eckit::LocalConfiguration &,
-                         const eckit::LocalConfiguration &) const 
-{  
-    throw eckit::NotImplemented("write is not implemented for this I/O type", Here());
-}*/
 
 void IOLandVector::write(const atlas::FieldSet & fieldsVector,
                              const eckit::LocalConfiguration & fileionames,
@@ -362,56 +306,10 @@ void IOLandVector::write(const atlas::FieldSet & fieldsVector,
 
   util::Timer timer(classname(), "write");
   oops::Log::trace() << classname() << " write started" << std::endl;
-  oops::Log::info() << classname() << " write started" << std::endl;
-  // 1. Get your parallel FunctionSpace handle
-  //auto fs = atlas::functionspace::PointCloud(geom_.functionSpace());
-  //auto fs = atlas::functionspace::NodeColumns(geom_.functionSpace());
+  
   auto fs = geom_.functionSpace();
 
   const size_t localSize = fs.size();
-  /*std::vector<atlas::PointXY> localPoints(localSize);
-  const auto & lonlatField = fs.lonlat();
-  auto lonlatView = atlas::array::make_view<double, 2>(lonlatField);
-  for (size_t i = 0; i < localSize; ++i) {
-    localPoints[i] = atlas::PointXY(lonlatView(i, 0), lonlatView(i, 1));
-  }
-  
-   // 3. Gather all local point counts to determine rank offsets
-  std::vector<size_t> localSizes(geom_.getComm().size(), 0);
-  geom_.getComm().allGather(localSize, localSizes.begin(), localSizes.end());
-  
-  // Convert points to contiguous doubles (2 values per point: lon, lat) for MPI Gatherv
-  std::vector<double> localCoords;
-  localCoords.reserve(localSize * 2);
-  for (const auto &p : localPoints) {
-    localCoords.push_back(p.x());
-    localCoords.push_back(p.y());
-  }
-
-  std::vector<int> counts(geom_.getComm().size());
-  std::vector<int> displs(geom_.getComm().size(), 0);
-  int totalDoubles = 0;
-
-  for (size_t r = 0; r < geom_.getComm().size(); ++r) {
-    counts[r] = static_cast<int>(localSizes[r] * 2);
-    if (r > 0) {
-      displs[r] = displs[r - 1] + counts[r - 1];
-    }
-    totalDoubles += counts[r];
-  }
-
-  std::vector<double> globalCoords(totalDoubles);
-  geom_.getComm().gatherv(localCoords.data(), localCoords.size(),
-                          globalCoords.data(), counts.data(), displs.data(), 0);
-  
-  // 4. Construct globalPoints vector (populated on rank 0, empty on others)
-  std::vector<atlas::PointXY> globalPoints;
-  if (geom_.getComm().rank() == 0) {
-    globalPoints.reserve(totalDoubles / 2);
-    for (size_t i = 0; i < globalCoords.size(); i += 2) {
-      globalPoints.emplace_back(globalCoords[i], globalCoords[i + 1]);
-    }
-  }*/
 
   // 1. Get the global_index field from the Geometry's fieldSet or create/access it via FunctionSpace
   atlas::Field globalIndexField = geom_.fields().field("global_index");
@@ -436,16 +334,8 @@ void IOLandVector::write(const atlas::FieldSet & fieldsVector,
   auto gIdx = atlas::array::make_view<double, 2>(globalGidxField);
   size_t globalSize = static_cast<size_t>(globalGidxField.shape(0));
 
-  //size_t globalSize = 0
-  //geom_.getComm().allReduce(localSize, globalSize, eckit::mpi::Operation::SUM);
 
   // 5. Create serial FunctionSpace on rank 0
-  // On rank 0, globalPoints contains all points; on other ranks, it is empty.
-//atlas::functionspace::PointCloud serialFunctionSpace(globalPoints);
-//atlas::functionspace::NodeColumns serialFunctionSpace(geom_.functionSpace());
-
-  // 3. Allocate fieldsSerial using the serial function space factory
-  // This guarantees all ranks have perfectly matching metadata, ranks, and levels
   atlas::FieldSet fieldsSerial;
   for (const auto & field : fieldsVector) {
     // Pass the matching metadata/options from the target field
@@ -457,7 +347,6 @@ void IOLandVector::write(const atlas::FieldSet & fieldsVector,
   }
 
   // Gather distributed data smoothly from all parallel ranks back into Rank 0
-  //readFunctionSpace_.gather(fieldsVector, fieldsSerial);
   fs.gather(fieldsVector, fieldsSerial);
 
   // Resolve the valid time dynamically
@@ -527,11 +416,11 @@ void IOLandVector::writeVectorFields(const atlas::FieldSet & fields,
   bool update_existing_file = params_.update_existing_file.value();
 
   if (update_existing_file) { 
+
       nc_rc(nc_open(pathFile.c_str(), NC_WRITE, &fileId), "nc_open" + pathFile);
-      oops::Log::warning() << "nc file opened for write " << pathFile << std::endl;
+      oops::Log::trace() << "nc file opened for write " << pathFile << std::endl;
 
       // Ensure the fields that will be written have correct dims
-      oops::Log::info() << "In num locations " << num_locations << std::endl;
       for (auto& field : fields) {
 
         // Get IO name for this field
@@ -539,15 +428,6 @@ void IOLandVector::writeVectorFields(const atlas::FieldSet & fields,
         if (ioNames.has(fieldName)) {
           fieldName = ioNames.getString(field.name());
         }
-        oops::Log::info() << "Field " << fieldName << std::endl;
-        oops::Log::info() << "Field Name: " << field.name() << "\n"
-                      << "  Rank:  " << field.rank() << "\n"
-                      << "  Size:  " << field.size() << "\n"
-                      << "  Shape: [";
-        for (atlas::idx_t i = 0; i < field.rank(); ++i) {
-            oops::Log::info() << field.shape(i) << (i + 1 < field.rank() ? ", " : "");
-        }
-        oops::Log::info() << "]" << std::endl;
 
         ASSERT(field.shape(0) == num_locations);  // Ensure the field has the expected number of locations
 
@@ -564,7 +444,7 @@ void IOLandVector::writeVectorFields(const atlas::FieldSet & fields,
       // Create a file to write fields into
       // ----------------------------------
       nc_rc(nc_create(pathFile.c_str(), NC_CLOBBER | NC_NETCDF4, &fileId), "nc_create" + pathFile);
-      oops::Log::warning() << "nc created" << pathFile << std::endl;
+      oops::Log::trace() << "nc created" << pathFile << std::endl;
 
       // Set float precision for fields
       // ------------------------------
@@ -602,7 +482,6 @@ void IOLandVector::writeVectorFields(const atlas::FieldSet & fields,
       
       // Define all the fields that will be written
       // ------------------------------------------
-      oops::Log::info() << "In num locations " << num_locations << std::endl;
       for (auto& field : fields) {
         
         // Get IO name for this field
@@ -610,15 +489,6 @@ void IOLandVector::writeVectorFields(const atlas::FieldSet & fields,
         if (ioNames.has(fieldName)) {
           fieldName = ioNames.getString(field.name());
         }
-        oops::Log::info() << "Field " << fieldName << std::endl;
-        oops::Log::info() << "Field Name: " << field.name() << "\n"
-                      << "  Rank:  " << field.rank() << "\n"
-                      << "  Size:  " << field.size() << "\n"
-                      << "  Shape: [";
-        for (atlas::idx_t i = 0; i < field.rank(); ++i) {
-            oops::Log::info() << field.shape(i) << (i + 1 < field.rank() ? ", " : "");
-        }
-        oops::Log::info() << "]" << std::endl;
 
         ASSERT(field.shape(0) == num_locations);  // Ensure the field has the expected number of locations
 
@@ -639,15 +509,6 @@ void IOLandVector::writeVectorFields(const atlas::FieldSet & fields,
         } else {
           ABORT("IOLandVector::writeVectorFields - Unsupported field rank: " + std::to_string(field.rank()));
         }
-
-/* // Look for fieldname in the iofile configuration and use the value if key found
-        const std::string fieldLong = field.name();
-        const char * fieldLongC = fieldLong.c_str();
-        
-        std::string fieldName = fieldLong;
-        if (ioNames.has(fieldName)) {
-          fieldName = ioNames.getString(fieldLong);
-        }*/
 
         // Define the field in the file
         nc_rc(nc_def_var(fileId, fieldName.c_str(), ncPrec, fieldDims.size(), fieldDims.data(), &fIv), "nc_def_var " + fieldName);
@@ -686,8 +547,6 @@ void IOLandVector::writeVectorFields(const atlas::FieldSet & fields,
   // Write the fields into the file
   // ------------------------------
   for (auto& field : fields) {
-
-    oops::Log::info() << "Writing Field " << field.name() << std::endl;
  
     // Create field and unpack data into it
     if (field.rank() == 2) {
@@ -721,7 +580,6 @@ void IOLandVector::writeVectorFields(const atlas::FieldSet & fields,
   // Close netCDF file
   // -----------------
   nc_rc(nc_close(fileId), "nc_close");
-  oops::Log::info() << "IOLandVector::writeVectorFields done " << std::endl;
 }
 
 // -------------------------------------------------------------------------------------------------
