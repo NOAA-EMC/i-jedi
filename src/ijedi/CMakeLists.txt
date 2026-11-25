@@ -67,9 +67,8 @@ list(APPEND ijedi_src_files
   Io/mom6/WriteMOM6Netcdf.h
   Io/unstructured/IoUnstructured.cc
   Io/unstructured/IoUnstructured.h
-  Io/StructuredGrid/IOStructuredGrid.cc
-  Io/StructuredGrid/IOStructuredGrid.h
-
+  Io/utils/UpdateNetcdf.cc
+  Io/utils/UpdateNetcdf.h
   Io/landVector/IOLandVector.cc
   Io/landVector/IOLandVector.h
 
