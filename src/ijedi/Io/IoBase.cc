@@ -127,10 +127,10 @@ namespace ijedi
 
   // -------------------------------------------------------------------------------------------------
 
-  void IoBase::writeBase(const atlas::FieldSet &x, const eckit::LocalConfiguration & config) const
+  void IoBase::writeBase(const atlas::FieldSet &x) const
   {
-    // Call write method from the child class with optional config parameter
-    this->write(x, fieldIoNames_, fieldIoScaling_, config);
+    // Call write method from the child class
+    this->write(x, fieldIoNames_, fieldIoScaling_);
   }
 
   // -------------------------------------------------------------------------------------------------
